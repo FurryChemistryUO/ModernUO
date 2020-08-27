@@ -267,8 +267,7 @@ namespace Server.Engines.Harvest
       from.Region.GetResource(type);
 
     public virtual Type GetResourceType(Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc,
-      HarvestResource resource) =>
-      resource.Types.Length > 0 ? resource.Types[Utility.Random(resource.Types.Length)] : null;
+      HarvestResource resource) => resource.Types.RandomElement();
 
     public virtual HarvestResource MutateResource(Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc,
       HarvestVein vein, HarvestResource primary, HarvestResource fallback)
@@ -336,8 +335,7 @@ namespace Server.Engines.Harvest
 
     public virtual void DoHarvestingSound(Mobile from, Item tool, HarvestDefinition def, object toHarvest)
     {
-      if (def.EffectSounds.Length > 0)
-        from.PlaySound(Utility.RandomList(def.EffectSounds));
+      from.PlaySound(def.EffectSounds.RandomElement(-1));
     }
 
     public virtual void DoHarvestingEffect(Mobile from, Item tool, HarvestDefinition def, Map map, Point3D loc)
@@ -345,7 +343,7 @@ namespace Server.Engines.Harvest
       from.Direction = from.GetDirectionTo(loc);
 
       if (!from.Mounted)
-        from.Animate(Utility.RandomList(def.EffectActions), 5, 1, true, false, 0);
+        from.Animate(def.EffectActions.RandomElement(), 5, 1, true, false, 0);
     }
 
     public virtual HarvestDefinition GetDefinition() => Definitions.First();

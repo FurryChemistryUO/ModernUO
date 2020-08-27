@@ -538,17 +538,12 @@ namespace Server.Items
 
       while (amount > 0 && toKill.Count > 0)
       {
-        int kill = Utility.Random(toKill.Count);
-
-        toKill[kill].Kill();
-
-        toKill.RemoveAt(kill);
+        var kill = toKill.RandomElement();
+        kill.Kill();
+        toKill.Remove(kill);
 
         amount -= 1;
-        LiveCreatures -= 1;
-
-        if (LiveCreatures < 0)
-          LiveCreatures = 0;
+        LiveCreatures = Math.Max(LiveCreatures - 1, 0);
 
         Events.Add(1074366); // An unfortunate accident has left a creature floating upside-down.  It is starting to smell.
       }
@@ -598,8 +593,8 @@ namespace Server.Items
         if (OptimalState && LiveCreatures < MaxLiveCreatures)
           if (Utility.RandomDouble() < 0.005 * LiveCreatures)
           {
-            BaseFish fish = null;
-            int message = 0;
+            BaseFish fish;
+            int message;
 
             switch (Utility.Random(6))
             {
@@ -642,7 +637,7 @@ namespace Server.Items
             }
 
             if (Utility.RandomDouble() < 0.05)
-              fish.Hue = FishHues[Utility.Random(FishHues.Length)];
+              fish.Hue = FishHues.RandomElement();
             else if (Utility.RandomDouble() < 0.5)
               fish.Hue = Utility.RandomMinMax(0x100, 0x3E5);
 
@@ -745,7 +740,7 @@ namespace Server.Items
 
     public virtual bool RemoveItem(Mobile from, int at)
     {
-      if (at < 0 && at >= Items.Count)
+      if (at < 0 || at >= Items.Count)
         return false;
 
       Item item = Items[at];

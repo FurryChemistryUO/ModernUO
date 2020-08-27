@@ -903,7 +903,7 @@ namespace Server.Items
       0x2F58, 0x2F59, 0x2F5A, 0x2F5B
     };
 
-    public static int GetRandomItemID() => Utility.RandomList(m_ItemIDs);
+    public static int GetRandomItemID() => m_ItemIDs.RandomElement();
 
     private static readonly Type[] m_Summons =
     {
@@ -955,7 +955,7 @@ namespace Server.Items
       1023817 // clean bandage
     };
 
-    public static Type GetRandomSummonType() => m_Summons[Utility.Random(m_Summons.Length)];
+    public static Type GetRandomSummonType() => m_Summons.RandomElement();
 
     public static TalismanAttribute GetRandomSummoner()
     {
@@ -1049,7 +1049,7 @@ namespace Server.Items
       SkillName.Tinkering
     };
 
-    public static SkillName GetRandomSkill() => m_Skills[Utility.Random(m_Skills.Length)];
+    public static SkillName GetRandomSkill() => m_Skills.RandomElement();
 
     public static int GetRandomExceptional()
     {

@@ -830,12 +830,7 @@ namespace Server.Misc
 
     private static void FixStat(ref int stat, int diff, int max)
     {
-      stat += diff;
-
-      if (stat < 0)
-        stat = 0;
-      else if (stat > max)
-        stat = max;
+      stat = Math.Clamp(stat + diff, 0, max);
     }
 
     private static void SetStats(Mobile m, NetState state, int str, int dex, int intel)
@@ -1107,7 +1102,7 @@ namespace Server.Misc
             int[] hues = { 0x1A8, 0xEC, 0x99, 0x90, 0xB5, 0x336, 0x89 };
             // TODO: Verify that's ALL the hues for that above.
 
-            EquipItem(new TattsukeHakama(hues[Utility.Random(hues.Length)]));
+            EquipItem(new TattsukeHakama(hues.RandomElement()));
 
             EquipItem(new HakamaShita(0x2C3));
             EquipItem(new NinjaTabi(0x2C3));

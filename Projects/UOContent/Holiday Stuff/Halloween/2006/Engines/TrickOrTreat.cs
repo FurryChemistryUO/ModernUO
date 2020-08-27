@@ -154,18 +154,14 @@ namespace Server.Engines.Events
 
           if (Utility.RandomDouble() > .10)
           {
-            switch (Utility.Random(3))
-            {
-              case 0:
-                begged.Say(1076768);
-                break; /* Oooooh, aren't you cute! */
-              case 1:
-                begged.Say(1076779);
-                break; /* All right...This better not spoil your dinner! */
-              case 2:
-                begged.Say(1076778);
-                break; /* Here you go! Enjoy! */
-            }
+            begged.Say(
+              Utility.Random(3) switch
+              {
+                0 => 1076768, // Oooooh, aren't you cute!
+                1 => 1076779, // All right...This better not spoil your dinner!
+                _ => 1076778 // Here you go! Enjoy!
+              }
+            );
 
             if (Utility.RandomDouble() <= .01 && from.Skills.Begging.Value >= 100)
             {
@@ -301,10 +297,10 @@ namespace Server.Engines.Events
     {
       return target.Map.MapID switch
       {
-        2 => Ilshenar_Locations[Utility.Random(Ilshenar_Locations.Length)],
-        3 => Malas_Locations[Utility.Random(Malas_Locations.Length)],
-        4 => Tokuno_Locations[Utility.Random(Tokuno_Locations.Length)],
-        _ => Felucca_Locations[Utility.Random(Felucca_Locations.Length)]
+        2 => Ilshenar_Locations.RandomElement(),
+        3 => Malas_Locations.RandomElement(),
+        4 => Tokuno_Locations.RandomElement(),
+        _ => Felucca_Locations.RandomElement()
       };
     }
 

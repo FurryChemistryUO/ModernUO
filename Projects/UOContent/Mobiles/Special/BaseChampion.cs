@@ -59,15 +59,13 @@ namespace Server.Mobiles
       if (list.Length == 0)
         return null;
 
-      int random = Utility.Random(list.Length);
-
-      Type type = list[random];
+      Type type = list.RandomElement();
 
       Item artifact = Loot.Construct(type);
 
-      if (artifact is MonsterStatuette statuette && StatueTypes.Length > 0)
+      if (StatueTypes.Length > 0 && artifact is MonsterStatuette statuette)
       {
-        statuette.Type = StatueTypes[Utility.Random(StatueTypes.Length)];
+        statuette.Type = StatueTypes.RandomElement();
         statuette.LootType = LootType.Regular;
       }
 
@@ -131,13 +129,7 @@ namespace Server.Mobiles
       }
 
       // Randomize
-      for (int i = 0; i < toGive.Count; ++i)
-      {
-        int rand = Utility.Random(toGive.Count);
-        Mobile hold = toGive[i];
-        toGive[i] = toGive[rand];
-        toGive[rand] = hold;
-      }
+      toGive.Shuffle();
 
       for (int i = 0; i < 6; ++i)
       {
@@ -249,7 +241,7 @@ namespace Server.Mobiles
         }
 
         if (toGive.Count > 0)
-          toGive[Utility.Random(toGive.Count)].AddToBackpack(new ChampionSkull(SkullType));
+          toGive.RandomElement().AddToBackpack(new ChampionSkull(SkullType));
         else
           c.DropItem(new ChampionSkull(SkullType));
       }
