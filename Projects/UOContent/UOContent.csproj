@@ -5,30 +5,20 @@
         <AssemblyName>UOContent</AssemblyName>
         <Product>ModernUO Content</Product>
         <PublishDir>..\..\Distribution\Assemblies</PublishDir>
-        <UseNETCoreGenerator>true</UseNETCoreGenerator>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <WarningsAsErrors />
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <OutDir>..\..\Distribution\Assemblies</OutDir>
     </PropertyGroup>
     <Target Name="CleanPub" AfterTargets="Clean">
         <Message Text="Removing distribution assemblies..." />
         <Delete Files="..\..\Distribution\Assemblies\Argon2.Bindings.dll" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\BouncyCastle.Crypto.dll" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\MailKit.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.AspNetCore.Connections.Abstractions.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.AspNetCore.Http.Features.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.Extensions.Configuration.Abstractions.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.Extensions.DependencyInjection.Abstractions.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.Extensions.FileProviders.Abstractions.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.Extensions.Hosting.Abstractions.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.Extensions.Logging.Abstractions.dll" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\Microsoft.Extensions.Primitives.dll" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\MimeKit.dll" ContinueOnError="true" />
+        <Delete Files="..\..\Distribution\Assemblies\Microsoft.Toolkit.HighPerformance.dll" ContinueOnError="true" />
+        <Delete Files="..\..\Distribution\Assemblies\System.Security.Cryptography.Pkcs.dll" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\$(AssemblyName).dll" ContinueOnError="true" />
+        <Delete Files="..\..\Distribution\Assemblies\ref\$(AssemblyName).dll" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\$(AssemblyName).deps.json" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\$(AssemblyName).pdb" ContinueOnError="true" />
-        <Delete Files="..\..\Distribution\Assemblies\System.IO.Pipelines.dll" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\libargon2.dll" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\libargon2.dylib" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\libargon2.so" ContinueOnError="true" />
@@ -37,32 +27,13 @@
         <Delete Files="..\..\Distribution\Assemblies\libz.so" ContinueOnError="true" />
         <Delete Files="..\..\Distribution\Assemblies\ZLib.Bindings.dll" ContinueOnError="true" />
     </Target>
-    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-        <DefineConstants>TRACE;DEBUG;$(DefineConstants)</DefineConstants>
-        <Optimize>false</Optimize>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <Optimize>true</Optimize>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)'=='Analyze'">
-        <CodeAnalysisRuleSet>..\..\Rules.ruleset</CodeAnalysisRuleSet>
-    </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\Server\Server.csproj" Private="false" PrivateAssets="All" IncludeAssets="None">
             <IncludeInPackage>false</IncludeInPackage>
         </ProjectReference>
-        <!-- Transient package version resolution -->
-        <PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions" Version="3.1.5" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.5" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.5" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.5" />
-        <!-- Direct packages -->
-        <PackageReference Include="MailKit" Version="2.8.0" />
-        <PackageReference Include="Zlib.Bindings" Version="1.2.0" />
-        <PackageReference Include="Argon2.Bindings" Version="1.6.0" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(Configuration)'=='Analyze'">
-        <AdditionalFiles Include="..\..\stylecop.json" />
-        <AdditionalFiles Include="..\..\Rules.ruleset" />
+        <PackageReference Include="MailKit" Version="2.12.0" />
+        <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.0.2" />
+        <PackageReference Include="Zlib.Bindings" Version="1.5.0" />
+        <PackageReference Include="Argon2.Bindings" Version="1.9.1" />
     </ItemGroup>
 </Project>

@@ -1,18 +1,13 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2020 - ModernUO Development Team                   *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
- * File: Point3D.cs - Created: 2020/05/31 - Updated: 2020/05/31          *
+ * File: Point3D.cs                                                      *
  *                                                                       *
  * This program is free software: you can redistribute it and/or modify  *
  * it under the terms of the GNU General Public License as published by  *
  * the Free Software Foundation, either version 3 of the License, or     *
  * (at your option) any later version.                                   *
- *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
  *                                                                       *
  * You should have received a copy of the GNU General Public License     *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
@@ -31,7 +26,7 @@ namespace Server
         internal int m_Y;
         internal int m_Z;
 
-        public static readonly Point3D Zero = new Point3D(0, 0, 0);
+        public static readonly Point3D Zero = new(0, 0, 0);
 
         [CommandProperty(AccessLevel.Counselor)]
         public int X
@@ -74,7 +69,7 @@ namespace Server
         public bool Equals(Point3D other) => m_X == other.m_X && m_Y == other.m_Y && m_Z == other.m_Z;
 
         public bool Equals(IPoint3D other) =>
-            !ReferenceEquals(other, null) && m_X == other.X && m_Y == other.Y && m_Z == other.Z;
+            m_X == other?.X && m_Y == other.Y && m_Z == other.Z;
 
         public override bool Equals(object obj) => obj is Point3D other && Equals(other);
 
@@ -82,7 +77,7 @@ namespace Server
 
         public static Point3D Parse(string value)
         {
-            var start = value.IndexOf('(');
+            var start = value.IndexOfOrdinal('(');
             var end = value.IndexOf(',', start + 1);
 
             Utility.ToInt32(value.Substring(start + 1, end - (start + 1)).Trim(), out var x);
@@ -133,18 +128,34 @@ namespace Server
         public int CompareTo(Point3D other)
         {
             var xComparison = m_X.CompareTo(other.m_X);
-            if (xComparison != 0) return xComparison;
+            if (xComparison != 0)
+            {
+                return xComparison;
+            }
+
             var yComparison = m_Y.CompareTo(other.m_Y);
-            if (yComparison != 0) return yComparison;
+            if (yComparison != 0)
+            {
+                return yComparison;
+            }
+
             return m_Z.CompareTo(other.m_Z);
         }
 
         public int CompareTo(IPoint3D other)
         {
             var xComparison = m_X.CompareTo(other.X);
-            if (xComparison != 0) return xComparison;
+            if (xComparison != 0)
+            {
+                return xComparison;
+            }
+
             var yComparison = m_Y.CompareTo(other.Y);
-            if (yComparison != 0) return yComparison;
+            if (yComparison != 0)
+            {
+                return yComparison;
+            }
+
             return m_Z.CompareTo(other.Z);
         }
     }

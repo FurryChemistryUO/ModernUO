@@ -1,18 +1,13 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2020 - ModernUO Development Team                   *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
- * File: Rectangle3D.cs - Created: 2020/05/31 - Updated: 2020/05/31      *
+ * File: Rectangle3D.cs                                                  *
  *                                                                       *
  * This program is free software: you can redistribute it and/or modify  *
  * it under the terms of the GNU General Public License as published by  *
  * the Free Software Foundation, either version 3 of the License, or     *
  * (at your option) any later version.                                   *
- *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
  *                                                                       *
  * You should have received a copy of the GNU General Public License     *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
@@ -20,8 +15,7 @@
 
 namespace Server
 {
-    [NoSort]
-    [PropertyObject]
+    [NoSort, PropertyObject]
     public struct Rectangle3D
     {
         private Point3D m_Start;
@@ -86,22 +80,34 @@ namespace Server
         public void MakeHold(Rectangle3D r)
         {
             if (r.m_Start.m_X < m_Start.m_X)
+            {
                 m_Start.m_X = r.m_Start.m_X;
+            }
 
             if (r.m_Start.m_Y < m_Start.m_Y)
+            {
                 m_Start.m_Y = r.m_Start.m_Y;
+            }
 
             if (r.m_Start.m_Z < m_Start.m_Z)
+            {
                 m_Start.m_Z = r.m_Start.m_Z;
+            }
 
             if (r.m_End.m_X > m_End.m_X)
+            {
                 m_End.m_X = r.m_End.m_X;
+            }
 
             if (r.m_End.m_Y > m_End.m_Y)
+            {
                 m_End.m_Y = r.m_End.m_Y;
+            }
 
             if (r.m_End.m_Z < m_End.m_Z)
+            {
                 m_End.m_Z = r.m_End.m_Z;
+            }
         }
 
         public bool Contains(Point3D p) =>

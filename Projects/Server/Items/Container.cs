@@ -1,27 +1,7 @@
-/***************************************************************************
- *                               Container.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using Server.Logging;
 using Server.Network;
 using Server.Utilities;
 using QueuePool = Server.Utilities.RefPool<Server.Utilities.QueueRef<Server.Items.Container>>;
@@ -36,8 +16,8 @@ namespace Server.Items
 
     public class Container : Item
     {
-        private static readonly QueuePool m_QueuePool = new QueuePool(QueueRef<Container>.Generate, 2, 5);
-        private static readonly List<Item> m_FindItemsList = new List<Item>();
+        private static readonly QueuePool m_QueuePool = new(QueueRef<Container>.Generate, 2, 5);
+        private static readonly List<Item> m_FindItemsList = new();
 
         private ContainerData m_ContainerData;
 
@@ -71,7 +51,9 @@ namespace Server.Items
             get
             {
                 if (m_ContainerData == null)
+                {
                     UpdateContainerData();
+                }
 
                 return m_ContainerData;
             }
@@ -89,7 +71,9 @@ namespace Server.Items
                 base.ItemID = value;
 
                 if (ItemID != oldID)
+                {
                     UpdateContainerData();
+                }
             }
         }
 
@@ -123,7 +107,10 @@ namespace Server.Items
         {
             get
             {
-                if (Parent is Container container && container.MaxWeight == 0) return 0;
+                if (Parent is Container container && container.MaxWeight == 0)
+                {
+                    return 0;
+                }
 
                 return DefaultMaxWeight;
             }
@@ -206,7 +193,9 @@ namespace Server.Items
                 if (IsDecoContainer)
                 {
                     if (message)
+                    {
                         SendCantStoreMessage(m, item);
+                    }
 
                     return false;
                 }
@@ -217,7 +206,9 @@ namespace Server.Items
                     TotalItems + plusItems + item.TotalItems + (item.IsVirtualItem ? 0 : 1) > maxItems)
                 {
                     if (message)
+                    {
                         SendFullItemsMessage(m, item);
+                    }
 
                     return false;
                 }
@@ -225,7 +216,9 @@ namespace Server.Items
                 if (MaxWeight != 0 && TotalWeight + plusWeight + item.TotalWeight + item.PileWeight > MaxWeight)
                 {
                     if (message)
+                    {
                         SendFullWeightMessage(m, item);
+                    }
 
                     return false;
                 }
@@ -236,10 +229,14 @@ namespace Server.Items
             while (parent != null)
             {
                 if (parent is Container container)
+                {
                     return container.CheckHold(m, item, message, checkItems, plusItems, plusWeight);
+                }
 
                 if (!(parent is Item parentItem))
+                {
                     break;
+                }
 
                 parent = parentItem.Parent;
             }
@@ -265,7 +262,9 @@ namespace Server.Items
         public virtual bool OnDragDropInto(Mobile from, Item item, Point3D p)
         {
             if (!CheckHold(from, item, true, true))
+            {
                 return false;
+            }
 
             item.Location = new Point3D(p.m_X, p.m_Y, 0);
             AddItem(item);
@@ -280,8 +279,12 @@ namespace Server.Items
             var t = item.GetType();
 
             for (var i = 0; i < types.Length; ++i)
+            {
                 if (types[i].IsAssignableFrom(t))
+                {
                     return true;
+                }
+            }
 
             return false;
         }
@@ -289,7 +292,9 @@ namespace Server.Items
         private static void SetSaveFlag(ref SaveFlag flags, SaveFlag toSet, bool setIf)
         {
             if (setIf)
+            {
                 flags |= toSet;
+            }
         }
 
         private static bool GetSaveFlag(SaveFlag flags, SaveFlag toGet) => (flags & toGet) != 0;
@@ -310,13 +315,19 @@ namespace Server.Items
             writer.Write((byte)flags);
 
             if (GetSaveFlag(flags, SaveFlag.MaxItems))
+            {
                 writer.WriteEncodedInt(m_MaxItems);
+            }
 
             if (GetSaveFlag(flags, SaveFlag.GumpID))
+            {
                 writer.WriteEncodedInt(m_GumpID);
+            }
 
             if (GetSaveFlag(flags, SaveFlag.DropSound))
+            {
                 writer.WriteEncodedInt(m_DropSound);
+            }
         }
 
         public override void Deserialize(IGenericReader reader)
@@ -332,19 +343,31 @@ namespace Server.Items
                         var flags = (SaveFlag)reader.ReadByte();
 
                         if (GetSaveFlag(flags, SaveFlag.MaxItems))
+                        {
                             m_MaxItems = reader.ReadEncodedInt();
+                        }
                         else
+                        {
                             m_MaxItems = -1;
+                        }
 
                         if (GetSaveFlag(flags, SaveFlag.GumpID))
+                        {
                             m_GumpID = reader.ReadEncodedInt();
+                        }
                         else
+                        {
                             m_GumpID = -1;
+                        }
 
                         if (GetSaveFlag(flags, SaveFlag.DropSound))
+                        {
                             m_DropSound = reader.ReadEncodedInt();
+                        }
                         else
+                        {
                             m_DropSound = -1;
+                        }
 
                         LiftOverride = GetSaveFlag(flags, SaveFlag.LiftOverride);
 
@@ -358,19 +381,27 @@ namespace Server.Items
                 case 0:
                     {
                         if (version < 1)
+                        {
                             m_MaxItems = GlobalMaxItems;
+                        }
 
                         m_GumpID = reader.ReadInt();
                         m_DropSound = reader.ReadInt();
 
                         if (m_GumpID == DefaultGumpID)
+                        {
                             m_GumpID = -1;
+                        }
 
                         if (m_DropSound == DefaultDropSound)
+                        {
                             m_DropSound = -1;
+                        }
 
                         if (m_MaxItems == DefaultMaxItems)
+                        {
                             m_MaxItems = -1;
+                        }
 
                         // m_Bounds = new Rectangle2D( reader.ReadPoint2D(), reader.ReadPoint2D() );
                         reader.ReadPoint2D();
@@ -397,6 +428,7 @@ namespace Server.Items
         public override void UpdateTotal(Item sender, TotalType type, int delta)
         {
             if (sender != this && delta != 0 && !sender.IsVirtualItem)
+            {
                 switch (type)
                 {
                     case TotalType.Gold:
@@ -413,6 +445,7 @@ namespace Server.Items
                         InvalidateProperties();
                         break;
                 }
+            }
 
             base.UpdateTotal(sender, type, delta);
         }
@@ -426,7 +459,9 @@ namespace Server.Items
             var items = m_Items;
 
             if (items == null)
+            {
                 return;
+            }
 
             for (var i = 0; i < items.Count; ++i)
             {
@@ -435,7 +470,9 @@ namespace Server.Items
                 item.UpdateTotals();
 
                 if (item.IsVirtualItem)
+                {
                     continue;
+                }
 
                 m_TotalGold += item.TotalGold;
                 m_TotalItems += item.TotalItems + 1;
@@ -471,7 +508,9 @@ namespace Server.Items
 
                 if (!(item is Container) && CheckHold(from, dropped, false, false) &&
                     item.StackWith(from, dropped, playSound))
+                {
                     return true;
+                }
             }
 
             if (CheckHold(from, dropped, sendFullMessage, true))
@@ -525,10 +564,14 @@ namespace Server.Items
             if (dropItems.Count + stackItems.Count == droppedItems.Length) // All good
             {
                 for (var i = 0; i < dropItems.Count; i++)
+                {
                     DropItem(dropItems[i]);
+                }
 
                 for (var i = 0; i < stackItems.Count; i++)
+                {
                     stackItems[i].m_StackItem.StackWith(from, stackItems[i].m_DropItem, false);
+                }
 
                 return true;
             }
@@ -542,11 +585,13 @@ namespace Server.Items
             var map = Map;
 
             for (var i = Items.Count - 1; i >= 0; --i)
+            {
                 if (i < Items.Count)
                 {
                     Items[i].SetLastMoved();
                     Items[i].MoveToWorld(loc, map);
                 }
+            }
 
             Delete();
         }
@@ -554,7 +599,9 @@ namespace Server.Items
         public virtual void DropItem(Item dropped)
         {
             if (dropped == null)
+            {
                 return;
+            }
 
             AddItem(dropped);
 
@@ -564,14 +611,22 @@ namespace Server.Items
             int x, y;
 
             if (bounds.Width >= ourBounds.Width)
+            {
                 x = (ourBounds.Width - bounds.Width) / 2;
+            }
             else
+            {
                 x = Utility.Random(ourBounds.Width - bounds.Width);
+            }
 
             if (bounds.Height >= ourBounds.Height)
+            {
                 y = (ourBounds.Height - bounds.Height) / 2;
+            }
             else
+            {
                 y = Utility.Random(ourBounds.Height - bounds.Height);
+            }
 
             x += ourBounds.X;
             x -= bounds.X;
@@ -593,9 +648,13 @@ namespace Server.Items
                 if (trade != null)
                 {
                     if (trade.From.Mobile == from)
+                    {
                         DisplayTo(trade.To.Mobile);
+                    }
                     else if (trade.To.Mobile == from)
+                    {
                         DisplayTo(trade.From.Mobile);
+                    }
                 }
             }
             else
@@ -614,7 +673,10 @@ namespace Server.Items
             base.OnSingleClick(from);
 
             if (CheckContentDisplay(from))
+            {
                 LabelTo(from, "({0} item{2}, {1} stones)", TotalItems, TotalWeight, TotalItems != 1 ? "s" : string.Empty);
+            }
+
             // LabelTo( from, 1050044, String.Format( "{0}\t{1}", TotalItems.ToString(), TotalWeight.ToString() ) );
         }
 
@@ -633,19 +695,16 @@ namespace Server.Items
 
             if (ns != null)
             {
-                if (ns.HighSeas)
-                    to.Send(new ContainerDisplayHS(Serial, GumpID));
-                else
-                    to.Send(new ContainerDisplay(Serial, GumpID));
+                ns.SendDisplayContainer(Serial, GumpID);
 
                 SendContentTo(ns);
 
                 if (ObjectPropertyList.Enabled)
                 {
-                    var items = Items;
-
-                    for (var i = 0; i < items.Count; ++i)
-                        to.Send(items[i].OPLPacket);
+                    for (var i = 0; i < Items.Count; ++i)
+                    {
+                        ns.SendOPLInfo(Items[i]);
+                    }
                 }
             }
         }
@@ -653,7 +712,9 @@ namespace Server.Items
         public void ProcessOpeners(Mobile opener)
         {
             if (IsPublicContainer)
+            {
                 return;
+            }
 
             var contains = false;
 
@@ -675,7 +736,9 @@ namespace Server.Items
                         var range = GetUpdateRange(mob);
 
                         if (mob.Map != map || !mob.InRange(worldLoc, range))
+                        {
                             Openers.RemoveAt(i--);
+                        }
                     }
                 }
             }
@@ -692,16 +755,7 @@ namespace Server.Items
             }
         }
 
-        public virtual void SendContentTo(NetState state)
-        {
-            if (state == null)
-                return;
-
-            if (state.ContainerGridLines)
-                state.Send(new ContainerContent6017(state.Mobile, this));
-            else
-                state.Send(new ContainerContent(state.Mobile, this));
-        }
+        public virtual void SendContentTo(NetState state) => state.SendContainerContent(state.Mobile, this);
 
         public override void GetProperties(ObjectPropertyList list)
         {
@@ -712,28 +766,33 @@ namespace Server.Items
                 if (Core.ML)
                 {
                     if (ParentsContain<BankBox>()) // Root Parent is the Mobile.  Parent could be another containter.
+                    {
                         list.Add(
-                            1073841,
+                            1073841, // Contents: ~1_COUNT~/~2_MAXCOUNT~ items, ~3_WEIGHT~ stones
                             "{0}\t{1}\t{2}",
                             TotalItems,
                             MaxItems,
                             TotalWeight
-                        ); // Contents: ~1_COUNT~/~2_MAXCOUNT~ items, ~3_WEIGHT~ stones
+                        );
+                    }
                     else
+                    {
                         list.Add(
-                            1072241,
+                            1072241, // Contents: ~1_COUNT~/~2_MAXCOUNT~ items, ~3_WEIGHT~/~4_MAXWEIGHT~ stones
                             "{0}\t{1}\t{2}\t{3}",
                             TotalItems,
                             MaxItems,
                             TotalWeight,
                             MaxWeight
-                        ); // Contents: ~1_COUNT~/~2_MAXCOUNT~ items, ~3_WEIGHT~/~4_MAXWEIGHT~ stones
+                        );
+                    }
 
                     // TODO: Where do the other clilocs come into play? 1073839 & 1073840?
                 }
                 else
                 {
-                    list.Add(1050044, "{0}\t{1}", TotalItems, TotalWeight); // ~1_COUNT~ items, ~2_WEIGHT~ stones
+                    // ~1_COUNT~ items, ~2_WEIGHT~ stones
+                    list.Add(1050044, "{0}\t{1}", TotalItems, TotalWeight);
                 }
             }
         }
@@ -741,15 +800,21 @@ namespace Server.Items
         public override void OnDoubleClick(Mobile from)
         {
             if (from.AccessLevel > AccessLevel.Player || from.InRange(GetWorldLocation(), 2))
+            {
                 DisplayTo(from);
+            }
             else
+            {
                 from.SendLocalizedMessage(500446); // That is too far away.
+            }
         }
 
         public bool ConsumeTotalGrouped(Type type, int amount, bool recurse, OnItemConsumed callback, CheckItemGroup grouper)
         {
             if (grouper == null)
+            {
                 throw new ArgumentNullException(nameof(grouper));
+            }
 
             var typedItems = FindItemsByType(type, recurse);
 
@@ -769,9 +834,13 @@ namespace Server.Items
                     var v = grouper(a, b);
 
                     if (v == 0)
+                    {
                         group.Add(b);
+                    }
                     else
+                    {
                         break;
+                    }
 
                     ++idx;
                 }
@@ -789,16 +858,23 @@ namespace Server.Items
                 items[i] = groups[i].ToArray();
 
                 for (var j = 0; j < items[i].Length; ++j)
+                {
                     totals[i] += items[i][j].Amount;
+                }
 
                 if (totals[i] >= amount)
+                {
                     hasEnough = true;
+                }
             }
 
             if (!hasEnough)
+            {
                 return false;
+            }
 
             for (var i = 0; i < items.Length; ++i)
+            {
                 if (totals[i] >= amount)
                 {
                     var need = amount;
@@ -827,6 +903,7 @@ namespace Server.Items
 
                     break;
                 }
+            }
 
             return true;
         }
@@ -837,9 +914,14 @@ namespace Server.Items
         )
         {
             if (types.Length != amounts.Length)
+            {
                 throw new ArgumentException("length of types and amounts must match");
+            }
+
             if (grouper == null)
+            {
                 throw new ArgumentNullException(nameof(grouper));
+            }
 
             var items = new Item[types.Length][][];
             var totals = new int[types.Length][];
@@ -864,9 +946,13 @@ namespace Server.Items
                         var v = grouper(a, b);
 
                         if (v == 0)
+                        {
                             group.Add(b);
+                        }
                         else
+                        {
                             break;
+                        }
 
                         ++idx;
                     }
@@ -884,18 +970,26 @@ namespace Server.Items
                     items[i][j] = groups[j].ToArray();
 
                     for (var k = 0; k < items[i][j].Length; ++k)
+                    {
                         totals[i][j] += items[i][j][k].Amount;
+                    }
 
                     if (totals[i][j] >= amounts[i])
+                    {
                         hasEnough = true;
+                    }
                 }
 
                 if (!hasEnough)
+                {
                     return i;
+                }
             }
 
             for (var i = 0; i < items.Length; ++i)
+            {
                 for (var j = 0; j < items[i].Length; ++j)
+                {
                     if (totals[i][j] >= amounts[i])
                     {
                         var need = amounts[i];
@@ -924,6 +1018,8 @@ namespace Server.Items
 
                         break;
                     }
+                }
+            }
 
             return -1;
         }
@@ -934,9 +1030,14 @@ namespace Server.Items
         )
         {
             if (types.Length != amounts.Length)
+            {
                 throw new ArgumentException("length of types and amounts must match");
+            }
+
             if (grouper == null)
+            {
                 throw new ArgumentNullException(nameof(grouper));
+            }
 
             var items = new Item[types.Length][][];
             var totals = new int[types.Length][];
@@ -961,9 +1062,13 @@ namespace Server.Items
                         var v = grouper(a, b);
 
                         if (v == 0)
+                        {
                             group.Add(b);
+                        }
                         else
+                        {
                             break;
+                        }
 
                         ++idx;
                     }
@@ -981,18 +1086,26 @@ namespace Server.Items
                     items[i][j] = groups[j].ToArray();
 
                     for (var k = 0; k < items[i][j].Length; ++k)
+                    {
                         totals[i][j] += items[i][j][k].Amount;
+                    }
 
                     if (totals[i][j] >= amounts[i])
+                    {
                         hasEnough = true;
+                    }
                 }
 
                 if (!hasEnough)
+                {
                     return i;
+                }
             }
 
             for (var i = 0; i < items.Length; ++i)
+            {
                 for (var j = 0; j < items[i].Length; ++j)
+                {
                     if (totals[i][j] >= amounts[i])
                     {
                         var need = amounts[i];
@@ -1021,6 +1134,8 @@ namespace Server.Items
 
                         break;
                     }
+                }
+            }
 
             return -1;
         }
@@ -1028,7 +1143,9 @@ namespace Server.Items
         public int ConsumeTotal(Type[][] types, int[] amounts, bool recurse = true, OnItemConsumed callback = null)
         {
             if (types.Length != amounts.Length)
+            {
                 throw new ArgumentException("length of types and amounts must match");
+            }
 
             var items = new Item[types.Length][];
             var totals = new int[types.Length];
@@ -1038,10 +1155,14 @@ namespace Server.Items
                 items[i] = FindItemsByType(types[i], recurse);
 
                 for (var j = 0; j < items[i].Length; ++j)
+                {
                     totals[i] += items[i][j].Amount;
+                }
 
                 if (totals[i] < amounts[i])
+                {
                     return i;
+                }
             }
 
             for (var i = 0; i < types.Length; ++i)
@@ -1077,7 +1198,9 @@ namespace Server.Items
         public int ConsumeTotal(Type[] types, int[] amounts, bool recurse = true, OnItemConsumed callback = null)
         {
             if (types.Length != amounts.Length)
+            {
                 throw new ArgumentException("length of types and amounts must match");
+            }
 
             var items = new Item[types.Length][];
             var totals = new int[types.Length];
@@ -1087,10 +1210,14 @@ namespace Server.Items
                 items[i] = FindItemsByType(types[i], recurse);
 
                 for (var j = 0; j < items[i].Length; ++j)
+                {
                     totals[i] += items[i][j].Amount;
+                }
 
                 if (totals[i] < amounts[i])
+                {
                     return i;
+                }
             }
 
             for (var i = 0; i < types.Length; ++i)
@@ -1131,7 +1258,9 @@ namespace Server.Items
             var total = 0;
 
             for (var i = 0; i < items.Length; ++i)
+            {
                 total += items[i].Amount;
+            }
 
             if (total >= amount)
             {
@@ -1175,7 +1304,9 @@ namespace Server.Items
             RecurseConsumeUpTo(this, type, amount, recurse, ref consumed, toDelete);
 
             while (toDelete.Count > 0)
+            {
                 toDelete.Dequeue().Delete();
+            }
 
             return consumed;
         }
@@ -1186,7 +1317,9 @@ namespace Server.Items
         )
         {
             if (current == null || current.Items.Count == 0)
+            {
                 return;
+            }
 
             var list = current.Items;
 
@@ -1222,7 +1355,9 @@ namespace Server.Items
         public int GetBestGroupAmount(Type type, bool recurse, CheckItemGroup grouper)
         {
             if (grouper == null)
+            {
                 throw new ArgumentNullException(nameof(grouper));
+            }
 
             var best = 0;
 
@@ -1244,9 +1379,13 @@ namespace Server.Items
                     var v = grouper(a, b);
 
                     if (v == 0)
+                    {
                         group.Add(b);
+                    }
                     else
+                    {
                         break;
+                    }
 
                     ++idx;
                 }
@@ -1261,10 +1400,14 @@ namespace Server.Items
                 var total = 0;
 
                 for (var j = 0; j < items.Length; ++j)
+                {
                     total += items[j].Amount;
+                }
 
                 if (total >= best)
+                {
                     best = total;
+                }
             }
 
             return best;
@@ -1273,7 +1416,9 @@ namespace Server.Items
         public int GetBestGroupAmount(Type[] types, bool recurse, CheckItemGroup grouper)
         {
             if (grouper == null)
+            {
                 throw new ArgumentNullException(nameof(grouper));
+            }
 
             var best = 0;
 
@@ -1295,9 +1440,13 @@ namespace Server.Items
                     var v = grouper(a, b);
 
                     if (v == 0)
+                    {
                         group.Add(b);
+                    }
                     else
+                    {
                         break;
+                    }
 
                     ++idx;
                 }
@@ -1308,10 +1457,16 @@ namespace Server.Items
             for (var j = 0; j < groups.Count; ++j)
             {
                 var items = groups[j].ToArray();
-                var total = items.Sum(t => t.Amount);
+                var total = 0;
+                foreach (var item in items)
+                {
+                    total += item.Amount;
+                }
 
                 if (total >= best)
+                {
                     best = total;
+                }
             }
 
             return best;
@@ -1320,7 +1475,9 @@ namespace Server.Items
         public int GetBestGroupAmount(Type[][] types, bool recurse, CheckItemGroup grouper)
         {
             if (grouper == null)
+            {
                 throw new ArgumentNullException(nameof(grouper));
+            }
 
             var best = 0;
 
@@ -1344,9 +1501,13 @@ namespace Server.Items
                         var v = grouper(a, b);
 
                         if (v == 0)
+                        {
                             group.Add(b);
+                        }
                         else
+                        {
                             break;
+                        }
 
                         ++idx;
                     }
@@ -1360,24 +1521,48 @@ namespace Server.Items
                     var total = 0;
 
                     for (var k = 0; k < items.Length; ++k)
+                    {
                         total += items[k].Amount;
+                    }
 
                     if (total >= best)
+                    {
                         best = total;
+                    }
                 }
             }
 
             return best;
         }
 
-        public int GetAmount(Type type, bool recurse = true) => FindItemsByType(type, recurse).Sum(t => t.Amount);
+        public int GetAmount(Type type, bool recurse = true)
+        {
+            var total = 0;
+            foreach (var item in FindItemsByType(type, recurse))
+            {
+                total += item.Amount;
+            }
 
-        public int GetAmount(Type[] types, bool recurse = true) => FindItemsByType(types, recurse).Sum(t => t.Amount);
+            return total;
+        }
+
+        public int GetAmount(Type[] types, bool recurse = true)
+        {
+            var total = 0;
+            foreach (var item in FindItemsByType(types, recurse))
+            {
+                total += item.Amount;
+            }
+
+            return total;
+        }
 
         public Item[] FindItemsByType(Type type, bool recurse = true)
         {
             if (m_FindItemsList.Count > 0)
+            {
                 m_FindItemsList.Clear();
+            }
 
             RecurseFindItemsByType(this, type, recurse, m_FindItemsList);
 
@@ -1387,7 +1572,9 @@ namespace Server.Items
         private static void RecurseFindItemsByType(Item current, Type type, bool recurse, List<Item> list)
         {
             if (current == null || current.Items.Count == 0)
+            {
                 return;
+            }
 
             var items = current.Items;
 
@@ -1396,17 +1583,23 @@ namespace Server.Items
                 var item = items[i];
 
                 if (type.IsInstanceOfType(item))
+                {
                     list.Add(item);
+                }
 
                 if (recurse && item is Container)
+                {
                     RecurseFindItemsByType(item, type, true, list);
+                }
             }
         }
 
         public Item[] FindItemsByType(Type[] types, bool recurse = true)
         {
             if (m_FindItemsList.Count > 0)
+            {
                 m_FindItemsList.Clear();
+            }
 
             RecurseFindItemsByType(this, types, recurse, m_FindItemsList);
 
@@ -1416,7 +1609,9 @@ namespace Server.Items
         private static void RecurseFindItemsByType(Item current, Type[] types, bool recurse, List<Item> list)
         {
             if (current == null || current.Items.Count == 0)
+            {
                 return;
+            }
 
             var items = current.Items;
 
@@ -1425,10 +1620,14 @@ namespace Server.Items
                 var item = items[i];
 
                 if (InTypeList(item, types))
+                {
                     list.Add(item);
+                }
 
                 if (recurse && item is Container)
+                {
                     RecurseFindItemsByType(item, types, true, list);
+                }
             }
         }
 
@@ -1437,7 +1636,9 @@ namespace Server.Items
         private static Item RecurseFindItemByType(Item current, Type type, bool recurse)
         {
             if (current == null || current.Items.Count == 0)
+            {
                 return null;
+            }
 
             var list = current.Items;
 
@@ -1446,14 +1647,18 @@ namespace Server.Items
                 var item = list[i];
 
                 if (type.IsInstanceOfType(item))
+                {
                     return item;
+                }
 
                 if (recurse && item is Container)
                 {
                     var check = RecurseFindItemByType(item, type, true);
 
                     if (check != null)
+                    {
                         return check;
+                    }
                 }
             }
 
@@ -1465,7 +1670,9 @@ namespace Server.Items
         private static Item RecurseFindItemByType(Item current, Type[] types, bool recurse)
         {
             if (current == null || current.Items.Count == 0)
+            {
                 return null;
+            }
 
             var list = current.Items;
 
@@ -1473,14 +1680,19 @@ namespace Server.Items
             {
                 var item = list[i];
 
-                if (InTypeList(item, types)) return item;
+                if (InTypeList(item, types))
+                {
+                    return item;
+                }
 
                 if (recurse && item is Container)
                 {
                     var check = RecurseFindItemByType(item, types, true);
 
                     if (check != null)
+                    {
                         return check;
+                    }
                 }
             }
 
@@ -1517,10 +1729,16 @@ namespace Server.Items
                 {
                     var container = queue.Dequeue();
                     foreach (var item in container.Items)
+                    {
                         if (item is T typedItem && predicate?.Invoke(typedItem) != false)
+                        {
                             items.Add(typedItem);
+                        }
                         else if (recurse && item is Container itemContainer)
+                        {
                             queue.Enqueue(itemContainer);
+                        }
+                    }
                 }
 
                 return items;
@@ -1556,9 +1774,14 @@ namespace Server.Items
                     foreach (var item in container.Items)
                     {
                         if (item is T typedItem && predicate?.Invoke(typedItem) != false)
+                        {
                             return typedItem;
+                        }
+
                         if (recurse && item is Container itemContainer)
+                        {
                             queue.Enqueue(itemContainer);
+                        }
                     }
                 }
 
@@ -1600,6 +1823,8 @@ namespace Server.Items
 
     public class ContainerData
     {
+        private static ILogger _logger;
+        private static ILogger Logger => _logger ??= LogFactory.GetLogger(typeof(ContainerData));
         private static readonly Dictionary<int, ContainerData> m_Table;
 
         static ContainerData()
@@ -1622,8 +1847,10 @@ namespace Server.Items
                 {
                     line = line.Trim();
 
-                    if (line.Length == 0 || line.StartsWith("#"))
+                    if (line.Length == 0 || line.StartsWithOrdinal("#"))
+                    {
                         continue;
+                    }
 
                     try
                     {
@@ -1635,7 +1862,9 @@ namespace Server.Items
 
                             var aRect = split[1].Split(' ');
                             if (aRect.Length < 4)
+                            {
                                 continue;
+                            }
 
                             var x = Utility.ToInt32(aRect[0]);
                             var y = Utility.ToInt32(aRect[1]);
@@ -1659,9 +1888,13 @@ namespace Server.Items
                                     var id = Utility.ToInt32(aIDs[i]);
 
                                     if (m_Table.ContainsKey(id))
-                                        Console.WriteLine(@"Warning: double ItemID entry in Data\containers.cfg");
+                                    {
+                                        Logger.Warning("double ItemID entry in Data\\containers.cfg");
+                                    }
                                     else
+                                    {
                                         m_Table[id] = data;
+                                    }
                                 }
                             }
                         }

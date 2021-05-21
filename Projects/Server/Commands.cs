@@ -1,23 +1,3 @@
-/***************************************************************************
- *                                Commands.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
 using System.Collections.Generic;
 using Server.Network;
@@ -26,7 +6,7 @@ namespace Server
 {
     public delegate void CommandEventHandler(CommandEventArgs e);
 
-    public class CommandEventArgs : EventArgs
+    public class CommandEventArgs
     {
         public CommandEventArgs(Mobile mobile, string command, string argString, string[] arguments)
         {
@@ -49,7 +29,9 @@ namespace Server
         public string GetString(int index)
         {
             if (index < 0 || index >= Arguments.Length)
+            {
                 return "";
+            }
 
             return Arguments[index];
         }
@@ -57,7 +39,9 @@ namespace Server
         public int GetInt32(int index)
         {
             if (index < 0 || index >= Arguments.Length)
+            {
                 return 0;
+            }
 
             return Utility.ToInt32(Arguments[index]);
         }
@@ -65,7 +49,9 @@ namespace Server
         public uint GetUInt32(int index)
         {
             if (index < 0 || index >= Arguments.Length)
+            {
                 return 0;
+            }
 
             return Utility.ToUInt32(Arguments[index]);
         }
@@ -73,7 +59,9 @@ namespace Server
         public bool GetBoolean(int index)
         {
             if (index < 0 || index >= Arguments.Length)
+            {
                 return false;
+            }
 
             return Utility.ToBoolean(Arguments[index]);
         }
@@ -81,7 +69,9 @@ namespace Server
         public double GetDouble(int index)
         {
             if (index < 0 || index >= Arguments.Length)
+            {
                 return 0.0;
+            }
 
             return Utility.ToDouble(Arguments[index]);
         }
@@ -89,7 +79,9 @@ namespace Server
         public TimeSpan GetTimeSpan(int index)
         {
             if (index < 0 || index >= Arguments.Length)
+            {
                 return TimeSpan.Zero;
+            }
 
             return Utility.ToTimeSpan(Arguments[index]);
         }
@@ -116,15 +108,77 @@ namespace Server
 
         public AccessLevel AccessLevel { get; }
 
-        public int CompareTo(CommandEntry e) => e == null ? 1 : Command.CompareTo(e.Command);
+        public int CompareTo(CommandEntry e) => string.CompareOrdinal(Command, e?.Command);
+
+        public static List<CommandEntry> GetList()
+        {
+            var commands = new List<CommandEntry>(CommandSystem.Entries.Values);
+
+            commands.Sort();
+            commands.Reverse();
+
+            for (var i = 0; i < commands.Count; ++i)
+            {
+                var e = commands[i];
+
+                for (var j = i + 1; j < commands.Count; ++j)
+                {
+                    var c = commands[j];
+
+                    if (e.Handler.Method == c.Handler.Method)
+                    {
+                        commands.RemoveAt(j);
+                        --j;
+                    }
+                }
+            }
+
+            return commands;
+        }
+    }
+
+    public record CommandInfo
+    {
+        public CommandInfo(AccessLevel accessLevel, string name, string[] aliases, string usage, string description)
+        {
+            AccessLevel = accessLevel;
+            Name = name;
+            Aliases = aliases;
+            Usage = usage;
+            Description = description;
+        }
+
+        public AccessLevel AccessLevel { get; }
+
+        public string Name { get; }
+
+        public string[] Aliases { get; }
+
+        public string Usage { get; }
+
+        public string Description { get; }
+    }
+
+    public class CommandInfoSorter : IComparer<CommandInfo>
+    {
+        public int Compare(CommandInfo a, CommandInfo b)
+        {
+            if (a == null && b == null)
+            {
+                return 0;
+            }
+
+            var v = b?.AccessLevel.CompareTo(a?.AccessLevel) ?? 1;
+
+            return v != 0 ? v : string.CompareOrdinal(a?.Name, b?.Name);
+        }
     }
 
     public static class CommandSystem
     {
         public static string Prefix { get; set; } = "[";
 
-        public static Dictionary<string, CommandEntry> Entries { get; } =
-            new Dictionary<string, CommandEntry>(StringComparer.OrdinalIgnoreCase);
+        public static Dictionary<string, CommandEntry> Entries { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public static AccessLevel BadCommandIgnoreLevel { get; set; } = AccessLevel.Player;
 
@@ -145,10 +199,16 @@ namespace Server
                     var end = start;
 
                     while (end < array.Length)
+                    {
                         if (array[end] != '"' || array[end - 1] == '\\')
+                        {
                             ++end;
+                        }
                         else
+                        {
                             break;
+                        }
+                    }
 
                     list.Add(value.Substring(start, end - start));
 
@@ -159,10 +219,16 @@ namespace Server
                     var end = start;
 
                     while (end < array.Length)
+                    {
                         if (array[end] != ' ')
+                        {
                             ++end;
+                        }
                         else
+                        {
                             break;
+                        }
+                    }
 
                     list.Add(value.Substring(start, end - start));
 
@@ -184,13 +250,17 @@ namespace Server
 
         public static bool Handle(Mobile from, string text, MessageType type = MessageType.Regular)
         {
-            if (!text.StartsWith(Prefix) && type != MessageType.Command)
+            if (!text.StartsWithOrdinal(Prefix) && type != MessageType.Command)
+            {
                 return false;
+            }
 
             if (type != MessageType.Command)
-                text = text.Substring(Prefix.Length);
+            {
+                text = text[Prefix.Length..];
+            }
 
-            var indexOf = text.IndexOf(' ');
+            var indexOf = text.IndexOfOrdinal(' ');
 
             string command;
             string[] args;
@@ -198,9 +268,9 @@ namespace Server
 
             if (indexOf >= 0)
             {
-                argString = text.Substring(indexOf + 1);
+                argString = text[(indexOf + 1)..];
 
-                command = text.Substring(0, indexOf);
+                command = text[..indexOf];
                 args = Split(argString);
             }
             else
@@ -226,7 +296,9 @@ namespace Server
                 else
                 {
                     if (from.AccessLevel <= BadCommandIgnoreLevel)
+                    {
                         return false;
+                    }
 
                     from.SendMessage("You do not have access to that command.");
                 }
@@ -234,7 +306,9 @@ namespace Server
             else
             {
                 if (from.AccessLevel <= BadCommandIgnoreLevel)
+                {
                     return false;
+                }
 
                 from.SendMessage("That is not a valid command.");
             }

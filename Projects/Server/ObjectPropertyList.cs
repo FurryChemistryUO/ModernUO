@@ -1,25 +1,7 @@
-/***************************************************************************
- *                           ObjectPropertyList.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
+using System;
+using System.Buffers;
 using System.IO;
-using System.Text;
+using System.Runtime.CompilerServices;
 using Server.Network;
 
 namespace Server
@@ -27,16 +9,12 @@ namespace Server
     public interface IPropertyListObject : IEntity
     {
         ObjectPropertyList PropertyList { get; }
-        OPLInfo OPLPacket { get; }
 
         void GetProperties(ObjectPropertyList list);
     }
 
-    public sealed class ObjectPropertyList : Packet
+    public sealed class ObjectPropertyList
     {
-        private static byte[] m_Buffer = new byte[1024];
-        private static readonly Encoding m_Encoding = Encoding.Unicode;
-
         // Each of these are localized to "~1_NOTHING~" which allows the string argument to be used
         private static readonly int[] m_StringNumbers =
         {
@@ -44,25 +22,28 @@ namespace Server
             1070722
         };
 
-        private int m_Hash;
-        private int m_Strings;
+        private int _hash;
+        private int _strings;
+        private byte[] _buffer;
+        private int _position;
 
-        public ObjectPropertyList(IEntity e) : base(0xD6)
+        public ObjectPropertyList(IEntity e)
         {
-            EnsureCapacity(128);
-
             Entity = e;
+            _buffer = GC.AllocateUninitializedArray<byte>(64);
 
-            Stream.Write((short)1);
-            Stream.Write(e.Serial);
-            Stream.Write((byte)0);
-            Stream.Write((byte)0);
-            Stream.Write(e.Serial);
+            var writer = new SpanWriter(_buffer);
+            writer.Write((byte)0xD6); // Packet ID
+            writer.Seek(2, SeekOrigin.Current);
+            writer.Write((ushort)1);
+            writer.Write(e.Serial);
+            writer.Write((ushort)0);
+            _position = writer.Position + 4; // Hash
         }
 
         public IEntity Entity { get; }
 
-        public int Hash => 0x40000000 + m_Hash;
+        public int Hash => 0x40000000 + _hash;
 
         public int Header { get; set; }
 
@@ -70,41 +51,57 @@ namespace Server
 
         public static bool Enabled { get; set; }
 
-        public void Add(int number)
+        public byte[] Buffer => _buffer;
+
+        public void Reset()
         {
-            if (number == 0)
-                return;
+            _position = 15;
+            _hash = 0;
+            _strings = 0;
+        }
 
-            AddHash(number);
+        public void Flush()
+        {
+            Resize(_buffer.Length * 2);
+        }
 
-            if (Header == 0)
-            {
-                Header = number;
-                HeaderArgs = "";
-            }
-
-            Stream.Write(number);
-            Stream.Write((short)0);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void Resize(int amount)
+        {
+            var newBuffer = GC.AllocateUninitializedArray<byte>(amount);
+            _buffer.AsSpan(0, Math.Min(amount, _buffer.Length)).CopyTo(newBuffer);
+            _buffer = newBuffer;
         }
 
         public void Terminate()
         {
-            Stream.Write(0);
+            int length = _position + 4;
+            if (length != _buffer.Length)
+            {
+                Resize(length);
+            }
 
-            Stream.Seek(11, SeekOrigin.Begin);
-            Stream.Write(m_Hash);
+            var writer = new SpanWriter(_buffer);
+            writer.Seek(_position, SeekOrigin.Begin);
+            writer.Write(0);
+
+            writer.Seek(11, SeekOrigin.Begin);
+            writer.Write(_hash);
+            writer.WritePacketLength();
         }
 
         public void AddHash(int val)
         {
-            m_Hash ^= val & 0x3FFFFFF;
-            m_Hash ^= (val >> 26) & 0x3F;
+            _hash ^= val & 0x3FFFFFF;
+            _hash ^= (val >> 26) & 0x3F;
         }
 
-        public void Add(int number, string arguments)
+        public void Add(int number, string arguments = null)
         {
             if (number == 0)
+            {
                 return;
+            }
 
             arguments ??= "";
 
@@ -115,19 +112,24 @@ namespace Server
             }
 
             AddHash(number);
-            AddHash(arguments.GetHashCode());
+            if (arguments.Length > 0)
+            {
+                AddHash(arguments.GetHashCode(StringComparison.Ordinal));
+            }
 
-            Stream.Write(number);
+            int strLength = arguments.Length * 2;
+            int length = _position + 6 + strLength;
+            while (length > _buffer.Length)
+            {
+                Flush();
+            }
 
-            var byteCount = m_Encoding.GetByteCount(arguments);
+            var writer = new SpanWriter(_buffer.AsSpan(_position));
+            writer.Write(number);
+            writer.Write((ushort)strLength);
+            writer.WriteLittleUni(arguments);
 
-            if (byteCount > m_Buffer.Length)
-                m_Buffer = new byte[byteCount];
-
-            byteCount = m_Encoding.GetBytes(arguments, 0, arguments.Length, m_Buffer, 0);
-
-            Stream.Write((short)byteCount);
-            Stream.Write(m_Buffer, 0, byteCount);
+            _position += writer.BytesWritten;
         }
 
         public void Add(int number, string format, object arg0)
@@ -150,7 +152,7 @@ namespace Server
             Add(number, string.Format(format, args));
         }
 
-        private int GetStringNumber() => m_StringNumbers[m_Strings++ % m_StringNumbers.Length];
+        private int GetStringNumber() => m_StringNumbers[_strings++ % m_StringNumbers.Length];
 
         public void Add(string text)
         {
@@ -175,24 +177,6 @@ namespace Server
         public void Add(string format, params object[] args)
         {
             Add(GetStringNumber(), string.Format(format, args));
-        }
-    }
-
-    public sealed class OPLInfo : Packet
-    {
-        /*public OPLInfo( ObjectPropertyList list ) : base( 0xBF )
-        {
-          EnsureCapacity( 13 );
-    
-          m_Stream.Write( (short) 0x10 );
-          m_Stream.Write( (int) list.Entity.Serial );
-          m_Stream.Write( (int) list.Hash );
-        }*/
-
-        public OPLInfo(Serial serial, int hash) : base(0xDC, 9)
-        {
-            Stream.Write(serial);
-            Stream.Write(hash);
         }
     }
 }

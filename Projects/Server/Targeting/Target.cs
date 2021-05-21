@@ -1,23 +1,3 @@
-/***************************************************************************
- *                                Target.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
 using Server.Network;
 
@@ -39,7 +19,7 @@ namespace Server.Targeting
             CheckLOS = true;
         }
 
-        public DateTime TimeoutTime { get; private set; }
+        public long TimeoutTime { get; private set; }
 
         public bool CheckLOS { get; set; }
 
@@ -57,17 +37,17 @@ namespace Server.Targeting
 
         public static void Cancel(Mobile m)
         {
-            m.NetState?.Send(CancelTarget.Instance);
+            m.NetState.SendCancelTarget();
             m.Target?.OnTargetCancel(m, TargetCancelType.Canceled);
         }
 
-        public void BeginTimeout(Mobile from, TimeSpan delay)
+        public void BeginTimeout(Mobile from, long delay)
         {
-            TimeoutTime = DateTime.UtcNow + delay;
+            TimeoutTime = Core.TickCount + delay;
 
             m_TimeoutTimer?.Stop();
 
-            m_TimeoutTimer = new TimeoutTimer(this, from, delay);
+            m_TimeoutTimer = new TimeoutTimer(this, from, TimeSpan.FromMilliseconds(delay));
             m_TimeoutTimer.Start();
         }
 
@@ -88,7 +68,7 @@ namespace Server.Targeting
             OnTargetFinish(from);
         }
 
-        public virtual Packet GetPacketFor(NetState ns) => new TargetReq(this);
+        public virtual void SendTargetTo(NetState ns) => ns.SendTargetReq(this);
 
         public void Cancel(Mobile from, TargetCancelType type)
         {
@@ -187,19 +167,33 @@ namespace Server.Targeting
             else
             {
                 if (!from.CanSee(targeted))
+                {
                     OnCantSeeTarget(from, targeted);
+                }
                 else if (CheckLOS && !from.InLOS(targeted))
+                {
                     OnTargetOutOfLOS(from, targeted);
+                }
                 else if (item?.InSecureTrade == true)
+                {
                     OnTargetInSecureTrade(from, targeted);
+                }
                 else if (item?.IsAccessibleTo(from) == false)
+                {
                     OnTargetNotAccessible(from, targeted);
+                }
                 else if (item?.CheckTarget(from, this, targeted) == false)
+                {
                     OnTargetUntargetable(from, targeted);
+                }
                 else if (mobile?.CheckTarget(from, this, mobile) == false)
+                {
                     OnTargetUntargetable(from, mobile);
+                }
                 else if (from.Region.OnTarget(from, this, targeted))
+                {
                     OnTarget(from, targeted);
+                }
             }
 
             OnTargetFinish(from);
@@ -270,19 +264,29 @@ namespace Server.Targeting
                 m_Mobile = m;
 
                 if (delay >= ThirtySeconds)
+                {
                     Priority = TimerPriority.FiveSeconds;
+                }
                 else if (delay >= TenSeconds)
+                {
                     Priority = TimerPriority.OneSecond;
+                }
                 else if (delay >= OneSecond)
+                {
                     Priority = TimerPriority.TwoFiftyMS;
+                }
                 else
+                {
                     Priority = TimerPriority.TwentyFiveMS;
+                }
             }
 
             protected override void OnTick()
             {
                 if (m_Mobile.Target == m_Target)
+                {
                     m_Target.Timeout(m_Mobile);
+                }
             }
         }
     }

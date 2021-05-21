@@ -1,28 +1,22 @@
-/***************************************************************************
- *                                 Timer.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: Timer.cs                                                        *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using Server.Diagnostics;
 
 namespace Server
@@ -41,12 +35,10 @@ namespace Server
 
     public partial class Timer
     {
-        private static readonly Queue<Timer> m_Queue = new Queue<Timer>();
+        private static readonly Queue<Timer> m_Queue = new();
 
         private static int m_QueueCountAtSlice;
-        private readonly int m_Count;
         private long m_Delay;
-        private int m_Index;
         private long m_Interval;
         private List<Timer> m_List;
         private long m_Next;
@@ -64,7 +56,7 @@ namespace Server
         {
             m_Delay = (long)delay.TotalMilliseconds;
             m_Interval = (long)interval.TotalMilliseconds;
-            m_Count = count;
+            Count = count;
 
             if (!m_PrioritySet)
             {
@@ -73,7 +65,9 @@ namespace Server
             }
 
             if (DefRegCreation)
+            {
                 RegCreation();
+            }
         }
 
         public TimerPriority Priority
@@ -82,14 +76,18 @@ namespace Server
             set
             {
                 if (!m_PrioritySet)
+                {
                     m_PrioritySet = true;
+                }
 
                 if (m_Priority != value)
                 {
                     m_Priority = value;
 
                     if (m_Running)
+                    {
                         TimerThread.PriorityChange(this, (int)m_Priority);
+                    }
                 }
             }
         }
@@ -108,15 +106,23 @@ namespace Server
             set => m_Interval = (long)value.TotalMilliseconds;
         }
 
+        public int Index { get; private set; }
+
+        public int Count { get; }
+
         public bool Running
         {
             get => m_Running;
             set
             {
                 if (value)
+                {
                     Start();
+                }
                 else
+                {
                     Stop();
+                }
             }
         }
 
@@ -134,20 +140,23 @@ namespace Server
 
         public TimerProfile GetProfile()
         {
-            if (!Core.Profiling) return null;
+            if (!Core.Profiling)
+            {
+                return null;
+            }
 
             var name = ToString();
 
             return TimerProfile.Acquire(name);
         }
 
-        public static void Slice()
+        public static int Slice()
         {
+            var index = 0;
+
             lock (m_Queue)
             {
                 m_QueueCountAtSlice = m_Queue.Count;
-
-                var index = 0;
 
                 while (index < BreakCount && m_Queue.Count != 0)
                 {
@@ -158,18 +167,23 @@ namespace Server
 
                     t.OnTick();
                     t.m_Queued = false;
-                    ++index;
+                    index++;
 
                     prof?.Finish();
                 }
             }
+
+            return index;
         }
 
         public void RegCreation()
         {
             var prof = GetProfile();
 
-            if (prof != null) prof.Created++;
+            if (prof != null)
+            {
+                prof.Created++;
+            }
         }
 
         public override string ToString() => GetType().FullName ?? "";
@@ -177,22 +191,34 @@ namespace Server
         public static TimerPriority ComputePriority(TimeSpan ts)
         {
             if (ts >= TimeSpan.FromMinutes(1.0))
+            {
                 return TimerPriority.FiveSeconds;
+            }
 
             if (ts >= TimeSpan.FromSeconds(10.0))
+            {
                 return TimerPriority.OneSecond;
+            }
 
             if (ts >= TimeSpan.FromSeconds(5.0))
+            {
                 return TimerPriority.TwoFiftyMS;
+            }
 
             if (ts >= TimeSpan.FromSeconds(2.5))
+            {
                 return TimerPriority.FiftyMS;
+            }
 
             if (ts >= TimeSpan.FromSeconds(1.0))
+            {
                 return TimerPriority.TwentyFiveMS;
+            }
 
             if (ts >= TimeSpan.FromSeconds(0.5))
+            {
                 return TimerPriority.TenMS;
+            }
 
             return TimerPriority.EveryTick;
         }
@@ -206,7 +232,10 @@ namespace Server
 
                 var prof = GetProfile();
 
-                if (prof != null) prof.Started++;
+                if (prof != null)
+                {
+                    prof.Started++;
+                }
             }
         }
 
@@ -219,7 +248,10 @@ namespace Server
 
                 var prof = GetProfile();
 
-                if (prof != null) prof.Stopped++;
+                if (prof != null)
+                {
+                    prof.Stopped++;
+                }
             }
         }
 
@@ -227,19 +259,10 @@ namespace Server
         {
         }
 
-        public static Task Pause(int ms) => Pause(TimeSpan.FromMilliseconds(ms));
-
-        public static Task Pause(TimeSpan ms)
-        {
-            var t = new DelayTaskTimer(ms);
-            t.Start();
-            return t.Task;
-        }
-
         public class TimerThread
         {
             private static readonly Dictionary<Timer, TimerChangeEntry>
-                m_Changed = new Dictionary<Timer, TimerChangeEntry>();
+                m_Changed = new();
 
             private static readonly long[] m_NextPriorities = new long[8];
 
@@ -257,17 +280,17 @@ namespace Server
 
             private static readonly List<Timer>[] m_Timers =
             {
-                new List<Timer>(),
-                new List<Timer>(),
-                new List<Timer>(),
-                new List<Timer>(),
-                new List<Timer>(),
-                new List<Timer>(),
-                new List<Timer>(),
-                new List<Timer>()
+                new(),
+                new(),
+                new(),
+                new(),
+                new(),
+                new(),
+                new(),
+                new()
             };
 
-            private static readonly AutoResetEvent m_Signal = new AutoResetEvent(false);
+            private static readonly AutoResetEvent m_Signal = new(false);
 
             public static void DumpInfo(TextWriter tw)
             {
@@ -285,7 +308,9 @@ namespace Server
                         var key = t.ToString();
 
                         if (!hash.TryGetValue(key, out var list))
+                        {
                             hash[key] = list = new List<Timer>();
+                        }
 
                         list.Add(t);
                     }
@@ -349,7 +374,7 @@ namespace Server
                         if (tce.m_IsAdd)
                         {
                             timer.m_Next = curTicks + timer.m_Delay;
-                            timer.m_Index = 0;
+                            timer.Index = 0;
                         }
 
                         if (newIndex >= 0)
@@ -386,13 +411,13 @@ namespace Server
 
                     ProcessChanged();
 
-                    var loaded = false;
-
                     for (var i = 0; i < m_Timers.Length; i++)
                     {
                         var now = Core.TickCount;
                         if (now < m_NextPriorities[i])
+                        {
                             break;
+                        }
 
                         m_NextPriorities[i] = now + m_PriorityDelays[i];
 
@@ -409,18 +434,17 @@ namespace Server
                                     m_Queue.Enqueue(t);
                                 }
 
-                                loaded = true;
-
-                                if (t.m_Count != 0 && ++t.m_Index >= t.m_Count)
+                                if (t.Count != 0 && ++t.Index >= t.Count)
+                                {
                                     t.Stop();
+                                }
                                 else
+                                {
                                     t.m_Next = now + t.m_Interval;
+                                }
                             }
                         }
                     }
-
-                    if (loaded)
-                        Core.Set();
 
                     m_Signal.WaitOne(1, false);
                 }
@@ -428,7 +452,7 @@ namespace Server
 
             private class TimerChangeEntry
             {
-                private static readonly Queue<TimerChangeEntry> m_InstancePool = new Queue<TimerChangeEntry>();
+                private static readonly Queue<TimerChangeEntry> m_InstancePool = new();
                 public bool m_IsAdd;
                 public int m_NewIndex;
                 public Timer m_Timer;
@@ -445,7 +469,9 @@ namespace Server
                     lock (m_InstancePool)
                     {
                         if (m_InstancePool.Count < 200) // Arbitrary
+                        {
                             m_InstancePool.Enqueue(this);
+                        }
                     }
                 }
 
@@ -455,7 +481,10 @@ namespace Server
 
                     lock (m_InstancePool)
                     {
-                        if (m_InstancePool.Count > 0) e = m_InstancePool.Dequeue();
+                        if (m_InstancePool.Count > 0)
+                        {
+                            e = m_InstancePool.Dequeue();
+                        }
                     }
 
                     if (e != null)
@@ -471,21 +500,6 @@ namespace Server
 
                     return e;
                 }
-            }
-        }
-
-        private class DelayTaskTimer : Timer
-        {
-            private readonly TaskCompletionSource<DelayTaskTimer> m_TaskCompleter;
-
-            public DelayTaskTimer(TimeSpan delay) : base(delay) =>
-                m_TaskCompleter = new TaskCompletionSource<DelayTaskTimer>();
-
-            public Task Task => m_TaskCompleter.Task;
-
-            protected override void OnTick()
-            {
-                m_TaskCompleter.SetResult(this);
             }
         }
     }

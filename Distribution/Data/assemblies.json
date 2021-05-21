@@ -1,0 +1,8 @@
+[
+  "Argon2.Bindings.dll",
+  "BouncyCastle.Crypto.dll",
+  "MailKit.dll",
+  "MimeKit.dll",
+  "Zlib.Bindings.dll",
+  "UOContent.dll"
+]

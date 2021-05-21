@@ -1,19 +1,13 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2020 - ModernUO Development Team                        *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: EventSink.cs                                                    *
- * Created: 2020/04/11 - Updated: 2020/04/11                             *
  *                                                                       *
  * This program is free software: you can redistribute it and/or modify  *
  * it under the terms of the GNU General Public License as published by  *
  * the Free Software Foundation, either version 3 of the License, or     *
  * (at your option) any later version.                                   *
- *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
  *                                                                       *
  * You should have received a copy of the GNU General Public License     *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
@@ -96,9 +90,6 @@ namespace Server
         public static void InvokeVirtueMacroRequest(Mobile mobile, int virtueID) =>
             VirtueMacroRequest?.Invoke(mobile, virtueID);
 
-        public static event Action<Mobile> ChatRequest;
-        public static void InvokeChatRequest(Mobile m) => ChatRequest?.Invoke(m);
-
         public static event Action<Mobile, Mobile> PaperdollRequest;
 
         public static void InvokePaperdollRequest(Mobile beholder, Mobile beheld) =>
@@ -114,12 +105,6 @@ namespace Server
 
         public static event Action<NetState, int> DeleteRequest;
         public static void InvokeDeleteRequest(NetState state, int index) => DeleteRequest?.Invoke(state, index);
-
-        public static event Action WorldLoad;
-        public static void InvokeWorldLoad() => WorldLoad?.Invoke();
-
-        public static event Action<bool> WorldSave;
-        public static void InvokeWorldSave(bool sendMessage) => WorldSave?.Invoke(sendMessage);
 
         public static event Action<Mobile, int> SetAbility;
         public static void InvokeSetAbility(Mobile mobile, int index) => SetAbility?.Invoke(mobile, index);
@@ -143,7 +128,9 @@ namespace Server
         public static void InvokeEquipMacro(Mobile m, List<Serial> list)
         {
             if (list?.Count > 0)
+            {
                 EquipMacro?.Invoke(m, list);
+            }
         }
 
         public static event Action<Mobile, List<Layer>> UnequipMacro;
@@ -151,7 +138,9 @@ namespace Server
         public static void InvokeUnequipMacro(Mobile m, List<Layer> layers)
         {
             if (layers?.Count > 0)
+            {
                 UnequipMacro?.Invoke(m, layers);
+            }
         }
 
         public static event Action<Mobile, IEntity, int> TargetedSpell;

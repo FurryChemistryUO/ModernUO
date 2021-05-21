@@ -1,30 +1,26 @@
-/***************************************************************************
- *                                GumpCheck.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpCheck.cs                                                    *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
     public class GumpCheck : GumpEntry
     {
-        private static readonly byte[] m_LayoutName = Gump.StringToBuffer("checkbox");
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("checkbox");
 
         public GumpCheck(int x, int y, int inactiveID, int activeID, bool initialState, int switchID)
         {
@@ -48,20 +44,28 @@ namespace Server.Gumps
 
         public int SwitchID { get; set; }
 
-        public override string Compile(NetState ns) =>
+        public override string Compile(OrderedHashSet<string> strings) =>
             $"{{ checkbox {X} {Y} {InactiveID} {ActiveID} {(InitialState ? 1 : 0)} {SwitchID} }}";
 
-        public override void AppendTo(NetState ns, IGumpWriter disp)
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
         {
-            disp.AppendLayout(m_LayoutName);
-            disp.AppendLayout(X);
-            disp.AppendLayout(Y);
-            disp.AppendLayout(InactiveID);
-            disp.AppendLayout(ActiveID);
-            disp.AppendLayout(InitialState);
-            disp.AppendLayout(SwitchID);
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(LayoutName);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(InactiveID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(ActiveID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(InitialState ? '1' : '0');
+            writer.WriteAscii(' ');
+            writer.WriteAscii(SwitchID.ToString());
+            writer.Write((ushort)0x207D); // " }"
 
-            disp.Switches++;
+            switches++;
         }
     }
 }

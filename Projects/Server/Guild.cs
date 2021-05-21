@@ -1,25 +1,4 @@
-/***************************************************************************
- *                                 Guild.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Server.Guilds
 {
@@ -32,75 +11,108 @@ namespace Server.Guilds
 
     public abstract class BaseGuild : ISerializable
     {
-        private static Serial m_NextID = 1;
-
-        protected BaseGuild(uint id) // serialization ctor
+        protected BaseGuild(Serial serial)
         {
-            Serial = id;
-            List.Add(Serial, this);
-            if (Serial + 1 > m_NextID)
-                m_NextID = Serial + 1;
-            SaveBuffer = new BufferWriter(true);
+            Serial = serial;
+
+            var ourType = GetType();
+            TypeRef = World.GuildTypes.IndexOf(ourType);
+
+            if (TypeRef == -1)
+            {
+                World.GuildTypes.Add(ourType);
+                TypeRef = World.GuildTypes.Count - 1;
+            }
         }
 
         protected BaseGuild()
         {
-            Serial = m_NextID++;
-            List.Add(Serial, this);
-            SaveBuffer = new BufferWriter(true);
+            Serial = World.NewGuild;
+            World.AddGuild(this);
+
+            var ourType = GetType();
+            TypeRef = World.GuildTypes.IndexOf(ourType);
+
+            if (TypeRef == -1)
+            {
+                World.GuildTypes.Add(ourType);
+                TypeRef = World.GuildTypes.Count - 1;
+            }
         }
 
         public abstract string Abbreviation { get; set; }
         public abstract string Name { get; set; }
         public abstract GuildType Type { get; set; }
         public abstract bool Disbanded { get; }
+        public abstract void Delete();
 
-        public static Dictionary<uint, BaseGuild> List { get; } = new Dictionary<uint, BaseGuild>();
-        public BufferWriter SaveBuffer { get; }
+        public bool Deleted => Disbanded;
 
         [CommandProperty(AccessLevel.Counselor)]
         public Serial Serial { get; }
 
-        public int TypeRef => 0;
+        BufferWriter ISerializable.SaveBuffer { get; set; }
 
-        public void Serialize()
-        {
-            SaveBuffer.Flush();
-            Serialize(SaveBuffer);
-        }
+        public int TypeRef { get; }
 
         public abstract void Serialize(IGenericWriter writer);
-
         public abstract void Deserialize(IGenericReader reader);
         public abstract void OnDelete(Mobile mob);
 
-        public static BaseGuild Find(uint id)
+        public static BaseGuild FindByName(string name)
         {
-            List.TryGetValue(id, out var g);
+            foreach (var g in World.Guilds.Values)
+            {
+                if (g.Name == name)
+                {
+                    return g;
+                }
+            }
 
-            return g;
+            return null;
         }
 
-        public static BaseGuild FindByName(string name) => List.Values.FirstOrDefault(g => g.Name == name);
+        public static BaseGuild FindByAbbrev(string abbr)
+        {
+            foreach (var g in World.Guilds.Values)
+            {
+                if (g.Abbreviation == abbr)
+                {
+                    return g;
+                }
+            }
 
-        public static BaseGuild FindByAbbrev(string abbr) => List.Values.FirstOrDefault(g => g.Abbreviation == abbr);
+            return null;
+        }
 
-        public static List<BaseGuild> Search(string find)
+        public static HashSet<BaseGuild> Search(string find)
         {
             var words = find.ToLower().Split(' ');
-            var results = new List<BaseGuild>();
+            var results = new HashSet<BaseGuild>();
 
-            foreach (var g in List.Values)
+            foreach (var g in World.Guilds.Values)
             {
-                var name = g.Name.ToLower();
+                var name = g.Name;
 
-                if (words.All(t => name.IndexOf(t) != -1))
+                bool all = true;
+                foreach (var t in words)
+                {
+                    if (name.InsensitiveIndexOf(t) == -1)
+                    {
+                        all = false;
+                        break;
+                    }
+                }
+
+                if (all)
+                {
                     results.Add(g);
+                }
             }
 
             return results;
         }
 
-        public override string ToString() => $"0x{Serial:X} \"{Name} [{Abbreviation}]\"";
+        public override string ToString() => $"0x{Serial.Value:X} \"{Name} [{Abbreviation}]\"";
     }
 }

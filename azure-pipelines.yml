@@ -1,11 +1,11 @@
 name: 'Build'
 
 trigger:
-- master
+- main
 
 variables:
-  buildConfiguration: 'Release'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
 
 jobs:
 - job: BuildWindows
@@ -15,29 +15,40 @@ jobs:
 
   steps:
   - task: UseDotNet@2
-    displayName: 'Install .NET Core'
+    displayName: 'Install .NET 5'
     inputs:
       packageType: sdk
-      version: '3.1.401'
+      version: 5.0.202
   - task: NuGetAuthenticate@0
-  - script: dotnet restore --force-evaluate --source https://api.nuget.org/v3/index.json
-    displayName: 'Restore NuGet Packages'
-  - script: dotnet build -c $(buildConfiguration) -f netcoreapp3.1 --no-restore Projects/Server/Server.csproj
-    displayName: 'Build Server'
-  - script: dotnet build -c $(buildConfiguration) -f netcoreapp3.1 --no-restore Projects/UOContent/UOContent.csproj
-    displayName: 'Build UO Content'
-  - script: dotnet test --no-restore -f netcoreapp3.1
+  - script: ./publish.cmd Release win
+    displayName: 'Build'
+  - script: dotnet test --no-restore
     displayName: 'Test'
 
 - job: BuildLinux
   strategy:
     matrix:
+      'CentOS 8':
+        containerImage: centos:8
+        os: centos.8
+      'CentOS 7':
+        containerImage: centos:7
+        os: centos.7
       'Debian 10':
-        containerImage: mcr.microsoft.com/dotnet/core/sdk:3.1-buster
-      'Ubuntu 18':
-        containerImage: mcr.microsoft.com/dotnet/core/sdk:3.1-bionic
+        containerImage: mcr.microsoft.com/dotnet/sdk:5.0-buster-slim
+        os: debian.10
+      # 'Debian 11':
+      #   containerImage: amd64/buildpack-deps:bullseye
+      #   os: debian.11-x64
       'Ubuntu 20':
-        containerImage: mcr.microsoft.com/dotnet/core/sdk:3.1-focal
+        containerImage: mcr.microsoft.com/dotnet/sdk:5.0-focal
+        os: ubuntu.20.04
+      'Fedora 32':
+        containerImage: fedora:32
+        os: fedora.32
+      'Fedora 33':
+        containerImage: fedora:33
+        os: fedora.33
 
   displayName: Linux
 
@@ -48,16 +59,12 @@ jobs:
 
   steps:
   - task: UseDotNet@2
-    displayName: 'Install .NET Core'
+    displayName: 'Install .NET 5'
     inputs:
       packageType: sdk
-      version: '3.1.401'
+      version: 5.0.202
   - task: NuGetAuthenticate@0
-  - script: dotnet restore --force-evaluate --source https://api.nuget.org/v3/index.json
-    displayName: 'Restore NuGet Packages'
-  - script: dotnet build -c $(buildConfiguration) -f netcoreapp3.1 --no-restore Projects/Server/Server.csproj
-    displayName: 'Build Server'
-  - script: dotnet build -c $(buildConfiguration) -f netcoreapp3.1 --no-restore Projects/UOContent/UOContent.csproj
-    displayName: 'Build UO Content'
-  - script: dotnet test --no-restore -f netcoreapp3.1
+  - script: ./publish.cmd Release $(os)
+    displayName: 'Build'
+  - script: dotnet test --no-restore
     displayName: 'Test'

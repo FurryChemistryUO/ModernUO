@@ -1,27 +1,7 @@
-/***************************************************************************
- *                                 Gump.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Server.Network;
+using Server.Text;
 
 namespace Server.Gumps
 {
@@ -29,13 +9,10 @@ namespace Server.Gumps
     {
         private static uint m_NextSerial = 1;
 
-        private static readonly byte[] m_BeginLayout = StringToBuffer("{ ");
-        private static readonly byte[] m_EndLayout = StringToBuffer(" }");
-
-        private static readonly byte[] m_NoMove = StringToBuffer("{ nomove }");
-        private static readonly byte[] m_NoClose = StringToBuffer("{ noclose }");
-        private static readonly byte[] m_NoDispose = StringToBuffer("{ nodispose }");
-        private static readonly byte[] m_NoResize = StringToBuffer("{ noresize }");
+        public static readonly byte[] NoMove = StringToBuffer("{ nomove }");
+        public static readonly byte[] NoClose = StringToBuffer("{ noclose }");
+        public static readonly byte[] NoDispose = StringToBuffer("{ nodispose }");
+        public static readonly byte[] NoResize = StringToBuffer("{ noresize }");
 
         internal int m_TextEntries, m_Switches;
 
@@ -61,7 +38,7 @@ namespace Server.Gumps
 
         public List<GumpEntry> Entries { get; }
 
-        public uint Serial { get; set; }
+        public Serial Serial { get; set; }
 
         public int X { get; set; }
 
@@ -75,7 +52,7 @@ namespace Server.Gumps
 
         public bool Closable { get; set; } = true;
 
-        public static int GetTypeID(Type type) => type?.FullName?.GetHashCode() ?? -1;
+        public static int GetTypeID(Type type) => type?.FullName?.GetHashCode(StringComparison.Ordinal) ?? -1;
 
         public void AddPage(int page)
         {
@@ -232,15 +209,21 @@ namespace Server.Gumps
         public void Add(GumpEntry g)
         {
             if (g.Parent != this)
+            {
                 g.Parent = this;
+            }
             else if (!Entries.Contains(g))
+            {
                 Entries.Add(g);
+            }
         }
 
         public void Remove(GumpEntry g)
         {
             if (g == null || !Entries.Contains(g))
+            {
                 return;
+            }
 
             Entries.Remove(g);
             g.Parent = null;
@@ -250,7 +233,10 @@ namespace Server.Gumps
         {
             var indexOf = Strings.IndexOf(value);
 
-            if (indexOf >= 0) return indexOf;
+            if (indexOf >= 0)
+            {
+                return indexOf;
+            }
 
             Strings.Add(value);
             return Strings.Count - 1;
@@ -259,52 +245,10 @@ namespace Server.Gumps
         public void SendTo(NetState state)
         {
             state.AddGump(this);
-            state.Send(Compile(state));
+            state.SendDisplayGump(this, out m_Switches, out m_TextEntries);
         }
 
-        public static byte[] StringToBuffer(string str) => Encoding.ASCII.GetBytes(str);
-
-        public Packet Compile(NetState ns = null)
-        {
-            IGumpWriter disp;
-
-            if (ns?.Unpack == true)
-                disp = new DisplayGumpPacked(this);
-            else
-                disp = new DisplayGumpFast(this);
-
-            if (!Draggable)
-                disp.AppendLayout(m_NoMove);
-
-            if (!Closable)
-                disp.AppendLayout(m_NoClose);
-
-            if (!Disposable)
-                disp.AppendLayout(m_NoDispose);
-
-            if (!Resizable)
-                disp.AppendLayout(m_NoResize);
-
-            var count = Entries.Count;
-
-            for (var i = 0; i < count; ++i)
-            {
-                var e = Entries[i];
-
-                disp.AppendLayout(m_BeginLayout);
-                e.AppendTo(ns, disp);
-                disp.AppendLayout(m_EndLayout);
-            }
-
-            disp.WriteStrings(Strings);
-
-            disp.Flush();
-
-            m_TextEntries = disp.TextEntries;
-            m_Switches = disp.Switches;
-
-            return (Packet)disp;
-        }
+        public static byte[] StringToBuffer(string str) => str.GetBytesAscii();
 
         public virtual void OnResponse(NetState sender, RelayInfo info)
         {

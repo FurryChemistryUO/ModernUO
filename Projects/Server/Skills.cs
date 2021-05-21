@@ -1,27 +1,5 @@
-/***************************************************************************
- *                                 Skills.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using Server.Network;
 
 namespace Server
@@ -133,15 +111,23 @@ namespace Server
                         if ((version & 0xC0) == 0x00)
                         {
                             if ((version & 0x1) != 0)
+                            {
                                 m_Base = reader.ReadUShort();
+                            }
 
                             if ((version & 0x2) != 0)
+                            {
                                 m_Cap = reader.ReadUShort();
+                            }
                             else
+                            {
                                 m_Cap = 1000;
+                            }
 
                             if ((version & 0x4) != 0)
+                            {
                                 Lock = (SkillLock)reader.ReadByte();
+                            }
                         }
 
                         break;
@@ -247,7 +233,9 @@ namespace Server
                 var raceBonus = Owner.Owner.RacialSkillBonus;
 
                 if (raceBonus > value)
+                {
                     value = raceBonus;
+                }
 
                 return value;
             }
@@ -261,7 +249,10 @@ namespace Server
                 var baseValue = Base;
                 var inv = 100.0 - baseValue;
 
-                if (inv < 0.0) inv = 0.0;
+                if (inv < 0.0)
+                {
+                    inv = 0.0;
+                }
 
                 inv /= 100.0;
 
@@ -273,7 +264,9 @@ namespace Server
                 statsOffset *= inv;
 
                 if (statsOffset > statTotal)
+                {
                     statsOffset = statTotal;
+                }
 
                 var value = baseValue + statsOffset;
 
@@ -292,9 +285,13 @@ namespace Server
                         if (mod.Relative)
                         {
                             if (mod.ObeyCap)
+                            {
                                 bonusObey += mod.Value;
+                            }
                             else
+                            {
                                 bonusNotObey += mod.Value;
+                            }
                         }
                         else
                         {
@@ -312,7 +309,9 @@ namespace Server
                     value += bonusObey;
 
                     if (value > Cap)
+                    {
                         value = Cap;
+                    }
                 }
 
                 return value;
@@ -324,7 +323,9 @@ namespace Server
         public void SetLockNoRelay(SkillLock skillLock)
         {
             if (skillLock < SkillLock.Up || skillLock > SkillLock.Locked)
+            {
                 return;
+            }
 
             Lock = skillLock;
         }
@@ -340,24 +341,36 @@ namespace Server
                 var flags = 0x0;
 
                 if (m_Base != 0)
+                {
                     flags |= 0x1;
+                }
 
                 if (m_Cap != 1000)
+                {
                     flags |= 0x2;
+                }
 
                 if (Lock != SkillLock.Up)
+                {
                     flags |= 0x4;
+                }
 
                 writer.Write((byte)flags); // version
 
                 if (m_Base != 0)
+                {
                     writer.Write((short)m_Base);
+                }
 
                 if (m_Cap != 1000)
+                {
                     writer.Write((short)m_Cap);
+                }
 
                 if (Lock != SkillLock.Up)
+                {
                     writer.Write((byte)Lock);
+                }
             }
         }
 
@@ -415,69 +428,69 @@ namespace Server
 
         public static SkillInfo[] Table { get; set; } =
         {
-            new SkillInfo(0, "Alchemy", 0.0, 5.0, 5.0, "Alchemist", null, 0.0, 0.5, 0.5, 1.0),
-            new SkillInfo(1, "Anatomy", 0.0, 0.0, 0.0, "Biologist", null, 0.15, 0.15, 0.7, 1.0),
-            new SkillInfo(2, "Animal Lore", 0.0, 0.0, 0.0, "Naturalist", null, 0.0, 0.0, 1.0, 1.0),
-            new SkillInfo(3, "Item Identification", 0.0, 0.0, 0.0, "Merchant", null, 0.0, 0.0, 1.0, 1.0),
-            new SkillInfo(4, "Arms Lore", 0.0, 0.0, 0.0, "Weapon Master", null, 0.75, 0.15, 0.1, 1.0),
-            new SkillInfo(5, "Parrying", 7.5, 2.5, 0.0, "Duelist", null, 0.75, 0.25, 0.0, 1.0),
-            new SkillInfo(6, "Begging", 0.0, 0.0, 0.0, "Beggar", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(7, "Blacksmithy", 10.0, 0.0, 0.0, "Blacksmith", null, 1.0, 0.0, 0.0, 1.0),
-            new SkillInfo(8, "Bowcraft/Fletching", 6.0, 16.0, 0.0, "Bowyer", null, 0.6, 1.6, 0.0, 1.0),
-            new SkillInfo(9, "Peacemaking", 0.0, 0.0, 0.0, "Pacifier", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(10, "Camping", 20.0, 15.0, 15.0, "Explorer", null, 2.0, 1.5, 1.5, 1.0),
-            new SkillInfo(11, "Carpentry", 20.0, 5.0, 0.0, "Carpenter", null, 2.0, 0.5, 0.0, 1.0),
-            new SkillInfo(12, "Cartography", 0.0, 7.5, 7.5, "Cartographer", null, 0.0, 0.75, 0.75, 1.0),
-            new SkillInfo(13, "Cooking", 0.0, 20.0, 30.0, "Chef", null, 0.0, 2.0, 3.0, 1.0),
-            new SkillInfo(14, "Detecting Hidden", 0.0, 0.0, 0.0, "Scout", null, 0.0, 0.4, 0.6, 1.0),
-            new SkillInfo(15, "Discordance", 0.0, 2.5, 2.5, "Demoralizer", null, 0.0, 0.25, 0.25, 1.0),
-            new SkillInfo(16, "Evaluating Intelligence", 0.0, 0.0, 0.0, "Scholar", null, 0.0, 0.0, 1.0, 1.0),
-            new SkillInfo(17, "Healing", 6.0, 6.0, 8.0, "Healer", null, 0.6, 0.6, 0.8, 1.0),
-            new SkillInfo(18, "Fishing", 0.0, 0.0, 0.0, "Fisherman", null, 0.5, 0.5, 0.0, 1.0),
-            new SkillInfo(19, "Forensic Evaluation", 0.0, 0.0, 0.0, "Detective", null, 0.0, 0.2, 0.8, 1.0),
-            new SkillInfo(20, "Herding", 16.25, 6.25, 2.5, "Shepherd", null, 1.625, 0.625, 0.25, 1.0),
-            new SkillInfo(21, "Hiding", 0.0, 0.0, 0.0, "Shade", null, 0.0, 0.8, 0.2, 1.0),
-            new SkillInfo(22, "Provocation", 0.0, 4.5, 0.5, "Rouser", null, 0.0, 0.45, 0.05, 1.0),
-            new SkillInfo(23, "Inscription", 0.0, 2.0, 8.0, "Scribe", null, 0.0, 0.2, 0.8, 1.0),
-            new SkillInfo(24, "Lockpicking", 0.0, 25.0, 0.0, "Infiltrator", null, 0.0, 2.0, 0.0, 1.0),
-            new SkillInfo(25, "Magery", 0.0, 0.0, 15.0, "Mage", null, 0.0, 0.0, 1.5, 1.0),
-            new SkillInfo(26, "Resisting Spells", 0.0, 0.0, 0.0, "Warder", null, 0.25, 0.25, 0.5, 1.0),
-            new SkillInfo(27, "Tactics", 0.0, 0.0, 0.0, "Tactician", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(28, "Snooping", 0.0, 25.0, 0.0, "Spy", null, 0.0, 2.5, 0.0, 1.0),
-            new SkillInfo(29, "Musicianship", 0.0, 0.0, 0.0, "Bard", null, 0.0, 0.8, 0.2, 1.0),
-            new SkillInfo(30, "Poisoning", 0.0, 4.0, 16.0, "Assassin", null, 0.0, 0.4, 1.6, 1.0),
-            new SkillInfo(31, "Archery", 2.5, 7.5, 0.0, "Archer", null, 0.25, 0.75, 0.0, 1.0),
-            new SkillInfo(32, "Spirit Speak", 0.0, 0.0, 0.0, "Medium", null, 0.0, 0.0, 1.0, 1.0),
-            new SkillInfo(33, "Stealing", 0.0, 10.0, 0.0, "Pickpocket", null, 0.0, 1.0, 0.0, 1.0),
-            new SkillInfo(34, "Tailoring", 3.75, 16.25, 5.0, "Tailor", null, 0.38, 1.63, 0.5, 1.0),
-            new SkillInfo(35, "Animal Taming", 14.0, 2.0, 4.0, "Tamer", null, 1.4, 0.2, 0.4, 1.0),
-            new SkillInfo(36, "Taste Identification", 0.0, 0.0, 0.0, "Praegustator", null, 0.2, 0.0, 0.8, 1.0),
-            new SkillInfo(37, "Tinkering", 5.0, 2.0, 3.0, "Tinker", null, 0.5, 0.2, 0.3, 1.0),
-            new SkillInfo(38, "Tracking", 0.0, 12.5, 12.5, "Ranger", null, 0.0, 1.25, 1.25, 1.0),
-            new SkillInfo(39, "Veterinary", 8.0, 4.0, 8.0, "Veterinarian", null, 0.8, 0.4, 0.8, 1.0),
-            new SkillInfo(40, "Swordsmanship", 7.5, 2.5, 0.0, "Swordsman", null, 0.75, 0.25, 0.0, 1.0),
-            new SkillInfo(41, "Mace Fighting", 9.0, 1.0, 0.0, "Armsman", null, 0.9, 0.1, 0.0, 1.0),
-            new SkillInfo(42, "Fencing", 4.5, 5.5, 0.0, "Fencer", null, 0.45, 0.55, 0.0, 1.0),
-            new SkillInfo(43, "Wrestling", 9.0, 1.0, 0.0, "Wrestler", null, 0.9, 0.1, 0.0, 1.0),
-            new SkillInfo(44, "Lumberjacking", 20.0, 0.0, 0.0, "Lumberjack", null, 2.0, 0.0, 0.0, 1.0),
-            new SkillInfo(45, "Mining", 20.0, 0.0, 0.0, "Miner", null, 2.0, 0.0, 0.0, 1.0),
-            new SkillInfo(46, "Meditation", 0.0, 0.0, 0.0, "Stoic", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(47, "Stealth", 0.0, 0.0, 0.0, "Rogue", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(48, "Remove Trap", 0.0, 0.0, 0.0, "Trap Specialist", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(49, "Necromancy", 0.0, 0.0, 0.0, "Necromancer", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(50, "Focus", 0.0, 0.0, 0.0, "Driven", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(51, "Chivalry", 0.0, 0.0, 0.0, "Paladin", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(52, "Bushido", 0.0, 0.0, 0.0, "Samurai", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(53, "Ninjitsu", 0.0, 0.0, 0.0, "Ninja", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(54, "Spellweaving", 0.0, 0.0, 0.0, "Arcanist", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(55, "Mysticism", 0.0, 0.0, 0.0, "Mystic", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(56, "Imbuing", 0.0, 0.0, 0.0, "Artificer", null, 0.0, 0.0, 0.0, 1.0),
-            new SkillInfo(57, "Throwing", 0.0, 0.0, 0.0, "Bladeweaver", null, 0.0, 0.0, 0.0, 1.0)
+            new(0, "Alchemy", 0.0, 5.0, 5.0, "Alchemist", null, 0.0, 0.5, 0.5, 1.0),
+            new(1, "Anatomy", 0.0, 0.0, 0.0, "Biologist", null, 0.15, 0.15, 0.7, 1.0),
+            new(2, "Animal Lore", 0.0, 0.0, 0.0, "Naturalist", null, 0.0, 0.0, 1.0, 1.0),
+            new(3, "Item Identification", 0.0, 0.0, 0.0, "Merchant", null, 0.0, 0.0, 1.0, 1.0),
+            new(4, "Arms Lore", 0.0, 0.0, 0.0, "Weapon Master", null, 0.75, 0.15, 0.1, 1.0),
+            new(5, "Parrying", 7.5, 2.5, 0.0, "Duelist", null, 0.75, 0.25, 0.0, 1.0),
+            new(6, "Begging", 0.0, 0.0, 0.0, "Beggar", null, 0.0, 0.0, 0.0, 1.0),
+            new(7, "Blacksmithy", 10.0, 0.0, 0.0, "Blacksmith", null, 1.0, 0.0, 0.0, 1.0),
+            new(8, "Bowcraft/Fletching", 6.0, 16.0, 0.0, "Bowyer", null, 0.6, 1.6, 0.0, 1.0),
+            new(9, "Peacemaking", 0.0, 0.0, 0.0, "Pacifier", null, 0.0, 0.0, 0.0, 1.0),
+            new(10, "Camping", 20.0, 15.0, 15.0, "Explorer", null, 2.0, 1.5, 1.5, 1.0),
+            new(11, "Carpentry", 20.0, 5.0, 0.0, "Carpenter", null, 2.0, 0.5, 0.0, 1.0),
+            new(12, "Cartography", 0.0, 7.5, 7.5, "Cartographer", null, 0.0, 0.75, 0.75, 1.0),
+            new(13, "Cooking", 0.0, 20.0, 30.0, "Chef", null, 0.0, 2.0, 3.0, 1.0),
+            new(14, "Detecting Hidden", 0.0, 0.0, 0.0, "Scout", null, 0.0, 0.4, 0.6, 1.0),
+            new(15, "Discordance", 0.0, 2.5, 2.5, "Demoralizer", null, 0.0, 0.25, 0.25, 1.0),
+            new(16, "Evaluating Intelligence", 0.0, 0.0, 0.0, "Scholar", null, 0.0, 0.0, 1.0, 1.0),
+            new(17, "Healing", 6.0, 6.0, 8.0, "Healer", null, 0.6, 0.6, 0.8, 1.0),
+            new(18, "Fishing", 0.0, 0.0, 0.0, "Fisherman", null, 0.5, 0.5, 0.0, 1.0),
+            new(19, "Forensic Evaluation", 0.0, 0.0, 0.0, "Detective", null, 0.0, 0.2, 0.8, 1.0),
+            new(20, "Herding", 16.25, 6.25, 2.5, "Shepherd", null, 1.625, 0.625, 0.25, 1.0),
+            new(21, "Hiding", 0.0, 0.0, 0.0, "Shade", null, 0.0, 0.8, 0.2, 1.0),
+            new(22, "Provocation", 0.0, 4.5, 0.5, "Rouser", null, 0.0, 0.45, 0.05, 1.0),
+            new(23, "Inscription", 0.0, 2.0, 8.0, "Scribe", null, 0.0, 0.2, 0.8, 1.0),
+            new(24, "Lockpicking", 0.0, 25.0, 0.0, "Infiltrator", null, 0.0, 2.0, 0.0, 1.0),
+            new(25, "Magery", 0.0, 0.0, 15.0, "Mage", null, 0.0, 0.0, 1.5, 1.0),
+            new(26, "Resisting Spells", 0.0, 0.0, 0.0, "Warder", null, 0.25, 0.25, 0.5, 1.0),
+            new(27, "Tactics", 0.0, 0.0, 0.0, "Tactician", null, 0.0, 0.0, 0.0, 1.0),
+            new(28, "Snooping", 0.0, 25.0, 0.0, "Spy", null, 0.0, 2.5, 0.0, 1.0),
+            new(29, "Musicianship", 0.0, 0.0, 0.0, "Bard", null, 0.0, 0.8, 0.2, 1.0),
+            new(30, "Poisoning", 0.0, 4.0, 16.0, "Assassin", null, 0.0, 0.4, 1.6, 1.0),
+            new(31, "Archery", 2.5, 7.5, 0.0, "Archer", null, 0.25, 0.75, 0.0, 1.0),
+            new(32, "Spirit Speak", 0.0, 0.0, 0.0, "Medium", null, 0.0, 0.0, 1.0, 1.0),
+            new(33, "Stealing", 0.0, 10.0, 0.0, "Pickpocket", null, 0.0, 1.0, 0.0, 1.0),
+            new(34, "Tailoring", 3.75, 16.25, 5.0, "Tailor", null, 0.38, 1.63, 0.5, 1.0),
+            new(35, "Animal Taming", 14.0, 2.0, 4.0, "Tamer", null, 1.4, 0.2, 0.4, 1.0),
+            new(36, "Taste Identification", 0.0, 0.0, 0.0, "Praegustator", null, 0.2, 0.0, 0.8, 1.0),
+            new(37, "Tinkering", 5.0, 2.0, 3.0, "Tinker", null, 0.5, 0.2, 0.3, 1.0),
+            new(38, "Tracking", 0.0, 12.5, 12.5, "Ranger", null, 0.0, 1.25, 1.25, 1.0),
+            new(39, "Veterinary", 8.0, 4.0, 8.0, "Veterinarian", null, 0.8, 0.4, 0.8, 1.0),
+            new(40, "Swordsmanship", 7.5, 2.5, 0.0, "Swordsman", null, 0.75, 0.25, 0.0, 1.0),
+            new(41, "Mace Fighting", 9.0, 1.0, 0.0, "Armsman", null, 0.9, 0.1, 0.0, 1.0),
+            new(42, "Fencing", 4.5, 5.5, 0.0, "Fencer", null, 0.45, 0.55, 0.0, 1.0),
+            new(43, "Wrestling", 9.0, 1.0, 0.0, "Wrestler", null, 0.9, 0.1, 0.0, 1.0),
+            new(44, "Lumberjacking", 20.0, 0.0, 0.0, "Lumberjack", null, 2.0, 0.0, 0.0, 1.0),
+            new(45, "Mining", 20.0, 0.0, 0.0, "Miner", null, 2.0, 0.0, 0.0, 1.0),
+            new(46, "Meditation", 0.0, 0.0, 0.0, "Stoic", null, 0.0, 0.0, 0.0, 1.0),
+            new(47, "Stealth", 0.0, 0.0, 0.0, "Rogue", null, 0.0, 0.0, 0.0, 1.0),
+            new(48, "Remove Trap", 0.0, 0.0, 0.0, "Trap Specialist", null, 0.0, 0.0, 0.0, 1.0),
+            new(49, "Necromancy", 0.0, 0.0, 0.0, "Necromancer", null, 0.0, 0.0, 0.0, 1.0),
+            new(50, "Focus", 0.0, 0.0, 0.0, "Driven", null, 0.0, 0.0, 0.0, 1.0),
+            new(51, "Chivalry", 0.0, 0.0, 0.0, "Paladin", null, 0.0, 0.0, 0.0, 1.0),
+            new(52, "Bushido", 0.0, 0.0, 0.0, "Samurai", null, 0.0, 0.0, 0.0, 1.0),
+            new(53, "Ninjitsu", 0.0, 0.0, 0.0, "Ninja", null, 0.0, 0.0, 0.0, 1.0),
+            new(54, "Spellweaving", 0.0, 0.0, 0.0, "Arcanist", null, 0.0, 0.0, 0.0, 1.0),
+            new(55, "Mysticism", 0.0, 0.0, 0.0, "Mystic", null, 0.0, 0.0, 0.0, 1.0),
+            new(56, "Imbuing", 0.0, 0.0, 0.0, "Artificer", null, 0.0, 0.0, 0.0, 1.0),
+            new(57, "Throwing", 0.0, 0.0, 0.0, "Bladeweaver", null, 0.0, 0.0, 0.0, 1.0)
         };
     }
 
     [PropertyObject]
-    public class Skills : IEnumerable<Skill>
+    public class Skills
     {
         private readonly Skill[] m_Skills;
         private Skill m_Highest;
@@ -490,9 +503,6 @@ namespace Server
             var info = SkillInfo.Table;
 
             m_Skills = new Skill[info.Length];
-
-            // for ( int i = 0; i < info.Length; ++i )
-            // m_Skills[i] = new Skill( this, info[i], 0, 1000, SkillLock.Up );
         }
 
         public Skills(Mobile owner, IGenericReader reader)
@@ -513,11 +523,15 @@ namespace Server
                 case 1:
                     {
                         if (version < 2)
+                        {
                             Cap = 7000;
+                        }
 
                         if (version < 3)
                             /*m_Total =*/
+                        {
                             reader.ReadInt();
+                        }
 
                         var info = SkillInfo.Table;
 
@@ -526,6 +540,7 @@ namespace Server
                         var count = reader.ReadInt();
 
                         for (var i = 0; i < count; ++i)
+                        {
                             if (i < info.Length)
                             {
                                 var sk = new Skill(this, info[i], reader);
@@ -541,6 +556,7 @@ namespace Server
                                 // Will be discarded
                                 _ = new Skill(this, null, reader);
                             }
+                        }
 
                         // for ( int i = count; i < info.Length; ++i )
                         // m_Skills[i] = new Skill( this, info[i], 0, 1000, SkillLock.Up );
@@ -572,12 +588,16 @@ namespace Server
             get
             {
                 if (skillID < 0 || skillID >= m_Skills.Length)
+                {
                     return null;
+                }
 
                 var sk = m_Skills[skillID];
 
                 if (sk == null)
+                {
                     m_Skills[skillID] = sk = new Skill(this, SkillInfo.Table[skillID], 0, 1000, SkillLock.Up);
+                }
 
                 return sk;
             }
@@ -596,7 +616,7 @@ namespace Server
                     {
                         var sk = m_Skills[i];
 
-                        if (sk != null && sk.BaseFixedPoint > value)
+                        if (sk?.BaseFixedPoint > value)
                         {
                             value = sk.BaseFixedPoint;
                             highest = sk;
@@ -610,189 +630,179 @@ namespace Server
             }
         }
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Alchemy => this[SkillName.Alchemy];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Anatomy => this[SkillName.Anatomy];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill AnimalLore => this[SkillName.AnimalLore];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill ItemID => this[SkillName.ItemID];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill ArmsLore => this[SkillName.ArmsLore];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Parry => this[SkillName.Parry];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Begging => this[SkillName.Begging];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Blacksmith => this[SkillName.Blacksmith];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Fletching => this[SkillName.Fletching];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Peacemaking => this[SkillName.Peacemaking];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Camping => this[SkillName.Camping];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Carpentry => this[SkillName.Carpentry];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Cartography => this[SkillName.Cartography];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Cooking => this[SkillName.Cooking];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill DetectHidden => this[SkillName.DetectHidden];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Discordance => this[SkillName.Discordance];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill EvalInt => this[SkillName.EvalInt];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Healing => this[SkillName.Healing];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Fishing => this[SkillName.Fishing];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Forensics => this[SkillName.Forensics];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Herding => this[SkillName.Herding];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Hiding => this[SkillName.Hiding];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Provocation => this[SkillName.Provocation];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Inscribe => this[SkillName.Inscribe];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Lockpicking => this[SkillName.Lockpicking];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Magery => this[SkillName.Magery];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill MagicResist => this[SkillName.MagicResist];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Tactics => this[SkillName.Tactics];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Snooping => this[SkillName.Snooping];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Musicianship => this[SkillName.Musicianship];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Poisoning => this[SkillName.Poisoning];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Archery => this[SkillName.Archery];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill SpiritSpeak => this[SkillName.SpiritSpeak];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Stealing => this[SkillName.Stealing];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Tailoring => this[SkillName.Tailoring];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill AnimalTaming => this[SkillName.AnimalTaming];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill TasteID => this[SkillName.TasteID];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Tinkering => this[SkillName.Tinkering];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Tracking => this[SkillName.Tracking];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Veterinary => this[SkillName.Veterinary];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Swords => this[SkillName.Swords];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Macing => this[SkillName.Macing];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Fencing => this[SkillName.Fencing];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Wrestling => this[SkillName.Wrestling];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Lumberjacking => this[SkillName.Lumberjacking];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Mining => this[SkillName.Mining];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Meditation => this[SkillName.Meditation];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Stealth => this[SkillName.Stealth];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill RemoveTrap => this[SkillName.RemoveTrap];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Necromancy => this[SkillName.Necromancy];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Focus => this[SkillName.Focus];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Chivalry => this[SkillName.Chivalry];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Bushido => this[SkillName.Bushido];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Ninjitsu => this[SkillName.Ninjitsu];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Spellweaving => this[SkillName.Spellweaving];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Mysticism => this[SkillName.Mysticism];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Imbuing => this[SkillName.Imbuing];
 
-        [CommandProperty(AccessLevel.Counselor)]
+        [CommandProperty(AccessLevel.Counselor, canModify: true)]
         public Skill Throwing => this[SkillName.Throwing];
-
-        public IEnumerator<Skill> GetEnumerator()
-        {
-            return m_Skills.Where(s => s != null).GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return m_Skills.Where(s => s != null).GetEnumerator();
-        }
 
         public override string ToString() => "...";
 
@@ -801,11 +811,19 @@ namespace Server
         public static bool UseSkill(Mobile from, int skillID)
         {
             if (!from.CheckAlive())
+            {
                 return false;
+            }
+
             if (!from.Region.OnSkillUse(from, skillID))
+            {
                 return false;
+            }
+
             if (!from.AllowSkillUse((SkillName)skillID))
+            {
                 return false;
+            }
 
             if (skillID >= 0 && skillID < SkillInfo.Table.Length)
             {
@@ -861,12 +879,57 @@ namespace Server
         public void OnSkillChange(Skill skill)
         {
             if (skill == m_Highest) // could be downgrading the skill, force a recalc
+            {
                 m_Highest = null;
-            else if (m_Highest != null && skill.BaseFixedPoint > m_Highest.BaseFixedPoint)
+            }
+            else if (skill.BaseFixedPoint > m_Highest?.BaseFixedPoint)
+            {
                 m_Highest = skill;
+            }
 
             Owner.OnSkillInvalidated(skill);
-            Owner.NetState?.Send(new SkillChange(skill));
+            Owner.NetState.SendSkillChange(skill);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public SkillsEnumerator GetEnumerator() => new(m_Skills);
+
+        public ref struct SkillsEnumerator
+        {
+            private readonly Skill[] _skills;
+            private int _index;
+            private Skill _current;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal SkillsEnumerator(Skill[] skills)
+            {
+                _skills = skills;
+                _index = 0;
+                _current = default;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                Skill[] localList = _skills;
+
+                while ((uint)_index < (uint)localList.Length)
+                {
+                    _current = _skills[_index++];
+                    if (_current != null)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public Skill Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _current;
+            }
         }
     }
 }

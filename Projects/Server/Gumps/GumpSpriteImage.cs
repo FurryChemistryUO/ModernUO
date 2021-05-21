@@ -1,10 +1,26 @@
-using Server.Network;
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpSpriteImage.cs                                              *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
+
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
     public class GumpSpriteImage : GumpEntry
     {
-        private static readonly byte[] m_LayoutName = Gump.StringToBuffer("picinpic");
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("picinpic");
 
         public GumpSpriteImage(int x, int y, int gumpID, int width, int height, int sx, int sy)
         {
@@ -30,19 +46,28 @@ namespace Server.Gumps
         public int SX { get; set; }
 
         public int SY { get; set; }
+        public override string Compile(OrderedHashSet<string> strings) =>
+            $"{{ picinpic {X} {Y} {GumpID} {Width} {Height} {SX} {SY} }}";
 
-        public override string Compile(NetState ns) => $"{{ picinpic {X} {Y} {GumpID} {Width} {Height} {SX} {SY} }}";
-
-        public override void AppendTo(NetState ns, IGumpWriter disp)
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
         {
-            disp.AppendLayout(m_LayoutName);
-            disp.AppendLayout(X);
-            disp.AppendLayout(Y);
-            disp.AppendLayout(GumpID);
-            disp.AppendLayout(Width);
-            disp.AppendLayout(Height);
-            disp.AppendLayout(SX);
-            disp.AppendLayout(SY);
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(LayoutName);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(GumpID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Width.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Height.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(SX.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(SY.ToString());
+            writer.Write((ushort)0x207D); // " }"
         }
     }
 }

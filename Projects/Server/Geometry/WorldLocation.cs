@@ -1,18 +1,13 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2020 - ModernUO Development Team                   *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
- * File: WorldLocation.cs - Created: 2020/05/31 - Updated: 2020/05/31    *
+ * File: WorldLocation.cs                                                *
  *                                                                       *
  * This program is free software: you can redistribute it and/or modify  *
  * it under the terms of the GNU General Public License as published by  *
  * the Free Software Foundation, either version 3 of the License, or     *
  * (at your option) any later version.                                   *
- *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
  *                                                                       *
  * You should have received a copy of the GNU General Public License     *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
@@ -30,7 +25,7 @@ namespace Server
         internal Point3D m_Loc;
         internal Map m_Map;
 
-        public static readonly WorldLocation Zero = new WorldLocation(0, 0, 0, Map.Internal);
+        public static readonly WorldLocation Zero = new(0, 0, 0, Map.Internal);
 
         [CommandProperty(AccessLevel.Counselor)]
         public Point3D Location
@@ -109,8 +104,7 @@ namespace Server
         public int CompareTo(WorldLocation other)
         {
             var locComparison = m_Loc.CompareTo(other.m_Loc);
-            if (locComparison != 0) return locComparison;
-            return Comparer<Map>.Default.Compare(m_Map, other.m_Map);
+            return locComparison != 0 ? locComparison : Comparer<Map>.Default.Compare(m_Map, other.m_Map);
         }
 
         public static implicit operator Point3D(WorldLocation worldLocation) => worldLocation.Location;
@@ -148,7 +142,7 @@ namespace Server
 
         public static WorldLocation Parse(string value)
         {
-            var start = value.IndexOf('(');
+            var start = value.IndexOfOrdinal('(');
             var end = value.IndexOf(',', start + 1);
 
             Utility.ToInt32(value.Substring(start + 1, end - (start + 1)).Trim(), out var x);

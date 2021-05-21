@@ -1,37 +1,17 @@
-/***************************************************************************
- *                                IAccount.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
 
 namespace Server.Accounting
 {
     public static class AccountGold
     {
-        public static bool Enabled = false;
+        public static bool Enabled { get; private set; }
 
         /// <summary>
         ///     This amount specifies the value at which point Gold turns to Platinum.
         ///     By default, when 1,000,000,000 Gold is accumulated, it will transform
         ///     into 1 Platinum.
         ///     !!! WARNING !!!
-        ///     The client is designed to perceive the currency threashold at 1,000,000,000
+        ///     The client is designed to perceive the currency threshold at 1,000,000,000
         ///     if you change this, it may cause unexpected results when using secure trading.
         /// </summary>
         public static int CurrencyThreshold = 1000000000;
@@ -40,13 +20,20 @@ namespace Server.Accounting
         ///     Enables or Disables automatic conversion of Gold and Checks to Bank Currency
         ///     when they are added to a bank box container.
         /// </summary>
-        public static bool ConvertOnBank = true;
+        public static bool ConvertOnBank { get; private set; }
 
         /// <summary>
         ///     Enables or Disables automatic conversion of Gold and Checks to Bank Currency
         ///     when they are added to a secure trade container.
         /// </summary>
-        public static bool ConvertOnTrade = false;
+        public static bool ConvertOnTrade { get; private set; }
+
+        public static void Configure()
+        {
+            Enabled = ServerConfiguration.GetSetting("accountGold.enable", Core.TOL);
+            ConvertOnBank = ServerConfiguration.GetSetting("accountGold.convertOnBank", true);
+            ConvertOnTrade = ServerConfiguration.GetSetting("accountGold.convertOnTrade", false);
+        }
     }
 
     public interface IGoldAccount
@@ -108,7 +95,7 @@ namespace Server.Accounting
         long GetTotalGold();
     }
 
-    public interface IAccount : IGoldAccount, IComparable<IAccount>
+    public interface IAccount : IGoldAccount, IComparable<IAccount>, ISerializable
     {
         string Username { get; set; }
         string Email { get; set; }

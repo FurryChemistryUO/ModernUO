@@ -1,24 +1,5 @@
-/***************************************************************************
- *                                BaseMulti.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Server.Items
 {
@@ -60,7 +41,10 @@ namespace Server.Items
                     int id = mcl.List[0].ItemId;
 
                     if (id < 0x4000)
+                    {
                         return 1020000 + id;
+                    }
+
                     return 1078872 + id;
                 }
 
@@ -111,8 +95,10 @@ namespace Server.Items
                    && mcl.Tiles[x][y].Length > 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(Mobile m) => m.Map == Map && Contains(m.X, m.Y);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(Item item) => item.Map == Map && Contains(item.X, item.Y);
 
         public override void Serialize(IGenericWriter writer)
@@ -129,8 +115,12 @@ namespace Server.Items
             var version = reader.ReadInt();
 
             if (version == 0)
+            {
                 if (ItemID >= 0x4000)
+                {
                     ItemID -= 0x4000;
+                }
+            }
         }
     }
 }

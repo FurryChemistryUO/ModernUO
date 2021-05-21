@@ -1,168 +1,190 @@
-/***************************************************************************
- *                                  Main.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
+ * Email: hi@modernuo.com                                                *
+ * File: Main.cs                                                         *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Server.Json;
+using Server.Logging;
 using Server.Network;
 
 namespace Server
 {
     public static class Core
     {
-        private static bool m_Crashed;
-        private static Thread timerThread;
-        private static string m_BaseDirectory;
-        private static string m_ExePath;
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(Core));
 
-        private static bool m_Profiling;
-        private static DateTime m_ProfileStart;
-        private static TimeSpan m_ProfileTime;
-        private static bool? m_IsRunningFromXUnit;
+        private static bool _crashed;
+        private static Thread _timerThread;
+        private static string _baseDirectory;
 
-        /*
-         * DateTime.Now and DateTime.UtcNow are based on actual system clock time.
-         * The resolution is acceptable but large clock jumps are possible and cause issues.
-         * GetTickCount and GetTickCount64 have poor resolution.
-         * Stopwatch.GetTimestamp() (QueryPerformanceCounter) is high resolution, but
-         * somewhat expensive to call because of its difference to DateTime.Now,
-         * which is why Stopwatch has been used to verify HRT before calling GetTimestamp(),
-         * enabling the usage of DateTime.UtcNow instead.
-         */
+        private static bool _profiling;
+        private static long _profileStart;
+        private static long _profileTime;
+#nullable enable
+        private static bool? _isRunningFromXUnit;
+#nullable restore
 
-        private static readonly double m_HighFrequency = 1000.0 / Stopwatch.Frequency;
-        private static readonly double m_LowFrequency = 1000.0 / TimeSpan.TicksPerSecond;
+        private static int _itemCount;
+        private static int _mobileCount;
+        private static EventLoopContext _eventLoopContext;
 
-        internal static ConsoleEventHandler m_ConsoleEventHandler;
+        private static readonly Type[] _serialTypeArray = { typeof(Serial) };
 
-        private static int m_CycleIndex = 1;
-        private static readonly float[] m_CyclesPerSecond = new float[100];
+        public static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        public static readonly bool IsDarwin = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+        public static readonly bool IsFreeBSD = RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD);
+        public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || IsFreeBSD;
+        public static readonly bool Unix = IsDarwin || IsFreeBSD || IsLinux;
 
-        private static readonly AutoResetEvent m_Signal = new AutoResetEvent(true);
+        private const string AssembliesConfiguration = "Data/assemblies.json";
 
-        private static int m_ItemCount, m_MobileCount;
-
-        private static readonly Type[] m_SerialTypeArray = { typeof(Serial) };
-
-        public static bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        public static bool IsDarwin = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-        public static bool IsFreeBSD = RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD);
-        public static bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || IsFreeBSD;
-        public static bool Unix = IsDarwin || IsFreeBSD || IsLinux;
-
-        private static readonly string assembliesConfiguration = "Configuration/assemblies.json";
-
-        public static bool IsRunningFromXUnit =>
-            m_IsRunningFromXUnit ??= AppDomain.CurrentDomain.GetAssemblies()
-                .Any(
-                    a => a.FullName?.ToLowerInvariant().StartsWith("xunit") ?? false
-                );
-
-        public static bool Profiling
-        {
-            get => m_Profiling;
-            set
-            {
-                if (m_Profiling == value)
-                    return;
-
-                m_Profiling = value;
-
-                if (m_ProfileStart > DateTime.MinValue)
-                    m_ProfileTime += DateTime.UtcNow - m_ProfileStart;
-
-                m_ProfileStart = m_Profiling ? DateTime.UtcNow : DateTime.MinValue;
-            }
-        }
-
-        public static TimeSpan ProfileTime
+#nullable enable
+        // TODO: Find a way to get rid of this
+        public static bool IsRunningFromXUnit
         {
             get
             {
-                if (m_ProfileStart > DateTime.MinValue)
-                    return m_ProfileTime + (DateTime.UtcNow - m_ProfileStart);
+                if (_isRunningFromXUnit != null)
+                {
+                    return _isRunningFromXUnit.Value;
+                }
 
-                return m_ProfileTime;
+                foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (a.FullName.InsensitiveStartsWith("xunit"))
+                    {
+                        _isRunningFromXUnit = true;
+                        return true;
+                    }
+                }
+
+                _isRunningFromXUnit = false;
+                return false;
+            }
+        }
+#nullable restore
+
+        public static bool Profiling
+        {
+            get => _profiling;
+            set
+            {
+                if (_profiling == value)
+                {
+                    return;
+                }
+
+                _profiling = value;
+
+                if (_profileStart > 0)
+                {
+                    _profileTime += Stopwatch.GetTimestamp() - _profileStart;
+                }
+
+                _profileStart = _profiling ? Stopwatch.GetTimestamp() : 0;
             }
         }
 
-        internal static bool HaltOnWarning { get; private set; }
+        public static TimeSpan ProfileTime =>
+            TimeSpan.FromTicks(_profileStart > 0 ? _profileTime + (Stopwatch.GetTimestamp() - _profileStart) : _profileTime);
 
         public static Assembly Assembly { get; set; }
 
-        public static Version Version => Assembly.GetName().Version;
+        // Assembly file version
+        public static Version Version => new(ThisAssembly.AssemblyFileVersion);
+
         public static Process Process { get; private set; }
 
         public static Thread Thread { get; private set; }
 
-        public static long TickCount => (long)Ticks;
+        [ThreadStatic]
+        private static long _tickCount;
 
-        public static double Ticks =>
-            Stopwatch.IsHighResolution
-                ? Stopwatch.GetTimestamp() * m_HighFrequency
-                : DateTime.UtcNow.Ticks * m_LowFrequency;
+        [ThreadStatic]
+        private static DateTime _now;
+
+        // For Unix Stopwatch.Frequency is normalized to 1ns
+        // We don't anticipate needing this for Windows/OSX
+        private static long _maxTickCountBeforePrecisionLoss = long.MaxValue / 1000L;
+        private static long _ticksPerMillisecond = Stopwatch.Frequency / 1000L;
+
+        public static long TickCount
+        {
+            get
+            {
+                if (_tickCount != 0)
+                {
+                    return _tickCount;
+                }
+
+                var timestamp = Stopwatch.GetTimestamp();
+                return timestamp > _maxTickCountBeforePrecisionLoss
+                    ? timestamp / _ticksPerMillisecond
+                    // No precision loss
+                    : 1000L * timestamp / Stopwatch.Frequency;
+            }
+            set => _tickCount = value;
+        }
+
+        public static DateTime Now
+        {
+            get => _now == DateTime.MinValue ? DateTime.UtcNow : _now;
+            set => _now = value;
+        }
 
         public static bool MultiProcessor { get; private set; }
 
         public static int ProcessorCount { get; private set; }
 
-        public static string ExePath => m_ExePath ??= Assembly.Location;
-
         public static string BaseDirectory
         {
             get
             {
-                if (m_BaseDirectory == null)
+                if (_baseDirectory == null)
+                {
                     try
                     {
-                        m_BaseDirectory = ExePath;
+                        _baseDirectory = Assembly.Location;
 
-                        if (m_BaseDirectory.Length > 0)
-                            m_BaseDirectory = Path.GetDirectoryName(m_BaseDirectory);
+                        if (_baseDirectory.Length > 0)
+                        {
+                            _baseDirectory = Path.GetDirectoryName(_baseDirectory);
+                        }
                     }
                     catch
                     {
-                        m_BaseDirectory = "";
+                        _baseDirectory = "";
                     }
+                }
 
-                return m_BaseDirectory;
+                return _baseDirectory;
             }
         }
 
-        public static bool Closing { get; private set; }
+        public static CancellationTokenSource ClosingTokenSource { get; } = new();
 
-        public static float CyclesPerSecond => m_CyclesPerSecond[(m_CycleIndex - 1) % m_CyclesPerSecond.Length];
-
-        public static float AverageCPS => m_CyclesPerSecond.Take(m_CycleIndex).Average();
+        public static bool Closing => ClosingTokenSource.IsCancellationRequested;
 
         public static string Arguments
         {
@@ -170,11 +192,10 @@ namespace Server
             {
                 var sb = new StringBuilder();
 
-                if (m_Profiling)
+                if (_profiling)
+                {
                     Utility.Separate(sb, "-profile", " ");
-
-                if (HaltOnWarning)
-                    Utility.Separate(sb, "-haltonwarning", " ");
+                }
 
                 return sb.ToString();
             }
@@ -184,8 +205,8 @@ namespace Server
 
         public static int GlobalMaxUpdateRange { get; set; } = 24;
 
-        public static int ScriptItems => m_ItemCount;
-        public static int ScriptMobiles => m_MobileCount;
+        public static int ScriptItems => _itemCount;
+        public static int ScriptMobiles => _mobileCount;
 
         public static Expansion Expansion { get; set; }
 
@@ -220,7 +241,9 @@ namespace Server
                 fullPath = Path.Combine(p, path);
 
                 if (File.Exists(fullPath))
+                {
                     break;
+                }
 
                 fullPath = null;
             }
@@ -232,7 +255,9 @@ namespace Server
                 Console.WriteLine("Make sure modernuo.json is properly configured");
                 Utility.PopColor();
                 if (throwNotFound)
+                {
                     throw new FileNotFoundException($"Data: {path} was not found");
+                }
             }
 
             return fullPath;
@@ -245,7 +270,7 @@ namespace Server
 
             if (e.IsTerminating)
             {
-                m_Crashed = true;
+                _crashed = true;
 
                 var close = false;
 
@@ -264,15 +289,6 @@ namespace Server
 
                 if (!close)
                 {
-                    try
-                    {
-                        // Close all listeners
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-
                     Console.WriteLine("This exception is fatal, press return to exit");
                     Console.ReadLine();
                 }
@@ -281,53 +297,75 @@ namespace Server
             }
         }
 
-        private static bool OnConsoleEvent(ConsoleEventType type)
-        {
-            if (World.Saving || type == ConsoleEventType.CTRL_LOGOFF_EVENT)
-                return true;
-
-            Kill(); // Kill -> HandleClosed will handle waiting for the completion of flushing to disk
-
-            return true;
-        }
-
         private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            HandleClosed();
+            if (!Closing)
+            {
+                HandleClosed();
+            }
+        }
+
+        private static void Console_CancelKeyPressed(object sender, ConsoleCancelEventArgs e)
+        {
+            var keypress = e.SpecialKey switch
+            {
+                ConsoleSpecialKey.ControlBreak => "CTRL+BREAK",
+                _ => "CTRL+C"
+            };
+
+            logger.Information($"Detected {keypress} pressed.");
+            e.Cancel = true;
+            Kill();
         }
 
         public static void Kill(bool restart = false)
         {
+            if (Closing)
+            {
+                return;
+            }
+
             HandleClosed();
 
             if (restart)
-                Process.Start(ExePath, Arguments);
+            {
+                if (IsWindows)
+                {
+                    Process.Start("dotnet", Assembly.Location);
+                }
+                else
+                {
+                    var process = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = "dotnet",
+                            Arguments = Assembly.Location,
+                            UseShellExecute = true
+                        }
+                    };
+
+                    process.Start();
+                }
+            }
 
             Process.Kill();
         }
 
         private static void HandleClosed()
         {
-            if (Closing)
-                return;
+            ClosingTokenSource.Cancel();
 
-            Closing = true;
-
-            Console.Write("Exiting...");
+            logger.Information("Shutting down");
 
             World.WaitForWriteCompletion();
 
-            if (!m_Crashed)
+            if (!_crashed)
+            {
                 EventSink.InvokeShutdown();
+            }
 
             Timer.TimerThread.Set();
-
-            Console.WriteLine("done");
-        }
-
-        public static void Set()
-        {
-            m_Signal.Set();
         }
 
         public static void Main(string[] args)
@@ -335,41 +373,61 @@ namespace Server
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
+            _eventLoopContext = new EventLoopContext();
+
+            SynchronizationContext.SetSynchronizationContext(_eventLoopContext);
+
             foreach (var a in args)
-                if (Insensitive.Equals(a, "-profile"))
+            {
+                if (a.InsensitiveEquals("-profile"))
+                {
                     Profiling = true;
-                else if (Insensitive.Equals(a, "-haltonwarning"))
-                    HaltOnWarning = true;
+                }
+            }
 
             Thread = Thread.CurrentThread;
             Process = Process.GetCurrentProcess();
             Assembly = Assembly.GetEntryAssembly();
 
             if (Assembly == null)
+            {
                 throw new Exception("Core: Assembly entry is missing.");
+            }
 
             if (Thread != null)
+            {
                 Thread.Name = "Core Thread";
+            }
 
             if (BaseDirectory.Length > 0)
+            {
                 Directory.SetCurrentDirectory(BaseDirectory);
-
-            var ver = Assembly.GetName().Version ?? new Version();
+            }
 
             Utility.PushColor(ConsoleColor.Green);
-            // Added to help future code support on forums, as a 'check' people can ask for to it see if they recompiled core or not
             Console.WriteLine(
                 "ModernUO - [https://github.com/modernuo/modernuo] Version {0}.{1}.{2}.{3}",
-                ver.Major,
-                ver.Minor,
-                ver.Build,
-                ver.Revision
+                Version.Major,
+                Version.Minor,
+                Version.Build,
+                Version.Revision
             );
-            Console.WriteLine("Core: Running on {0}\n", RuntimeInformation.FrameworkDescription);
             Utility.PopColor();
 
+            Utility.PushColor(ConsoleColor.DarkGray);
+            Console.WriteLine(@"Copyright 2019-2020 ModernUO Development Team
+                This program comes with ABSOLUTELY NO WARRANTY;
+                This is free software, and you are welcome to redistribute it under certain conditions.
+
+                You should have received a copy of the GNU General Public License
+                along with this program. If not, see <https://www.gnu.org/licenses/>.
+            ".TrimMultiline());
+            Utility.PopColor();
+
+            logger.Information($"Running on {RuntimeInformation.FrameworkDescription}");
+
             var ttObj = new Timer.TimerThread();
-            timerThread = new Thread(ttObj.TimerMain)
+            _timerThread = new Thread(ttObj.TimerMain)
             {
                 Name = "Timer Thread"
             };
@@ -377,95 +435,104 @@ namespace Server
             var s = Arguments;
 
             if (s.Length > 0)
-                Console.WriteLine("Core: Running with arguments: {0}", s);
+            {
+                logger.Information($"Running with arguments: {s}");
+            }
 
             ProcessorCount = Environment.ProcessorCount;
 
             if (ProcessorCount > 1)
-                MultiProcessor = true;
-
-            if (MultiProcessor)
-                Console.WriteLine("Core: Optimizing for {0} processor{1}", ProcessorCount, ProcessorCount == 1 ? "" : "s");
-
-            if (IsWindows)
             {
-                m_ConsoleEventHandler = OnConsoleEvent;
-                UnsafeNativeMethods.SetConsoleCtrlHandler(m_ConsoleEventHandler, true);
+                MultiProcessor = true;
             }
 
-            if (GCSettings.IsServerGC)
-                Console.WriteLine("Core: Server garbage collection mode enabled");
+            if (MultiProcessor)
+            {
+                logger.Information($"Optimizing for {ProcessorCount} processor{(ProcessorCount == 1 ? "" : "s")}");
+            }
 
-            Console.WriteLine(
-                "Core: High resolution timing ({0})",
-                Stopwatch.IsHighResolution ? "Supported" : "Unsupported"
-            );
+            Console.CancelKeyPress += Console_CancelKeyPressed;
+
+            if (GCSettings.IsServerGC)
+            {
+                logger.Information("Server garbage collection mode enabled");
+            }
+
+            logger.Information($"High resolution timing ({(Stopwatch.IsHighResolution ? "Supported" : "Unsupported")})");
 
             ServerConfiguration.Load();
 
+            var assemblyPath = Path.Join(BaseDirectory, AssembliesConfiguration);
+
             // Load UOContent.dll
-            var assemblyFiles = JsonConfig.Deserialize<List<string>>(
-                    Path.Join(BaseDirectory, assembliesConfiguration)
-                )
-                .Select(t => Path.Join(BaseDirectory, "Assemblies", t))
-                .ToArray();
+            var assemblyFiles = JsonConfig.Deserialize<List<string>>(assemblyPath)?.ToArray();
+            if (assemblyFiles == null)
+            {
+                throw new JsonException($"Failed to deserialize {assemblyPath}.");
+            }
+
+            for (var i = 0; i < assemblyFiles.Length; i++)
+            {
+                assemblyFiles[i] = Path.Join(BaseDirectory, "Assemblies", assemblyFiles[i]);
+            }
+
             AssemblyHandler.LoadScripts(assemblyFiles);
 
             VerifySerialization();
 
             AssemblyHandler.Invoke("Configure");
 
+            TileMatrixLoader.LoadTileMatrix();
+
             RegionLoader.LoadRegions();
             World.Load();
 
             AssemblyHandler.Invoke("Initialize");
 
-            timerThread.Start();
+            _timerThread.Start();
 
-            foreach (var m in Map.AllMaps)
-                m.Tiles.Force();
-
+            TcpServer.Start();
             EventSink.InvokeServerStarted();
-
-            // Start net socket server
-            var host = TcpServer.CreateWebHostBuilder().Build();
-            var life = host.Services.GetRequiredService<IHostApplicationLifetime>();
-            life.ApplicationStopping.Register(() => { Kill(); });
-
-            host.Run();
+            RunEventLoop();
         }
 
-        public static void RunEventLoop(IMessagePumpService messagePumpService)
+        public static void RunEventLoop()
         {
             try
             {
-                var last = TickCount;
-
-                const int sampleInterval = 100;
-                const float ticksPerSecond = 1000.0f * sampleInterval;
-
-                long sample = 0;
+                const int interval = 100;
+                int idleCount = 0;
 
                 while (!Closing)
                 {
-                    m_Signal.WaitOne();
+                    _tickCount = TickCount;
+                    _now = DateTime.UtcNow;
 
-                    Task.WaitAll(
-                        Task.Run(Mobile.ProcessDeltaQueue),
-                        Task.Run(Item.ProcessDeltaQueue)
-                    );
+                    var events = Mobile.ProcessDeltaQueue();
+                    events += Item.ProcessDeltaQueue();
+                    events += Timer.Slice();
 
-                    Timer.Slice();
-                    messagePumpService.DoWork();
+                    // Handle networking
+                    events += TcpServer.Slice();
+                    events += NetState.HandleAllReceives();
+                    events += NetState.Slice();
 
-                    NetState.ProcessDisposedQueue();
+                    // Execute captured post-await methods (like Timer.Pause)
+                    events += _eventLoopContext.ExecuteTasks();
 
-                    if (sample++ % sampleInterval != 0)
+                    _tickCount = 0;
+                    _now = DateTime.MinValue;
+
+                    if (events > 0)
+                    {
+                        idleCount = 0;
                         continue;
+                    }
 
-                    var now = TickCount;
-                    m_CyclesPerSecond[m_CycleIndex++ % m_CyclesPerSecond.Length] = ticksPerSecond / (now - last);
-                    last = now;
+                    if (++idleCount > interval)
+                    {
+                        Thread.Sleep(1);
+                    }
                 }
             }
             catch (Exception e)
@@ -476,88 +543,81 @@ namespace Server
 
         public static void VerifySerialization()
         {
-            m_ItemCount = 0;
-            m_MobileCount = 0;
+            _itemCount = 0;
+            _mobileCount = 0;
 
-            var ca = Assembly.GetCallingAssembly();
+            var callingAssembly = Assembly.GetCallingAssembly();
 
-            VerifySerialization(ca);
+            VerifySerialization(callingAssembly);
 
-            foreach (var a in AssemblyHandler.Assemblies)
-                if (a != ca)
-                    VerifySerialization(a);
+            foreach (var assembly in AssemblyHandler.Assemblies)
+            {
+                if (assembly != callingAssembly)
+                {
+                    VerifySerialization(assembly);
+                }
+            }
         }
 
-        private static void VerifyType(Type t)
+        private static void VerifyType(Type type)
         {
-            var isItem = t.IsSubclassOf(typeof(Item));
+            var isItem = type.IsSubclassOf(typeof(Item));
 
-            if (!isItem && !t.IsSubclassOf(typeof(Mobile))) return;
+            if (!isItem && !type.IsSubclassOf(typeof(Mobile)))
+            {
+                return;
+            }
 
             if (isItem)
-                Interlocked.Increment(ref m_ItemCount);
+            {
+                Interlocked.Increment(ref _itemCount);
+            }
             else
-                Interlocked.Increment(ref m_MobileCount);
+            {
+                Interlocked.Increment(ref _mobileCount);
+            }
 
             StringBuilder warningSb = null;
 
             try
             {
-                if (t.GetConstructor(m_SerialTypeArray) == null)
+                if (type.GetConstructor(_serialTypeArray) == null)
                 {
                     warningSb = new StringBuilder();
                     warningSb.AppendLine("       - No serialization constructor");
                 }
 
-                if (
-                    t.GetMethod(
-                        "Serialize",
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
-                    ) ==
-                    null)
+                const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic |
+                                                  BindingFlags.Instance | BindingFlags.DeclaredOnly;
+                if (type.GetMethod("Serialize", bindingFlags) == null)
                 {
                     warningSb ??= new StringBuilder();
                     warningSb.AppendLine("       - No Serialize() method");
                 }
 
-                if (t.GetMethod(
-                        "Deserialize",
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly
-                    ) ==
-                    null)
+                if (type.GetMethod("Deserialize", bindingFlags) == null)
                 {
                     warningSb ??= new StringBuilder();
                     warningSb.AppendLine("       - No Deserialize() method");
                 }
 
-                if (warningSb?.Length > 0) Console.WriteLine("Warning: {0}\n{1}", t, warningSb);
+                if (warningSb?.Length > 0)
+                {
+                    Console.WriteLine("Warning: {0}\n{1}", type, warningSb);
+                }
             }
             catch
             {
-                Console.WriteLine("Warning: Exception in serialization verification of type {0}", t);
+                Console.WriteLine("Warning: Exception in serialization verification of type {0}", type);
             }
         }
 
-        private static void VerifySerialization(Assembly a)
+        private static void VerifySerialization(Assembly assembly)
         {
-            if (a != null) Parallel.ForEach(a.GetTypes(), VerifyType);
-        }
-
-        internal enum ConsoleEventType
-        {
-            CTRL_C_EVENT,
-            CTRL_BREAK_EVENT,
-            CTRL_CLOSE_EVENT,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT
-        }
-
-        internal delegate bool ConsoleEventHandler(ConsoleEventType type);
-
-        internal class UnsafeNativeMethods
-        {
-            [DllImport("Kernel32")]
-            internal static extern bool SetConsoleCtrlHandler(ConsoleEventHandler callback, bool add);
+            if (assembly != null)
+            {
+                Parallel.ForEach(assembly.GetTypes(), VerifyType);
+            }
         }
     }
 }

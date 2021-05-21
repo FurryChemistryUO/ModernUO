@@ -1,39 +1,27 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2020 - ModernUO Development Team                   *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: IGenericReader.cs                                               *
- * Created: 2019/12/30 - Updated: 2020/01/18                             *
  *                                                                       *
  * This program is free software: you can redistribute it and/or modify  *
  * it under the terms of the GNU General Public License as published by  *
  * the Free Software Foundation, either version 3 of the License, or     *
  * (at your option) any later version.                                   *
  *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
- *                                                                       *
  * You should have received a copy of the GNU General Public License     *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  *************************************************************************/
 
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
-using Server.Guilds;
 
 namespace Server
 {
     public interface IGenericReader
     {
-        string ReadString();
-        DateTime ReadDateTime();
-        DateTimeOffset ReadDateTimeOffset();
-        TimeSpan ReadTimeSpan();
-        DateTime ReadDeltaTime();
-        decimal ReadDecimal();
+        string ReadString(bool intern = false);
         long ReadLong();
         ulong ReadULong();
         int ReadInt();
@@ -42,37 +30,72 @@ namespace Server
         ushort ReadUShort();
         double ReadDouble();
         float ReadFloat();
-        char ReadChar();
         byte ReadByte();
         sbyte ReadSByte();
         bool ReadBool();
-        int ReadEncodedInt();
-        IPAddress ReadIPAddress();
-        Point3D ReadPoint3D();
-        Point2D ReadPoint2D();
-        Rectangle2D ReadRect2D();
-        Rectangle3D ReadRect3D();
-        Map ReadMap();
-        IEntity ReadEntity();
-        Item ReadItem();
-        Mobile ReadMobile();
-        BaseGuild ReadGuild();
-        T ReadItem<T>() where T : Item;
-        T ReadMobile<T>() where T : Mobile;
-        T ReadGuild<T>() where T : BaseGuild;
-        List<Item> ReadStrongItemList();
-        List<T> ReadStrongItemList<T>() where T : Item;
-        List<Mobile> ReadStrongMobileList();
-        List<T> ReadStrongMobileList<T>() where T : Mobile;
-        List<BaseGuild> ReadStrongGuildList();
-        List<T> ReadStrongGuildList<T>() where T : BaseGuild;
-        HashSet<Item> ReadItemSet();
-        HashSet<T> ReadItemSet<T>() where T : Item;
-        HashSet<Mobile> ReadMobileSet();
-        HashSet<T> ReadMobileSet<T>() where T : Mobile;
-        HashSet<BaseGuild> ReadGuildSet();
-        HashSet<T> ReadGuildSet<T>() where T : BaseGuild;
-        Race ReadRace();
-        bool End();
+
+        DateTime ReadDateTime() => new(ReadLong(), DateTimeKind.Utc);
+        TimeSpan ReadTimeSpan() => new(ReadLong());
+        DateTime ReadDeltaTime() => new(ReadLong() + DateTime.UtcNow.Ticks, DateTimeKind.Utc);
+        decimal ReadDecimal() => new(stackalloc int[4] { ReadInt(), ReadInt(), ReadInt(), ReadInt() });
+        int ReadEncodedInt()
+        {
+            int v = 0, shift = 0;
+            byte b;
+
+            do
+            {
+                b = ReadByte();
+                v |= (b & 0x7F) << shift;
+                shift += 7;
+            }
+            while (b >= 0x80);
+
+            return v;
+        }
+        IPAddress ReadIPAddress()
+        {
+            byte length = ReadByte();
+            // Either 2 ushorts, or 8 ushorts
+            Span<byte> integer = stackalloc byte[length];
+            Read(integer);
+            return Utility.Intern(new IPAddress(integer));
+        }
+        Point3D ReadPoint3D() => new(ReadInt(), ReadInt(), ReadInt());
+        Point2D ReadPoint2D() => new(ReadInt(), ReadInt());
+        Rectangle2D ReadRect2D() => new(ReadPoint2D(), ReadPoint2D());
+        Rectangle3D ReadRect3D() => new(ReadPoint3D(), ReadPoint3D());
+        Map ReadMap() => Map.Maps[ReadByte()];
+        Race ReadRace() => Race.Races[ReadByte()];
+        int Read(Span<byte> buffer);
+        unsafe T ReadEnum<T>() where T : unmanaged, Enum
+        {
+            switch (ReadByte())
+            {
+                case 1:
+                    {
+                        var num = ReadByte();
+                        return *(T*)&num;
+                    }
+                case 2:
+                    {
+                        var num = ReadShort();
+                        return *(T*)&num;
+                    }
+                case 3:
+                    {
+                        var num = ReadEncodedInt();
+                        return *(T*)&num;
+                    }
+                case 4:
+                    {
+                        var num = ReadLong();
+                        return *(T*)&num;
+                    }
+            }
+
+            return default;
+        }
+        long Seek(long offset, SeekOrigin origin);
     }
 }

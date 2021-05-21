@@ -1,24 +1,5 @@
-/***************************************************************************
- *                                GumpEntry.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
@@ -42,7 +23,10 @@ namespace Server.Gumps
             }
         }
 
-        public abstract string Compile(NetState ns);
-        public abstract void AppendTo(NetState ns, IGumpWriter disp);
+        public abstract string Compile(OrderedHashSet<string> strings);
+
+        // TODO: Replace OrderedHashSet with InsertOnlyHashSet, a copy of HashSet that is ReadOnly compatible, but includes
+        // a public AddIfNotPresent function that returns the index of the element
+        public abstract void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches);
     }
 }

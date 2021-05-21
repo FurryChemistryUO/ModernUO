@@ -1,30 +1,10 @@
-/***************************************************************************
- *                               HuePicker.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using Server.Network;
 
 namespace Server.HuePickers
 {
     public class HuePicker
     {
-        private static int m_NextSerial = 1;
+        private static Serial m_NextSerial = 1;
 
         public HuePicker(int itemID)
         {
@@ -36,7 +16,7 @@ namespace Server.HuePickers
             ItemID = itemID;
         }
 
-        public int Serial { get; }
+        public Serial Serial { get; }
 
         public int ItemID { get; }
 
@@ -46,7 +26,7 @@ namespace Server.HuePickers
 
         public void SendTo(NetState state)
         {
-            state.Send(new DisplayHuePicker(this));
+            state.SendDisplayHuePicker(Serial, ItemID);
             state.AddHuePicker(this);
         }
     }

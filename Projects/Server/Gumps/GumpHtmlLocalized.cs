@@ -1,24 +1,20 @@
-/***************************************************************************
- *                            GumpHtmlLocalized.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpHtmlLocalized.cs                                            *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
@@ -31,9 +27,9 @@ namespace Server.Gumps
 
     public class GumpHtmlLocalized : GumpEntry
     {
-        private static readonly byte[] m_LayoutNamePlain = Gump.StringToBuffer("xmfhtmlgump");
-        private static readonly byte[] m_LayoutNameColor = Gump.StringToBuffer("xmfhtmlgumpcolor");
-        private static readonly byte[] m_LayoutNameArgs = Gump.StringToBuffer("xmfhtmltok");
+        public static readonly byte[] LayoutNamePlain = Gump.StringToBuffer("xmfhtmlgump");
+        public static readonly byte[] LayoutNameColor = Gump.StringToBuffer("xmfhtmlgumpcolor");
+        public static readonly byte[] LayoutNameArgs = Gump.StringToBuffer("xmfhtmltok");
 
         public GumpHtmlLocalized(
             int x, int y, int width, int height, int number,
@@ -108,9 +104,8 @@ namespace Server.Gumps
 
         public GumpHtmlLocalizedType Type { get; set; }
 
-        public override string Compile(NetState ns)
-        {
-            return Type switch
+        public override string Compile(OrderedHashSet<string> strings) =>
+            Type switch
             {
                 GumpHtmlLocalizedType.Plain =>
                     $"{{ xmfhtmlgump {X} {Y} {Width} {Height} {Number} {(Background ? 1 : 0)} {(Scrollbar ? 1 : 0)} }}",
@@ -119,60 +114,84 @@ namespace Server.Gumps
                 _ =>
                     $"{{ xmfhtmltok {X} {Y} {Width} {Height} {(Background ? 1 : 0)} {(Scrollbar ? 1 : 0)} {Color} {Number} @{Args}@ }}"
             };
-        }
 
-        public override void AppendTo(NetState ns, IGumpWriter disp)
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
         {
+            writer.Write((ushort)0x7B20); // "{ "
+
             switch (Type)
             {
                 case GumpHtmlLocalizedType.Plain:
                     {
-                        disp.AppendLayout(m_LayoutNamePlain);
-
-                        disp.AppendLayout(X);
-                        disp.AppendLayout(Y);
-                        disp.AppendLayout(Width);
-                        disp.AppendLayout(Height);
-                        disp.AppendLayout(Number);
-                        disp.AppendLayout(Background);
-                        disp.AppendLayout(Scrollbar);
+                        writer.Write(LayoutNamePlain);
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(X.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Y.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Width.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Height.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Number.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Background ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Scrollbar ? '1' : '0');
 
                         break;
                     }
-
                 case GumpHtmlLocalizedType.Color:
                     {
-                        disp.AppendLayout(m_LayoutNameColor);
-
-                        disp.AppendLayout(X);
-                        disp.AppendLayout(Y);
-                        disp.AppendLayout(Width);
-                        disp.AppendLayout(Height);
-                        disp.AppendLayout(Number);
-                        disp.AppendLayout(Background);
-                        disp.AppendLayout(Scrollbar);
-                        disp.AppendLayout(Color);
+                        writer.Write(LayoutNameColor);
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(X.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Y.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Width.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Height.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Number.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Background ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Scrollbar ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Color.ToString());
 
                         break;
                     }
-
                 case GumpHtmlLocalizedType.Args:
                     {
-                        disp.AppendLayout(m_LayoutNameArgs);
-
-                        disp.AppendLayout(X);
-                        disp.AppendLayout(Y);
-                        disp.AppendLayout(Width);
-                        disp.AppendLayout(Height);
-                        disp.AppendLayout(Background);
-                        disp.AppendLayout(Scrollbar);
-                        disp.AppendLayout(Color);
-                        disp.AppendLayout(Number);
-                        disp.AppendLayout(Args);
+                        writer.Write(LayoutNameArgs);
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(X.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Y.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Width.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Height.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Background ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Scrollbar ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Color.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Number.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii('@');
+                        writer.WriteAscii(Args ?? "");
+                        writer.WriteAscii('@');
 
                         break;
                     }
             }
+
+            writer.Write((ushort)0x207D); // " }"
         }
     }
 }

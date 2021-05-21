@@ -1,23 +1,3 @@
-/***************************************************************************
- *                          ExpansionInfo.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
 
 namespace Server
@@ -114,7 +94,7 @@ namespace Server
         Unk3 = 0x00000800,
         SeventhCharacterSlot = 0x00001000,
         Unk4 = 0x00002000,
-        NewMovementSystem = 0x00004000,
+        NewMovementSystem = 0x00004000, // Doesn't seem to be used on OSI
         NewFeluccaAreas = 0x00008000,
 
         ExpansionNone = ContextMenus,
@@ -269,9 +249,7 @@ namespace Server
             FeatureFlags supportedFeatures,
             CharacterListFlags charListFlags,
             HousingFlags customHousingFlag
-        )
-            : this(id, name, supportedFeatures, charListFlags, customHousingFlag) =>
-            ClientFlags = clientFlags;
+        ) : this(id, name, supportedFeatures, charListFlags, customHousingFlag) => ClientFlags = clientFlags;
 
         public ExpansionInfo(
             int id,
@@ -280,9 +258,7 @@ namespace Server
             FeatureFlags supportedFeatures,
             CharacterListFlags charListFlags,
             HousingFlags customHousingFlag
-        )
-            : this(id, name, supportedFeatures, charListFlags, customHousingFlag) =>
-            RequiredClient = requiredClient;
+        ) : this(id, name, supportedFeatures, charListFlags, customHousingFlag) => RequiredClient = requiredClient;
 
         private ExpansionInfo(
             int id,
@@ -317,11 +293,13 @@ namespace Server
         {
             var info = GetInfo(ex);
 
-            if (info != null) return info.SupportedFeatures;
+            if (info != null)
+            {
+                return info.SupportedFeatures;
+            }
 
             return ex switch
             {
-                Expansion.None => FeatureFlags.ExpansionNone,
                 Expansion.T2A  => FeatureFlags.ExpansionT2A,
                 Expansion.UOR  => FeatureFlags.ExpansionUOR,
                 Expansion.UOTD => FeatureFlags.ExpansionUOTD,
@@ -343,7 +321,10 @@ namespace Server
         {
             var v = ex;
 
-            if (v < 0 || v >= Table.Length) v = 0;
+            if (v < 0 || v >= Table.Length)
+            {
+                v = 0;
+            }
 
             return Table[v];
         }

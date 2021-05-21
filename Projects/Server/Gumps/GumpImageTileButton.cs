@@ -1,35 +1,30 @@
-/***************************************************************************
- *                               GumpImageTileButton.cs
- *                            -------------------
- *   begin                : April 26, 2005
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpImageTileButton.cs                                          *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
     public class GumpImageTileButton : GumpEntry
     {
-        private static readonly byte[] m_LayoutName = Gump.StringToBuffer("buttontileart");
-        private static readonly byte[] m_LayoutTooltip = Gump.StringToBuffer(" }{ tooltip");
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("buttontileart");
+        public static readonly byte[] LayoutTooltip = Gump.StringToBuffer(" }{ tooltip");
 
-        private GumpButtonType m_Type;
-
-        // Note, on OSI, The tooltip supports ONLY clilocs as far as I can figure out, and the tooltip ONLY works after the buttonTileArt (as far as I can tell from testing)
+        // Note, on OSI, the tooltip supports ONLY clilocs as far as I can figure out,
+        // and the tooltip ONLY works after the buttonTileArt (as far as I can tell from testing)
 
         public GumpImageTileButton(
             int x, int y, int normalID, int pressedID, int buttonID, GumpButtonType type, int param,
@@ -41,7 +36,7 @@ namespace Server.Gumps
             NormalID = normalID;
             PressedID = pressedID;
             ButtonID = buttonID;
-            m_Type = type;
+            Type = type;
             Param = param;
 
             ItemID = itemID;
@@ -62,19 +57,7 @@ namespace Server.Gumps
 
         public int ButtonID { get; set; }
 
-        public GumpButtonType Type
-        {
-            get => m_Type;
-            set
-            {
-                if (m_Type != value)
-                {
-                    m_Type = value;
-
-                    var parent = Parent;
-                }
-            }
-        }
+        public GumpButtonType Type { get; set; }
 
         public int Param { get; set; }
 
@@ -88,36 +71,45 @@ namespace Server.Gumps
 
         public int LocalizedTooltip { get; set; }
 
-        public override string Compile(NetState ns)
-        {
-            if (LocalizedTooltip > 0)
-                return
-                    $"{{ buttontileart {X} {Y} {NormalID} {PressedID} {(int)m_Type} {Param} {ButtonID} {ItemID} {Hue} {Width} {Height} }}{{ tooltip {LocalizedTooltip} }}";
-            return
-                $"{{ buttontileart {X} {Y} {NormalID} {PressedID} {(int)m_Type} {Param} {ButtonID} {ItemID} {Hue} {Width} {Height} }}";
-        }
+        public override string Compile(OrderedHashSet<string> strings) =>
+            LocalizedTooltip > 0 ?
+                $"{{ buttontileart {X} {Y} {NormalID} {PressedID} {(int)Type} {Param} {ButtonID} {ItemID} {Hue} {Width} {Height} }}{{ tooltip {LocalizedTooltip} }}" :
+                $"{{ buttontileart {X} {Y} {NormalID} {PressedID} {(int)Type} {Param} {ButtonID} {ItemID} {Hue} {Width} {Height} }}";
 
-        public override void AppendTo(NetState ns, IGumpWriter disp)
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
         {
-            disp.AppendLayout(m_LayoutName);
-            disp.AppendLayout(X);
-            disp.AppendLayout(Y);
-            disp.AppendLayout(NormalID);
-            disp.AppendLayout(PressedID);
-            disp.AppendLayout((int)m_Type);
-            disp.AppendLayout(Param);
-            disp.AppendLayout(ButtonID);
-
-            disp.AppendLayout(ItemID);
-            disp.AppendLayout(Hue);
-            disp.AppendLayout(Width);
-            disp.AppendLayout(Height);
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(LayoutName);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(NormalID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(PressedID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(((int)Type).ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Param.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(ButtonID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(ItemID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Hue.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Width.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Height.ToString());
 
             if (LocalizedTooltip > 0)
             {
-                disp.AppendLayout(m_LayoutTooltip);
-                disp.AppendLayout(LocalizedTooltip);
+                writer.Write(LayoutTooltip);
+                writer.WriteAscii(LocalizedTooltip.ToString());
             }
+
+            writer.Write((ushort)0x207D); // " }"
         }
     }
 }

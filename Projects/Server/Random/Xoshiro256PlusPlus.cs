@@ -1,19 +1,13 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2020 - ModernUO Development Team                   *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: Xoshiro256PlusPlus.cs                                           *
- * Created: 2020/01/09 - Updated: 2020/07/25                             *
  *                                                                       *
  * This program is free software: you can redistribute it and/or modify  *
  * it under the terms of the GNU General Public License as published by  *
  * the Free Software Foundation, either version 3 of the License, or     *
  * (at your option) any later version.                                   *
- *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
  *                                                                       *
  * You should have received a copy of the GNU General Public License     *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
@@ -81,7 +75,10 @@ namespace Server.Random
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override unsafe void NextBytes(Span<byte> b)
         {
-            if (b.Length == 0) return;
+            if (b.Length == 0)
+            {
+                return;
+            }
 
             var s0 = _s0;
             var s1 = _s1;
@@ -156,6 +153,7 @@ namespace Server.Random
             ulong s3 = 0;
 
             for (var i = 0; i < jumps.Length; i++)
+            {
                 for (var b = 0; b < 64; b++)
                 {
                     if ((jumps[i] & (1ul << b)) != 0)
@@ -168,6 +166,7 @@ namespace Server.Random
 
                     NextULong();
                 }
+            }
 
             _s0 = s0;
             _s1 = s1;
@@ -208,7 +207,10 @@ namespace Server.Random
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FillArray(ulong[] arr)
         {
-            for (var i = 0; i < arr.Length; i++) arr[i] = Next();
+            for (var i = 0; i < arr.Length; i++)
+            {
+                arr[i] = Next();
+            }
         }
     }
 }

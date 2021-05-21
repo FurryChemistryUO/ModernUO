@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-10.15
+            name: MacOS 10.15
+          - os: macos-11.0
+            name: MacOS 11.0
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
+    - name: Setup .NET 5
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.202
+    - name: Build
+      run: ./publish.cmd
+    - name: Test
+      run: dotnet test --no-restore

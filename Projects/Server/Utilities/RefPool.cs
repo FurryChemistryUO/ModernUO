@@ -1,18 +1,13 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2020 - ModernUO Development Team                   *
+ * Copyright 2019-2020 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
- * File: RefPool.cs - Created: 2020/02/20 - Updated: 2020/07/30        *
+ * File: RefPool.cs                                                      *
  *                                                                       *
  * This program is free software: you can redistribute it and/or modify  *
  * it under the terms of the GNU General Public License as published by  *
  * the Free Software Foundation, either version 3 of the License, or     *
  * (at your option) any later version.                                   *
- *                                                                       *
- * This program is distributed in the hope that it will be useful,       *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- * GNU General Public License for more details.                          *
  *                                                                       *
  * You should have received a copy of the GNU General Public License     *
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
@@ -65,7 +60,7 @@ namespace Server.Utilities
         public const int DEFAULT_RESOURCE_RETENTION = 10;
         private readonly Generator m_Generator;
 
-        private readonly Stack<TRef> m_Resources = new Stack<TRef>();
+        private readonly Stack<TRef> m_Resources = new();
         private int m_MaxRefrenceRetention;
 
         /// <param name="generator">The generator function for creating new resources.</param>
@@ -76,14 +71,23 @@ namespace Server.Utilities
         public RefPool(Generator generator, int preGenerateCount = 0, int maxRefrenceRetention = DEFAULT_RESOURCE_RETENTION)
         {
             if (generator == null)
+            {
                 throw new ArgumentNullException(nameof(generator));
+            }
+
             if (preGenerateCount > maxRefrenceRetention)
+            {
                 throw new IndexOutOfRangeException(
                     $"{nameof(preGenerateCount)} greater than {nameof(maxRefrenceRetention)}"
                 );
+            }
+
             m_Generator = generator;
             m_MaxRefrenceRetention = maxRefrenceRetention;
-            while (--preGenerateCount >= 0) m_Resources.Push(generator(this));
+            while (--preGenerateCount >= 0)
+            {
+                m_Resources.Push(generator(this));
+            }
         }
 
         /// <summary>
@@ -95,7 +99,10 @@ namespace Server.Utilities
             set
             {
                 m_MaxRefrenceRetention = value;
-                while (m_Resources.Count > value) m_Resources.Pop();
+                while (m_Resources.Count > value)
+                {
+                    m_Resources.Pop();
+                }
             }
         }
 
@@ -114,7 +121,9 @@ namespace Server.Utilities
         public void Return(TRef queueRef)
         {
             if (m_Resources.Count < MaxRefrenceRetention)
+            {
                 m_Resources.Push(queueRef);
+            }
         }
     }
 

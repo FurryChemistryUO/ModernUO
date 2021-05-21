@@ -1,75 +1,57 @@
-using System.IO;
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using Server.Json;
 
 namespace Server
 {
-  public class ShrinkTable
-  {
-    public const int DefaultItemID = 0x1870; // Yellow virtue stone
-
-    private static int[] m_Table;
-
-    public static int Lookup(Mobile m) => Lookup(m.Body.BodyID, DefaultItemID);
-
-    public static int Lookup(int body) => Lookup(body, DefaultItemID);
-
-    public static int Lookup(Mobile m, int defaultValue) => Lookup(m.Body.BodyID, defaultValue);
-
-    public static int Lookup(int body, int defaultValue)
+    public static class ShrinkTable
     {
-      if (m_Table == null)
-        Load();
+        public const int DefaultItemID = 0x1870; // Yellow virtue stone
 
-      int val = 0;
+        private static int[] _shrinkTable; // body is the index, value is the item id
 
-      if (body >= 0 && body < m_Table!.Length)
-        val = m_Table[body];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Lookup(Mobile m, int defaultValue = DefaultItemID) => Lookup(m.Body.BodyID, defaultValue);
 
-      if (val == 0)
-        val = defaultValue;
-
-      return val;
-    }
-
-    private static void Load()
-    {
-      string path = Path.Combine(Core.BaseDirectory, "Data/shrink.cfg");
-
-      if (!File.Exists(path))
-      {
-        m_Table = System.Array.Empty<int>();
-        return;
-      }
-
-      m_Table = new int[1000];
-
-      using StreamReader ip = new StreamReader(path);
-      string line;
-
-      while ((line = ip.ReadLine()) != null)
-      {
-        line = line.Trim();
-
-        if (line.Length == 0 || line.StartsWith("#"))
-          continue;
-
-        try
+        public static int Lookup(int body, int defaultValue = DefaultItemID)
         {
-          string[] split = line.Split('\t');
+            _shrinkTable ??= Load();
+            if (body < 0 || body >= _shrinkTable.Length)
+            {
+                return defaultValue;
+            }
 
-          if (split.Length >= 2)
-          {
-            int body = Utility.ToInt32(split[0]);
-            int item = Utility.ToInt32(split[1]);
-
-            if (body >= 0 && body < m_Table.Length)
-              m_Table[body] = item;
-          }
+            var val = _shrinkTable[body];
+            return val == 0 ? defaultValue : val;
         }
-        catch
+
+        private static int[] Load()
         {
-          // ignored
+            var path = "Data/shrink.json";
+            var table = JsonConfig.Deserialize<Dictionary<string, string>>(path);
+            if (table == null)
+            {
+                throw new JsonException($"Failed to deserialize {path}.");
+            }
+
+            int length = 0;
+
+            foreach (var key in table.Keys)
+            {
+                var index = Utility.ToInt32(key);
+                length = Math.Max(length, index + 1);
+            }
+
+            var list = new int[length];
+            foreach (var (body, item) in table)
+            {
+                var index = Utility.ToInt32(body);
+                list[index] = Utility.ToInt32(item);
+            }
+
+            return list;
         }
-      }
     }
-  }
 }
