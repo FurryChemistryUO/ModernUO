@@ -1,6 +1,5 @@
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -23,14 +22,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(ItemReward.LargeBagOfTreasure);
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Kia"), new Point3D(87, 1640, 0), Map.Malas);
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Nythalia"), new Point3D(91, 1639, 0), Map.Malas);
-        }
     }
 
     public class CulinaryCrisis : MLQuest
@@ -50,13 +41,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new CollectObjective(5, typeof(CheeseWheel), 1022430)); // wheel of cheese
 
             Rewards.Add(ItemReward.BagOfTreasure);
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Emerillo"), new Point3D(90, 1639, 0), Map.Malas);
         }
     }
 
@@ -90,7 +74,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the student";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -134,7 +118,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the cook";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -186,7 +170,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the student";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);

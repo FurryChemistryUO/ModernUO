@@ -35,13 +35,14 @@ namespace Server
         void Write(byte value);
         void Write(sbyte value);
         void Write(bool value);
+        void Write(Serial serial);
 
         void Write(DateTime value)
         {
             var ticks = (value.Kind switch
             {
                 DateTimeKind.Local       => value.ToUniversalTime(),
-                DateTimeKind.Unspecified => value.ToLocalTime().ToUniversalTime(),
+                DateTimeKind.Unspecified  => value.ToLocalTime().ToUniversalTime(),
                 _                        => value
             }).Ticks;
 
@@ -49,10 +50,21 @@ namespace Server
         }
         void WriteDeltaTime(DateTime value)
         {
+            if (value == DateTime.MinValue)
+            {
+                Write(long.MinValue);
+                return;
+            }
+
+            if (value == DateTime.MaxValue)
+            {
+                Write(long.MaxValue);
+            }
+
             var ticks = (value.Kind switch
             {
                 DateTimeKind.Local       => value.ToUniversalTime(),
-                DateTimeKind.Unspecified => value.ToLocalTime().ToUniversalTime(),
+                DateTimeKind.Unspecified  => value.ToLocalTime().ToUniversalTime(),
                 _                        => value
             }).Ticks;
 
@@ -116,39 +128,40 @@ namespace Server
         void Write(Map value) => Write((byte)(value?.MapIndex ?? 0xFF));
         void Write(Race value) => Write((byte)(value?.RaceIndex ?? 0xFF));
         void Write(ReadOnlySpan<byte> bytes);
-        unsafe void Write<T>(T value) where T : unmanaged, Enum
+        unsafe void WriteEnum<T>(T value) where T : unmanaged, Enum
         {
-            var size = sizeof(T);
-
-            switch (size)
+            switch (sizeof(T))
             {
                 default: throw new ArgumentException($"Argument of type {typeof(T)} is not a normal enum");
                 case 1:
                     {
-                        Write((byte)1);
                         Write(*(byte*)&value);
                         break;
                     }
                 case 2:
                     {
-                        Write((byte)2);
                         Write(*(ushort*)&value);
                         break;
                     }
                 case 4:
                     {
-                        Write((byte)3);
                         WriteEncodedInt(*(int*)&value);
                         break;
                     }
                 case 8:
                     {
-                        Write((byte)4);
                         Write(*(ulong*)&value);
                         break;
                     }
             }
         }
+        void Write(Guid guid)
+        {
+            Span<byte> stack = stackalloc byte[16];
+            guid.TryWriteBytes(stack);
+            Write(stack);
+        }
+
         long Seek(long offset, SeekOrigin origin);
     }
 }

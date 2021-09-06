@@ -1,16 +1,13 @@
 namespace Server.Items
 {
+    [Serializable(0)]
     [Flippable(0x2B77, 0x316E)]
-    public class HidePauldrons : BaseArmor
+    public partial class HidePauldrons : BaseArmor
     {
         [Constructible]
         public HidePauldrons() : base(0x2B77) => Weight = 4.0;
 
-        public HidePauldrons(Serial serial) : base(serial)
-        {
-        }
-
-        public override Race RequiredRace => Race.Elf;
+        public override int RequiredRaces => Race.AllowElvesOnly;
 
         public override int BasePhysicalResistance => 3;
         public override int BaseFireResistance => 3;
@@ -30,19 +27,5 @@ namespace Server.Items
         public override CraftResource DefaultResource => CraftResource.RegularLeather;
 
         public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.Half;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.WriteEncodedInt(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadEncodedInt();
-        }
     }
 }

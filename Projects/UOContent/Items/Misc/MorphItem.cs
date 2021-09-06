@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace Server.Items
 {
     public class MorphItem : Item
@@ -80,7 +78,19 @@ namespace Server.Items
 
         public void Refresh()
         {
-            var found = GetMobilesInRange(CurrentRange).Any(mob => !mob.Hidden || mob.AccessLevel <= AccessLevel.Player);
+            var found = false;
+            var eable = GetMobilesInRange(CurrentRange);
+            foreach (var mob in eable)
+            {
+                if (!mob.Hidden || mob.AccessLevel <= AccessLevel.Player)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            eable.Free();
+
             ItemID = found ? ActiveItemID : InactiveItemID;
 
             Visible = ItemID != 0x1;
@@ -127,7 +137,7 @@ namespace Server.Items
                     }
             }
 
-            Timer.DelayCall(Refresh);
+            Timer.StartTimer(Refresh);
         }
     }
 }

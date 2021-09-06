@@ -144,7 +144,7 @@ namespace Server.Mobiles
         private readonly List<SBInfo> m_SBInfos = new();
         private BaseHouse m_House;
 
-        private Timer m_NewsTimer;
+        private Timer _newsTimer;
 
         public PlayerBarkeeper(Mobile owner, BaseHouse house) : base("the barkeeper")
         {
@@ -206,7 +206,7 @@ namespace Server.Mobiles
         {
             base.InitBody();
 
-            if (BodyValue == 0x340 || BodyValue == 0x402)
+            if (Body == 0x340 || Body == 0x402)
             {
                 Hue = 0;
             }
@@ -222,12 +222,13 @@ namespace Server.Mobiles
 
         public override bool HandlesOnSpeech(Mobile from) => InRange(from, 3) || base.HandlesOnSpeech(from);
 
-        private void ShoutNews_Callback(TownCrierEntry tce, int index)
+        private void ShoutNews_Callback(TownCrierEntry tce)
         {
-            if (index < 0 || index >= tce.Lines.Length)
+            var index = _newsTimer.Index;
+            if (index >= tce.Lines.Length)
             {
-                m_NewsTimer?.Stop();
-                m_NewsTimer = null;
+                _newsTimer.Stop();
+                _newsTimer = null;
             }
             else
             {
@@ -265,7 +266,7 @@ namespace Server.Mobiles
 
             if (!e.Handled && InRange(e.Mobile, 3))
             {
-                if (m_NewsTimer == null && e.HasKeyword(0x30)) // *news*
+                if (_newsTimer == null && e.HasKeyword(0x30)) // *news*
                 {
                     var tce = GlobalTownCrierEntryList.Instance.GetRandomEntry();
 
@@ -275,11 +276,11 @@ namespace Server.Mobiles
                     }
                     else
                     {
-                        var index = 0;
-                        m_NewsTimer = Timer.DelayCall(
+                        _newsTimer = Timer.DelayCall(
                             TimeSpan.FromSeconds(1.0),
                             TimeSpan.FromSeconds(3.0),
-                            () => ShoutNews_Callback(tce, index)
+                            tce.Lines.Length,
+                            () => ShoutNews_Callback(tce)
                         );
 
                         PublicOverheadMessage(MessageType.Regular, 0x3B2, 502978); // Some of the latest news!
@@ -607,7 +608,7 @@ namespace Server.Mobiles
 
             if (version < 1)
             {
-                Timer.DelayCall(UpgradeFromVersion0);
+                Timer.StartTimer(UpgradeFromVersion0);
             }
         }
 
@@ -800,7 +801,7 @@ namespace Server.Mobiles
                 {
                     --buttonID;
 
-                    if (buttonID >= 0 && buttonID < m_Entries.Length)
+                    if (buttonID < m_Entries.Length)
                     {
                         m_Barkeeper.EndChangeTitle(m_From, m_Entries[buttonID].m_Title, m_Entries[buttonID].m_Vendor);
                     }
@@ -1049,7 +1050,7 @@ namespace Server.Mobiles
             AddButton(130, 120, 4005, 4007, GetButtonID(5, 0));
             AddHtml(170, 120, 120, 20, "Title");
 
-            if (m_Barkeeper.BodyValue != 0x340 && m_Barkeeper.BodyValue != 0x402)
+            if (m_Barkeeper.Body != 0x340 && m_Barkeeper.Body != 0x402)
             {
                 AddButton(130, 200, 4005, 4007, GetButtonID(5, 1));
                 AddHtml(170, 200, 120, 20, "Appearance");

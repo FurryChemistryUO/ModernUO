@@ -1,7 +1,6 @@
 using System;
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -35,14 +34,6 @@ namespace Server.Engines.MLQuests.Definitions
         }
 
         public override Type NextQuest => typeof(Aemaeth2);
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 4, "Aurelia"), new Point3D(1459, 3795, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 4, "Aurelia"), new Point3D(1459, 3795, 0), Map.Felucca);
-        }
     }
 
     public class Aemaeth2 : MLQuest
@@ -74,14 +65,6 @@ namespace Server.Engines.MLQuests.Definitions
         }
 
         public override bool IsChainTriggered => true;
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 2, "SkeletonOfSzandor"), new Point3D(1277, 3731, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 2, "SkeletonOfSzandor"), new Point3D(1277, 3731, 0), Map.Felucca);
-        }
     }
 
     public class OddsAndEnds : MLQuest
@@ -130,7 +113,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the Architect's Daughter";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);

@@ -20,9 +20,10 @@ namespace Server.Items
         bool CouldFit(IPoint3D p, Map map);
     }
 
-    public abstract class BaseAddon : Item, IChoppable, IAddon
+    [Serializable(3, false)]
+    public abstract partial class BaseAddon : Item, IChoppable, IAddon
     {
-        private CraftResource m_Resource;
+        private CraftResource _resource;
 
         public BaseAddon() : base(1)
         {
@@ -32,19 +33,17 @@ namespace Server.Items
             Components = new List<AddonComponent>();
         }
 
-        public BaseAddon(Serial serial) : base(serial)
-        {
-        }
-
         public virtual bool RetainDeedHue => false;
 
         public virtual BaseAddonDeed Deed => null;
 
-        public List<AddonComponent> Components { get; private set; }
+        [SerializableField(0, setter: "private")]
+        private List<AddonComponent> _components;
 
         public virtual bool ShareHue => true;
 
-        [Hue, CommandProperty(AccessLevel.GameMaster)]
+        [Hue]
+        [CommandProperty(AccessLevel.GameMaster)]
         public override int Hue
         {
             get => base.Hue;
@@ -66,17 +65,19 @@ namespace Server.Items
         }
 
         [CommandProperty(AccessLevel.GameMaster)]
+        [SerializableField(1)]
         public CraftResource Resource
         {
-            get => m_Resource;
+            get => _resource;
             set
             {
-                if (m_Resource != value)
+                if (_resource != value)
                 {
-                    m_Resource = value;
-                    Hue = CraftResources.GetHue(m_Resource);
+                    _resource = value;
+                    Hue = CraftResources.GetHue(_resource);
 
                     InvalidateProperties();
+                    this.MarkDirty();
                 }
             }
         }
@@ -138,7 +139,7 @@ namespace Server.Items
                 return;
             }
 
-            Components.Add(c);
+            this.Add(Components, c);
 
             c.Addon = this;
             c.Offset = new Point3D(x, y, z);
@@ -161,7 +162,7 @@ namespace Server.Items
                     return AddonFitResult.Blocked;
                 }
 
-                if (!CheckHouse(from, p3D, map, c.ItemData.Height, ref house))
+                if (!CheckHouse(from, p3D, map, c.ItemData.Height, out house))
                 {
                     return AddonFitResult.NotInHouse;
                 }
@@ -203,7 +204,7 @@ namespace Server.Items
             return AddonFitResult.Valid;
         }
 
-        public static bool CheckHouse(Mobile from, Point3D p, Map map, int height, ref BaseHouse house)
+        public static bool CheckHouse(Mobile from, Point3D p, Map map, int height, out BaseHouse house)
         {
             house = BaseHouse.FindHouseAt(p, map, height);
 
@@ -277,34 +278,13 @@ namespace Server.Items
             }
         }
 
-        public override void Serialize(IGenericWriter writer)
+        private void Deserialize(IGenericReader reader, int version)
         {
-            base.Serialize(writer);
+            _components = reader.ReadEntityList<AddonComponent>();
 
-            writer.Write(1); // version
-
-            writer.Write(Components);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-
-            switch (version)
+            if (version == 2)
             {
-                case 1:
-                case 0:
-                    {
-                        Components = reader.ReadEntityList<AddonComponent>();
-                        break;
-                    }
-            }
-
-            if (version < 1 && Weight == 0)
-            {
-                Weight = -1;
+                _resource = (CraftResource)reader.ReadEncodedInt();
             }
         }
     }

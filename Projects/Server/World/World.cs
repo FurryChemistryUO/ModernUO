@@ -48,28 +48,30 @@ namespace Server
         private static string _tempSavePath; // Path to the temporary folder for the save
         private static string _savePath; // Path to "Saves" folder
 
+        public const bool DirtyTrackingEnabled = false;
         public const uint ItemOffset = 0x40000000;
         public const uint MaxItemSerial = 0x7FFFFFFF;
         public const uint MaxMobileSerial = ItemOffset - 1;
         private const uint _maxItems = MaxItemSerial - ItemOffset + 1;
 
         private static Serial _lastMobile = Serial.Zero;
-        private static Serial _lastItem = ItemOffset;
+        private static Serial _lastItem = (Serial)ItemOffset;
         private static Serial _lastGuild = Serial.Zero;
 
         public static Serial NewMobile
         {
             get
             {
-                uint last = _lastMobile;
+                var last = _lastMobile;
+                var maxMobile = (Serial)MaxMobileSerial;
 
                 for (int i = 0; i < MaxMobileSerial; i++)
                 {
                     last++;
 
-                    if (last > MaxMobileSerial)
+                    if (last > maxMobile)
                     {
-                        last = 1;
+                        last = (Serial)1;
                     }
 
                     if (FindMobile(last) == null)
@@ -87,7 +89,7 @@ namespace Server
         {
             get
             {
-                uint last = _lastItem;
+                var last = _lastItem;
 
                 for (int i = 0; i < _maxItems; i++)
                 {
@@ -95,7 +97,7 @@ namespace Server
 
                     if (last > MaxItemSerial)
                     {
-                        last = ItemOffset;
+                        last = (Serial)ItemOffset;
                     }
 
                     if (FindItem(last) == null)
@@ -418,7 +420,7 @@ namespace Server
 
             m_DiskWriteHandle.Set();
 
-            Timer.DelayCall(FinishWorldSave);
+            Timer.StartTimer(FinishWorldSave);
         }
 
         private static void ProcessDecay()
@@ -647,7 +649,7 @@ namespace Server
 
         public static T ReadEntity<T>(this IGenericReader reader) where T : class, ISerializable
         {
-            Serial serial = reader.ReadUInt();
+            Serial serial = reader.ReadSerial();
             var typeT = typeof(T);
 
             // Add to this list when creating new serializable types

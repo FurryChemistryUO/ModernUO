@@ -1,7 +1,6 @@
 using System;
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -24,32 +23,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new CollectObjective(10, typeof(Arrow), 1023902)); // arrow
 
             Rewards.Add(ItemReward.FletchingSatchel);
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Beotham"), new Point3D(6285, 114, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Beotham"), new Point3D(6285, 114, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Danoel"), new Point3D(6282, 116, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Danoel"), new Point3D(6282, 116, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Tallinin"), new Point3D(6279, 122, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Tallinin"), new Point3D(6279, 122, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Tiana"), new Point3D(6257, 112, -10), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Tiana"), new Point3D(6257, 112, -10), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "LorekeeperOolua"), new Point3D(6250, 124, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "LorekeeperOolua"), new Point3D(6250, 124, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "LorekeeperRollarn"), new Point3D(6244, 110, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "LorekeeperRollarn"), new Point3D(6244, 110, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Dallid"), new Point3D(6277, 104, -10), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Dallid"), new Point3D(6277, 104, -10), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Canir"), new Point3D(6274, 130, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Canir"), new Point3D(6274, 130, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Yellienir"), new Point3D(6257, 126, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Yellienir"), new Point3D(6257, 126, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "ElderOnallan"), new Point3D(6258, 108, -10), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "ElderOnallan"), new Point3D(6258, 108, -10), Map.Felucca);
         }
     }
 
@@ -793,7 +766,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the bowcrafter";
             Race = Race.Elf;
-            BodyValue = 0x25D;
+            Body = 0x25D;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -860,7 +833,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the metal weaver";
             Race = Race.Elf;
-            BodyValue = 0x25D;
+            Body = 0x25D;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -918,7 +891,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the cloth weaver";
             Race = Race.Elf;
-            BodyValue = 0x25E;
+            Body = 0x25E;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -979,7 +952,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the guard";
             Race = Race.Elf;
-            BodyValue = 0x25E;
+            Body = 0x25E;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -1051,7 +1024,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the keeper of tradition";
             Race = Race.Elf;
-            BodyValue = 0x25E;
+            Body = 0x25E;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -1108,7 +1081,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the keeper of tradition";
             Race = Race.Elf;
-            BodyValue = 0x25D;
+            Body = 0x25D;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -1176,7 +1149,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the cook";
             Race = Race.Elf;
-            BodyValue = 0x25D;
+            Body = 0x25D;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -1239,7 +1212,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the thaumaturgist";
             Race = Race.Elf;
-            BodyValue = 0x25E;
+            Body = 0x25E;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -1300,7 +1273,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the bark weaver";
             Race = Race.Elf;
-            BodyValue = 0x25E;
+            Body = 0x25E;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -1346,7 +1319,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the wise";
             Race = Race.Elf;
-            BodyValue = 0x25D;
+            Body = 0x25D;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);

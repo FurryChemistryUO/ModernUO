@@ -1,7 +1,5 @@
-﻿using System;
-using Server.Engines.MLQuests.Objectives;
+﻿using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -29,23 +27,6 @@ namespace Server.Engines.MLQuests.Definitions
         // {
         // instance.Player.SendLocalizedMessage( 1073775, "", 0x23 ); // Your quest is complete. Return for your reward.
         // }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(
-                new Spawner(1, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), 0, 5, "Lissbet"),
-                new Point3D(1568, 1040, -7),
-                Map.Ilshenar
-            );
-            PutSpawner(new Spawner(1, 5, 10, 0, 8, "GrandpaCharley"), new Point3D(1322, 1331, -14), Map.Ilshenar);
-            PutSpawner(
-                new Spawner(1, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30), 0, 3, "Sheep"),
-                new Point3D(1308, 1324, -14),
-                Map.Ilshenar
-            );
-        }
     }
 
     public class SomethingToWailAbout : MLQuest
@@ -62,13 +43,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new KillObjective(12, new[] { typeof(WailingBanshee) }, "wailing banshees"));
 
             Rewards.Add(ItemReward.BagOfTreasure);
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 4, "Jelrice"), new Point3D(1176, 1196, -25), Map.Ilshenar);
         }
     }
 
@@ -126,13 +100,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new KillObjective(1, new[] { typeof(Spite) }, "Spite"));
 
             Rewards.Add(ItemReward.Strongbox);
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 5, "Yorus"), new Point3D(1389, 423, -24), Map.Ilshenar);
         }
     }
 
@@ -264,7 +231,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the trader";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -314,7 +281,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the tinker";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);

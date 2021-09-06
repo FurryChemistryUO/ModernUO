@@ -16,7 +16,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Server.Text;
@@ -286,6 +285,9 @@ namespace Server
             FlushIfNeeded(1);
             _buffer[Index++] = *(byte*)&value; // up to 30% faster to dereference the raw value on the stack
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write(Serial serial) => Write(serial.Value);
 
         internal void InternalWriteString(string value)
         {

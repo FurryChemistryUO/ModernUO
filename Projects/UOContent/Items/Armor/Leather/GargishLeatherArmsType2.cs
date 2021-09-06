@@ -1,15 +1,13 @@
 namespace Server.Items
 {
+    [Serializable(0, false)]
     [TypeAlias("Server.Items.FemaleGargishLeatherArms")]
-    public class GargishLeatherArmsType2 : BaseArmor
+    public partial class GargishLeatherArmsType2 : BaseArmor
     {
         [Constructible]
         public GargishLeatherArmsType2() : base(0x302) => Weight = 4.0;
-        public GargishLeatherArmsType2(Serial serial) : base(serial)
-        {
-        }
 
-        public override Race RequiredRace => Race.Gargoyle;
+        public override int RequiredRaces => Race.AllowGargoylesOnly;
         public override int BasePhysicalResistance => 5;
         public override int BaseFireResistance => 6;
         public override int BaseColdResistance => 7;
@@ -27,16 +25,5 @@ namespace Server.Items
         public override CraftResource DefaultResource => CraftResource.RegularLeather;
 
         public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.All;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            int version = reader.ReadInt();
-        }
     }
 }

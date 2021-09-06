@@ -2,7 +2,6 @@ using System;
 using Server.Engines.MLQuests.Items;
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -34,13 +33,6 @@ namespace Server.Engines.MLQuests.Definitions
         }
 
         public override Type NextQuest => typeof(YouScratchMyBack);
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 4, "Aernya"), new Point3D(2095, 1380, -90), Map.Malas);
-        }
     }
 
     public class YouScratchMyBack : MLQuest
@@ -67,13 +59,6 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override Type NextQuest => typeof(FoolingAernya);
         public override bool IsChainTriggered => true;
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 4, "Gorrow"), new Point3D(993, 512, -50), Map.Malas);
-        }
     }
 
     public class FoolingAernya : MLQuest
@@ -173,13 +158,6 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override Type NextQuest => typeof(TuitionReimbursement);
         public override bool IsChainTriggered => true;
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "MasterGnosos"), new Point3D(87, 1639, 0), Map.Malas);
-        }
     }
 
     public class TuitionReimbursement : MLQuest
@@ -222,7 +200,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the Mistress of Admissions";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -268,7 +246,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the Mayor";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -325,7 +303,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the necromancer";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = 0x83E8;
             InitStats(100, 100, 25);

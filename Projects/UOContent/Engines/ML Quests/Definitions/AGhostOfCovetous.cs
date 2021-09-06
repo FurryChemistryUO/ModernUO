@@ -1,7 +1,6 @@
 using System;
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -34,14 +33,6 @@ namespace Server.Engines.MLQuests.Definitions
         }
 
         public override Type NextQuest => typeof(SaveHisDad);
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Ben"), new Point3D(2467, 402, 15), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Ben"), new Point3D(2467, 402, 15), Map.Felucca);
-        }
     }
 
     public class SaveHisDad : MLQuest
@@ -75,14 +66,6 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override Type NextQuest => typeof(AFathersGratitude);
         public override bool IsChainTriggered => true;
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Frederic"), new Point3D(2415, 887, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Frederic"), new Point3D(2415, 887, 0), Map.Felucca);
-        }
     }
 
     public class AFathersGratitude : MLQuest
@@ -108,16 +91,6 @@ namespace Server.Engines.MLQuests.Definitions
         }
 
         public override bool IsChainTriggered => true;
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Leon"), new Point3D(2918, 851, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Leon"), new Point3D(2918, 851, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Andros"), new Point3D(2531, 581, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 3, "Andros"), new Point3D(2531, 581, 0), Map.Felucca);
-        }
     }
 
     public class Ben : BaseCreature
@@ -127,7 +100,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Apprentice Necromancer";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83FD;
             HairItemID = 0x2048;
             HairHue = 0x463;
@@ -172,7 +145,7 @@ namespace Server.Engines.MLQuests.Definitions
         public Frederic()
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
-            BodyValue = 0x1A;
+            Body = 0x1A;
             Hue = 0x455;
             Frozen = true;
 
@@ -210,7 +183,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the Alchemist";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -252,7 +225,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Blacksmith";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x8409;
             FacialHairItemID = 0x2041;
             FacialHairHue = 0x45E;

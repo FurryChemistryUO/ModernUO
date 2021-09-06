@@ -5,13 +5,14 @@ using Xunit;
 
 namespace Server.Tests.Network
 {
+    [Collection("Sequential Tests")]
     public class PlayerPacketTests : IClassFixture<ServerFixture>
     {
         [Theory]
         [InlineData(StatLockType.Down, StatLockType.Up, StatLockType.Locked)]
         public void TestStatLockInfo(StatLockType str, StatLockType intel, StatLockType dex)
         {
-            var m = new Mobile(0x1);
+            var m = new Mobile((Serial)0x1);
             m.DefaultMobileInit();
             m.StrLock = str;
             m.IntLock = intel;
@@ -56,31 +57,14 @@ namespace Server.Tests.Network
         }
 
         [Theory]
-        [InlineData(0, true)]
-        [InlineData(0, false)]
-        [InlineData(100, true)]
-        [InlineData(1000, false)]
-        public void TestSpecialAbility(int abilityId, bool active)
-        {
-            var expected = new ToggleSpecialAbility(abilityId, active).Compile();
-
-            var ns = PacketTestUtilities.CreateTestNetState();
-            ns.SendToggleSpecialAbility(abilityId, active);
-
-            var result = ns.SendPipe.Reader.TryRead();
-            AssertThat.Equal(result.Buffer[0].AsSpan(0), expected);
-        }
-
-        [Theory]
         [InlineData(0x1000u, "This is a header", "This is a body", "This is a footer")]
         [InlineData(0x1000u, null, null, null)]
         public void TestDisplayProfile(uint serial, string header, string body, string footer)
         {
-            Serial m = serial;
-            var expected = new DisplayProfile(m, header, body, footer).Compile();
+            var expected = new DisplayProfile((Serial)serial, header, body, footer).Compile();
 
             var ns = PacketTestUtilities.CreateTestNetState();
-            ns.SendDisplayProfile(m, header, body, footer);
+            ns.SendDisplayProfile((Serial)serial, header, body, footer);
 
             var result = ns.SendPipe.Reader.TryRead();
             AssertThat.Equal(result.Buffer[0].AsSpan(0), expected);
@@ -145,7 +129,7 @@ namespace Server.Tests.Network
         [Fact]
         public void TestSkillsUpdate()
         {
-            var m = new Mobile(0x1);
+            var m = new Mobile((Serial)0x1);
             m.DefaultMobileInit();
 
             var skills = m.Skills;
@@ -181,7 +165,7 @@ namespace Server.Tests.Network
         [InlineData(SkillName.Begging, 100000, 1000)]
         public void TestSkillChange(SkillName skillName, int baseFixedPoint, int capFixedPoint)
         {
-            var m = new Mobile(0x1);
+            var m = new Mobile((Serial)0x1);
             m.DefaultMobileInit();
 
             var skill = m.Skills[skillName];
@@ -221,8 +205,8 @@ namespace Server.Tests.Network
             int itemId, int hue, int amount
         )
         {
-            var src = new Entity(srcSerial, new Point3D(srcX, srcY, srcZ), null);
-            var targ = new Entity(trgSerial, new Point3D(trgX, trgY, trgZ), null);
+            var src = new Entity((Serial)srcSerial, new Point3D(srcX, srcY, srcZ), null);
+            var targ = new Entity((Serial)trgSerial, new Point3D(trgX, trgY, trgZ), null);
 
             var expected = new DragEffect(src, targ, itemId, hue, amount).Compile();
 
@@ -257,10 +241,10 @@ namespace Server.Tests.Network
         [InlineData(0x1024u, "Test Title", true, false)]
         public void TestDisplayPaperdoll(uint m, string title, bool warmode, bool canLift)
         {
-            var expected = new DisplayPaperdoll(m, title, warmode, canLift).Compile();
+            var expected = new DisplayPaperdoll((Serial)m, title, warmode, canLift).Compile();
 
             var ns = PacketTestUtilities.CreateTestNetState();
-            ns.SendDisplayPaperdoll(m, title, warmode, canLift);
+            ns.SendDisplayPaperdoll((Serial)m, title, warmode, canLift);
 
             var result = ns.SendPipe.Reader.TryRead();
             AssertThat.Equal(result.Buffer[0].AsSpan(0), expected);
@@ -333,18 +317,6 @@ namespace Server.Tests.Network
 
             var ns = PacketTestUtilities.CreateTestNetState();
             ns.SendPingAck(ping);
-
-            var result = ns.SendPipe.Reader.TryRead();
-            AssertThat.Equal(result.Buffer[0].AsSpan(0), expected);
-        }
-
-        [Fact]
-        public void TestClearAbility()
-        {
-            var expected = new ClearWeaponAbility().Compile();
-
-            var ns = PacketTestUtilities.CreateTestNetState();
-            ns.SendClearWeaponAbility();
 
             var result = ns.SendPipe.Reader.TryRead();
             AssertThat.Equal(result.Buffer[0].AsSpan(0), expected);

@@ -1,16 +1,13 @@
 namespace Server.Items
 {
+    [Serializable(0, false)]
     [Flippable(0x2B76, 0x316D)]
-    public class HideGorget : BaseArmor
+    public partial class HideGorget : BaseArmor
     {
         [Constructible]
         public HideGorget() : base(0x2B76) => Weight = 3.0;
 
-        public HideGorget(Serial serial) : base(serial)
-        {
-        }
-
-        public override Race RequiredRace => Race.Elf;
+        public override int RequiredRaces => Race.AllowElvesOnly;
 
         public override int BasePhysicalResistance => 3;
         public override int BaseFireResistance => 3;
@@ -30,22 +27,5 @@ namespace Server.Items
         public override CraftResource DefaultResource => CraftResource.RegularLeather;
 
         public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.Half;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-
-            if (Weight == 2.0)
-            {
-                Weight = 1.0;
-            }
-        }
     }
 }

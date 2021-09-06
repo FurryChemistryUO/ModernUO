@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
 using Server.ContextMenus;
 using Server.Items;
@@ -115,22 +114,7 @@ namespace Server
                 var loc = reader.ReadPoint3D();
                 var worldLoc = reader.ReadPoint3D();
 
-                IEntity parent;
-
-                Serial serial = reader.ReadUInt();
-
-                if (serial.IsItem)
-                {
-                    parent = World.FindItem(serial);
-                }
-                else if (serial.IsMobile)
-                {
-                    parent = World.FindMobile(serial);
-                }
-                else
-                {
-                    parent = null;
-                }
+                IEntity parent = reader.ReadEntity<IEntity>();
 
                 return new BounceInfo(map, loc, worldLoc, parent);
             }
@@ -216,9 +200,6 @@ namespace Server
 
         private ObjectPropertyList m_PropertyList;
 
-        // Position in the save buffer where serialization ends. -1 if dirty
-        private int _savePosition = -1;
-
         [Constructible]
         public Item(int itemID = 0)
         {
@@ -234,27 +215,22 @@ namespace Server
             SetLastMoved();
 
             World.AddEntity(this);
-
-            var ourType = GetType();
-            TypeRef = World.ItemTypes.IndexOf(ourType);
-
-            if (TypeRef == -1)
-            {
-                World.ItemTypes.Add(ourType);
-                TypeRef = World.ItemTypes.Count - 1;
-            }
+            SetTypeRef(GetType());
         }
 
         public Item(Serial serial)
         {
             Serial = serial;
+            SetTypeRef(GetType());
+        }
 
-            var ourType = GetType();
-            TypeRef = World.ItemTypes.IndexOf(ourType);
+        public void SetTypeRef(Type type)
+        {
+            TypeRef = World.ItemTypes.IndexOf(type);
 
             if (TypeRef == -1)
             {
-                World.ItemTypes.Add(ourType);
+                World.ItemTypes.Add(type);
                 TypeRef = World.ItemTypes.Count - 1;
             }
         }
@@ -432,6 +408,8 @@ namespace Server
 
         public virtual bool IsVirtualItem => false;
 
+        public virtual bool CanSeeStaffOnly(Mobile from) => from.AccessLevel > AccessLevel.Counselor;
+
         public virtual int LabelNumber
         {
             get
@@ -510,7 +488,8 @@ namespace Server
         [CommandProperty(AccessLevel.Counselor, AccessLevel.GameMaster)]
         public int PileWeight => (int)Math.Ceiling(Weight * Amount);
 
-        [Hue, CommandProperty(AccessLevel.GameMaster)]
+        [Hue]
+        [CommandProperty(AccessLevel.GameMaster)]
         public virtual int Hue
         {
             get => m_Hue;
@@ -792,22 +771,17 @@ namespace Server
             AddNameProperties(list);
         }
 
+        long ISerializable.SavePosition { get; set; } = -1;
+
         BufferWriter ISerializable.SaveBuffer { get; set; }
 
         [CommandProperty(AccessLevel.Counselor)]
         public Serial Serial { get; }
 
-        public int TypeRef { get; }
+        public int TypeRef { get; private set; }
 
         public virtual void Serialize(IGenericWriter writer)
         {
-            // The item is clean, so let's skip
-            if (_savePosition > -1)
-            {
-                writer.Seek(_savePosition, SeekOrigin.Begin);
-                return;
-            }
-
             writer.Write(9); // version
 
             var flags = SaveFlag.None;
@@ -1075,6 +1049,11 @@ namespace Server
             {
                 writer.WriteEncodedInt(info.m_SavedFlags);
             }
+        }
+
+        public void MoveToWorld(WorldLocation worldLocation)
+        {
+            MoveToWorld(worldLocation.Location, worldLocation.Map);
         }
 
         /// <summary>
@@ -1620,23 +1599,9 @@ namespace Server
             set => Location = new Point3D(m_Location.m_X, m_Location.m_Y, value);
         }
 
-        public virtual bool InRange(Point2D p, int range) =>
-            p.m_X >= Location.m_X - range
-            && p.m_X <= Location.m_X + range
-            && p.m_Y >= Location.m_Y - range
-            && p.m_Y <= Location.m_Y + range;
+        public virtual bool InRange(Point2D p, int range) => Utility.InRange(p.X, p.Y, X, Y, range);
 
-        public virtual bool InRange(Point3D p, int range) =>
-            p.m_X >= Location.m_X - range
-            && p.m_X <= Location.m_X + range
-            && p.m_Y >= Location.m_Y - range
-            && p.m_Y <= Location.m_Y + range;
-
-        public virtual bool InRange(IPoint2D p, int range) =>
-            p.X >= Location.m_X - range
-            && p.X <= Location.m_X + range
-            && p.Y >= Location.m_Y - range
-            && p.Y <= Location.m_Y + range;
+        public virtual bool InRange(Point3D p, int range) => Utility.InRange(p.X, p.Y, X, Y, range);
 
         public ExpandFlag GetExpandFlags()
         {
@@ -2139,6 +2104,47 @@ namespace Server
 
         public virtual bool CheckConflictingLayer(Mobile m, Item item, Layer layer) => m_Layer == layer;
 
+        // Uses Race.RaceFlag
+        public virtual int RequiredRaces => Race.AllowAllRaces;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool CheckRace(Race race) => Race.IsAllowedRace(race, RequiredRaces);
+
+        public virtual bool CheckRace(Mobile from, bool message = true)
+        {
+            var race = from.Race;
+            var requiredRaces = RequiredRaces;
+
+            if (Race.IsAllowedRace(race, requiredRaces))
+            {
+                return true;
+            }
+
+            if (!message)
+            {
+                return false;
+            }
+
+            if (requiredRaces == Race.AllowGargoylesOnly)
+            {
+                from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1111707); // Only gargoyles can wear this.
+            }
+            else if (race == Race.Gargoyle)
+            {
+                from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1111708); // Gargoyles can't wear this.
+            }
+            else if (requiredRaces == Race.AllowElvesOnly)
+            {
+                from.SendLocalizedMessage(1072203); // Only Elves may use this.
+            }
+            else
+            {
+                from.SendMessage($"{race.PluralName} may not use this.");
+            }
+
+            return false;
+        }
+
         public virtual bool CanEquip(Mobile m) => m_Layer != Layer.Invalid && m.FindItemOnLayer(m_Layer) == null;
 
         public virtual void GetChildContextMenuEntries(Mobile from, List<ContextMenuEntry> list, Item item)
@@ -2346,18 +2352,12 @@ namespace Server
 
                 doubled = false;
 
-                if (m_Amount <= 1)
+                itemID = m_Amount switch
                 {
-                    itemID = coinBase;
-                }
-                else if (m_Amount <= 5)
-                {
-                    itemID = coinBase + 1;
-                }
-                else // m_Amount > 5
-                {
-                    itemID = coinBase + 2;
-                }
+                    <= 1 => coinBase,
+                    <= 5 => coinBase + 1,
+                    _    => coinBase + 2
+                };
             }
 
             var bounds = ItemBounds.Table[itemID & 0x3FFF];
@@ -2679,7 +2679,7 @@ namespace Server
 
                         if (GetSaveFlag(flags, SaveFlag.Parent))
                         {
-                            Serial parent = reader.ReadUInt();
+                            Serial parent = reader.ReadSerial();
 
                             if (parent.IsMobile)
                             {
@@ -2840,7 +2840,7 @@ namespace Server
 
                         if (GetSaveFlag(flags, SaveFlag.Parent))
                         {
-                            Serial parent = reader.ReadUInt();
+                            Serial parent = reader.ReadSerial();
 
                             if (parent.IsMobile)
                             {
@@ -2958,7 +2958,7 @@ namespace Server
                             AcquireCompactInfo().m_Name = name;
                         }
 
-                        Serial parent = reader.ReadUInt();
+                        Serial parent = reader.ReadSerial();
 
                         if (parent.IsMobile)
                         {
@@ -3041,7 +3041,7 @@ namespace Server
 
             if (HeldBy != null)
             {
-                Timer.DelayCall(FixHolding_Sandbox);
+                Timer.StartTimer(FixHolding_Sandbox);
             }
 
             // if (version < 9)
@@ -3567,8 +3567,7 @@ namespace Server
             var landTile = map.Tiles.GetLandTile(x, y);
             var landFlags = TileData.LandTable[landTile.ID & TileData.MaxLandValue].Flags;
 
-            int landZ = 0, landAvg = 0, landTop = 0;
-            map.GetAverageZ(x, y, ref landZ, ref landAvg, ref landTop);
+            map.GetAverageZ(x, y, out var landZ, out var landAvg, out _);
 
             if (!landTile.Ignored && (landFlags & TileFlag.Impassable) == 0)
             {

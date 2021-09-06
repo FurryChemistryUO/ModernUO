@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace Server.Mobiles
 {
     public class InterredGrizzle : BaseCreature
@@ -120,7 +118,10 @@ namespace Server.Mobiles
                 {
                     p = GetSpawnPosition(2);
 
-                    if (!Map.GetItemsInRange(p, 0).OfType<StainedOoze>().Any())
+                    var eable = Map.GetItemsInRange<StainedOoze>(p, 0);
+                    bool atLocation = eable.GetEnumerator().MoveNext();
+                    eable.Free();
+                    if (!atLocation)
                     {
                         break;
                     }

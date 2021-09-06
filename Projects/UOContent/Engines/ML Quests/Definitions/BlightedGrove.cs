@@ -1,7 +1,6 @@
 ﻿using System;
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -26,17 +25,6 @@ namespace Server.Engines.MLQuests.Definitions
         }
 
         public override Type NextQuest => typeof(ARockAndAHardPlace);
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 5, "Jamal"), new Point3D(559, 1651, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 5, "Jamal"), new Point3D(559, 1651, 0), Map.Trammel);
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 2, "Iosep"), new Point3D(1354, 3754, 0), Map.Felucca);
-            PutSpawner(new Spawner(1, 5, 10, 0, 2, "Iosep"), new Point3D(1354, 3754, 0), Map.Trammel);
-        }
     }
 
     public class ARockAndAHardPlace : MLQuest

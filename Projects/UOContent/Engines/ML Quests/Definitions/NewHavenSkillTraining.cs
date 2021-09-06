@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -28,13 +27,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077727, typeof(BulwarkLeggings))); // Bulwark Leggings
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Aelorn"), new Point3D(3527, 2516, 45), Map.Trammel);
-        }
     }
 
     public class TheRudimentsOfSelfDefense : MLQuest
@@ -58,13 +50,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Wrestling, 500, true, true));
 
             Rewards.Add(new ItemReward(1077614, typeof(GlovesOfSafeguarding))); // Gloves Of Safeguarding
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Dimethro"), new Point3D(3528, 2520, 25), Map.Trammel);
         }
     }
 
@@ -90,13 +75,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1078062, typeof(ChurchillsWarMace))); // Churchill's War Mace
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Churchill"), new Point3D(3531, 2531, 20), Map.Trammel);
-        }
     }
 
     public class SwiftAsAnArrow : MLQuest
@@ -119,13 +97,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Archery, 500, true, true));
 
             Rewards.Add(new ItemReward(1078210, typeof(Heartseeker))); // Heartseeker
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Robyn"), new Point3D(3535, 2531, 20), Map.Trammel);
         }
     }
 
@@ -151,13 +122,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1078195, typeof(RecarosRiposte))); // Recaro's Riposte
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Recaro"), new Point3D(3536, 2534, 20), Map.Trammel);
-        }
     }
 
     public class TheArtOfWar : MLQuest
@@ -181,13 +145,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Tactics, 500, true, true));
 
             Rewards.Add(new ItemReward(1077675, typeof(ArmsOfArmstrong))); // Arms of Armstrong
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "AldenArmstrong"), new Point3D(3535, 2538, 20), Map.Trammel);
         }
     }
 
@@ -213,13 +170,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077666, typeof(JocklesQuicksword))); // Jockles' Quicksword
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Jockles"), new Point3D(3535, 2544, 20), Map.Trammel);
-        }
     }
 
     public class ThouAndThineShield : MLQuest
@@ -243,13 +193,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Parry, 500, true, true));
 
             Rewards.Add(new ItemReward(1077694, typeof(EscutcheonDeAriadne))); // Escutcheon de Ariadne
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "TylAriadne"), new Point3D(3525, 2556, 20), Map.Trammel);
         }
     }
 
@@ -275,13 +218,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077627, typeof(BraceletOfResilience))); // Bracelet of Resilience
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Alefian"), new Point3D(3473, 2497, 72), Map.Trammel);
-        }
     }
 
     public class StoppingTheWorld : MLQuest
@@ -304,13 +240,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Meditation, 500, true, true));
 
             Rewards.Add(new ItemReward(1077602, typeof(PhilosophersHat))); // Philosopher's Hat
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Gustar"), new Point3D(3474, 2492, 91), Map.Trammel);
         }
     }
 
@@ -336,13 +265,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077620, typeof(HallowedSpellbook))); // Hallowed Spellbook
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Jillian"), new Point3D(3465, 2490, 71), Map.Trammel);
-        }
     }
 
     public class TheMagesApprentice : MLQuest
@@ -367,13 +289,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077582, typeof(EmberStaff))); // Ember Staff
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Kaelynna"), new Point3D(3486, 2491, 52), Map.Trammel);
-        }
     }
 
     public class ScholarlyTask : MLQuest
@@ -396,13 +311,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.EvalInt, 500, true, true));
 
             Rewards.Add(new ItemReward(1077608, typeof(RingOfTheSavant))); // Ring of the Savant
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Mithneral"), new Point3D(3485, 2491, 71), Map.Trammel);
         }
     }
 
@@ -428,13 +336,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077749, typeof(AmeliasToolbox))); // Amelia’s Toolbox
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "AmeliaYoungstone"), new Point3D(3459, 2529, 53), Map.Trammel);
-        }
     }
 
     public class KnowThineEnemy : MLQuest
@@ -458,13 +359,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Anatomy, 500, true, true));
 
             Rewards.Add(new ItemReward(1077693, typeof(TunicOfGuarding))); // Tunic of Guarding
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "AndreasVesalius"), new Point3D(3457, 2550, 35), Map.Trammel);
         }
     }
 
@@ -490,13 +384,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077684, typeof(HealersTouch))); // Healer's Touch
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Avicenna"), new Point3D(3464, 2558, 35), Map.Trammel);
-        }
     }
 
     public class TheInnerWarrior : MLQuest
@@ -521,13 +408,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077695, typeof(ClaspOfConcentration))); // Clasp of Concentration
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "SarsmeaSmythe"), new Point3D(3492, 2577, 15), Map.Trammel);
-        }
     }
 
     public class TheArtOfStealth : MLQuest
@@ -550,13 +430,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Ninjitsu, 500, true, true));
 
             Rewards.Add(new ItemReward(1078163, typeof(SilverSerpentBlade))); // Silver Serpent Blade
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Ryuichi"), new Point3D(3422, 2520, 21), Map.Trammel);
         }
     }
 
@@ -581,13 +454,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1078173, typeof(BagOfSmokeBombs))); // Bag of Smoke Bombs
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Chiyo"), new Point3D(3420, 2516, 21), Map.Trammel);
-        }
     }
 
     public class WalkingSilently : MLQuest
@@ -610,13 +476,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Stealth, 500, true, true));
 
             Rewards.Add(new ItemReward(1078183, typeof(TwilightJacket))); // Twilight Jacket
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Jun"), new Point3D(3422, 2516, 21), Map.Trammel);
         }
     }
 
@@ -642,13 +501,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1078222, typeof(WalkersLeggings))); // Walker's Leggings
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Walker"), new Point3D(3429, 2518, 19), Map.Trammel);
-        }
     }
 
     public class TheWayOfTheSamurai : MLQuest
@@ -672,13 +524,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1078015, typeof(TheDragonsTail))); // The Dragon's Tail
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Hamato"), new Point3D(3493, 2414, 55), Map.Trammel);
-        }
     }
 
     public class TheAllureOfDarkMagic : MLQuest
@@ -701,13 +546,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Necromancy, 500, true, true));
 
             Rewards.Add(new InternalReward());
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Mulcivikh"), new Point3D(3548, 2456, 15), Map.Trammel);
         }
 
         private class InternalReward : ItemReward
@@ -753,13 +591,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1078053, typeof(BagOfNecromancerReagents))); // Bag of Necromancer Reagents
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Morganna"), new Point3D(3547, 2463, 15), Map.Trammel);
-        }
     }
 
     public class TheDeluciansLostMine : MLQuest
@@ -783,13 +614,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new GainSkillObjective(SkillName.Mining, 500, true, true));
 
             Rewards.Add(new ItemReward(1077758, typeof(JacobsPickaxe))); // Jacob's Pickaxe
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "JacobWaltz"), new Point3D(3504, 2741, 0), Map.Trammel);
         }
     }
 
@@ -815,13 +639,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1077740, typeof(HammerOfHephaestus))); // Hammer of Hephaestus
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "GeorgeHephaestus"), new Point3D(3471, 2542, 36), Map.Trammel);
-        }
     }
 
     public class Aelorn : KeeperOfChivalry
@@ -830,7 +647,7 @@ namespace Server.Engines.MLQuests.Definitions
         public Aelorn()
         {
             Title = "the Chivalry Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203C;
             HairHue = 0x47D;
@@ -895,7 +712,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Wrestling Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203D;
             HairHue = 0x455;
@@ -954,7 +771,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Mace Fighting Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203C;
             HairHue = 0x455;
@@ -1031,7 +848,7 @@ namespace Server.Engines.MLQuests.Definitions
         public Robyn()
         {
             Title = "the Archery Instructor";
-            BodyValue = 0x191;
+            Body = 0x191;
             Hue = 0x83EA;
             HairItemID = 0x203C;
             HairHue = 0x47D;
@@ -1114,7 +931,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Fencer Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203C;
             HairHue = 0x455;
@@ -1198,7 +1015,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Tactics Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203B;
             HairHue = 0x44E;
@@ -1263,7 +1080,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Swordsmanship Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83FA;
             HairItemID = 0x203C;
             HairHue = 0x8A7;
@@ -1324,7 +1141,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Parrying Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x8374;
             HairItemID = 0;
 
@@ -1405,7 +1222,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Resisting Spells Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203D;
             HairHue = 0x457;
@@ -1461,7 +1278,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Meditation Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83F5;
             HairItemID = 0x203B;
             HairHue = 0x455;
@@ -1543,7 +1360,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Inscription Instructor";
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = 0x83EA;
             HairItemID = 0x203D;
@@ -1600,7 +1417,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Magery Instructor";
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = 0x83EA;
             HairItemID = 0x203C;
@@ -1657,7 +1474,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Evaluating Intelligence Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203C;
             HairHue = 0x455;
@@ -1717,7 +1534,7 @@ namespace Server.Engines.MLQuests.Definitions
         public AmeliaYoungstone()
         {
             Title = "the Tinkering Instructor";
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = 0x83EA;
             HairItemID = 0x203D;
@@ -1778,7 +1595,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Anatomy Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EC;
             HairItemID = 0x203C;
             HairHue = 0x477;
@@ -1838,7 +1655,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Healing Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203B;
             HairHue = 0x477;
@@ -1895,7 +1712,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Focus Instructor";
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = 0x83EA;
             HairItemID = 0x203C;
@@ -2027,7 +1844,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Hiding Instructor";
-            BodyValue = 0xF7;
+            Body = 0xF7;
 
             InitStats(100, 100, 25);
 
@@ -2076,7 +1893,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Stealth Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x8403;
             HairItemID = 0x203B;
             HairHue = 0x455;
@@ -2136,7 +1953,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Tracking Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203B;
             HairHue = 0x47D;
@@ -2275,7 +2092,7 @@ namespace Server.Engines.MLQuests.Definitions
         public Mulcivikh()
         {
             Title = "the Necromancy Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203D;
             HairHue = 0x457;
@@ -2353,7 +2170,7 @@ namespace Server.Engines.MLQuests.Definitions
         public Morganna()
         {
             Title = "the Spirit Speak Instructor";
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = 0x83EA;
             HairItemID = 0x203C;
@@ -2412,7 +2229,7 @@ namespace Server.Engines.MLQuests.Definitions
             : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
         {
             Title = "the Miner Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x2048;
             HairHue = 0x44E;
@@ -2474,7 +2291,7 @@ namespace Server.Engines.MLQuests.Definitions
         public GeorgeHephaestus()
         {
             Title = "the Blacksmith Instructor";
-            BodyValue = 0x190;
+            Body = 0x190;
             Hue = 0x83EA;
             HairItemID = 0x203B;
             HairHue = 0x47B;

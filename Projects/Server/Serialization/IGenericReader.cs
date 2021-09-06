@@ -33,10 +33,20 @@ namespace Server
         byte ReadByte();
         sbyte ReadSByte();
         bool ReadBool();
+        Serial ReadSerial();
 
         DateTime ReadDateTime() => new(ReadLong(), DateTimeKind.Utc);
         TimeSpan ReadTimeSpan() => new(ReadLong());
-        DateTime ReadDeltaTime() => new(ReadLong() + DateTime.UtcNow.Ticks, DateTimeKind.Utc);
+
+        DateTime ReadDeltaTime()
+        {
+            return ReadLong() switch
+            {
+                long.MinValue => DateTime.MinValue,
+                long.MaxValue => DateTime.MaxValue,
+                var delta     => new DateTime(delta + DateTime.UtcNow.Ticks, DateTimeKind.Utc)
+            };
+        }
         decimal ReadDecimal() => new(stackalloc int[4] { ReadInt(), ReadInt(), ReadInt(), ReadInt() });
         int ReadEncodedInt()
         {
@@ -70,7 +80,7 @@ namespace Server
         int Read(Span<byte> buffer);
         unsafe T ReadEnum<T>() where T : unmanaged, Enum
         {
-            switch (ReadByte())
+            switch (sizeof(T))
             {
                 case 1:
                     {
@@ -82,12 +92,12 @@ namespace Server
                         var num = ReadShort();
                         return *(T*)&num;
                     }
-                case 3:
+                case 4:
                     {
                         var num = ReadEncodedInt();
                         return *(T*)&num;
                     }
-                case 4:
+                case 8:
                     {
                         var num = ReadLong();
                         return *(T*)&num;
@@ -96,6 +106,13 @@ namespace Server
 
             return default;
         }
+        Guid ReadGuid()
+        {
+            Span<byte> bytes = stackalloc byte[16];
+            Read(bytes);
+            return new Guid(bytes);
+        }
+
         long Seek(long offset, SeekOrigin origin);
     }
 }

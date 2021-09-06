@@ -1,7 +1,6 @@
 using System;
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -26,14 +25,6 @@ namespace Server.Engines.MLQuests.Definitions
         }
 
         public override Type NextQuest => typeof(TheGoldenHorn);
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 5, "LorekeeperBroolol"), new Point3D(7011, 375, 0), Map.Trammel);
-            PutSpawner(new Spawner(1, 5, 10, 0, 5, "LorekeeperBroolol"), new Point3D(7011, 375, 0), Map.Felucca);
-        }
     }
 
     public class TheGoldenHorn : MLQuest
@@ -112,7 +103,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the keeper of tradition";
             Race = Race.Elf;
-            BodyValue = 0x25E;
+            Body = 0x25E;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);

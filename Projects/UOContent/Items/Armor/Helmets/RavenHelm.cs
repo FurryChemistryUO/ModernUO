@@ -1,16 +1,13 @@
 namespace Server.Items
 {
     [Flippable(0x2B71, 0x3168)]
-    public class RavenHelm : BaseArmor
+    [Serializable(0)]
+    public partial class RavenHelm : BaseArmor
     {
         [Constructible]
         public RavenHelm() : base(0x2B71) => Weight = 5.0;
 
-        public RavenHelm(Serial serial) : base(serial)
-        {
-        }
-
-        public override Race RequiredRace => Race.Elf;
+        public override int RequiredRaces => Race.AllowElvesOnly;
 
         public override int BasePhysicalResistance => 5;
         public override int BaseFireResistance => 1;
@@ -27,19 +24,5 @@ namespace Server.Items
         public override int ArmorBase => 40;
 
         public override ArmorMaterialType MaterialType => ArmorMaterialType.Plate;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.WriteEncodedInt(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadEncodedInt();
-        }
     }
 }

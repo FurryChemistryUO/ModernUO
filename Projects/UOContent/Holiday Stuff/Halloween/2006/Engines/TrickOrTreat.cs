@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Server.Events.Halloween;
 using Server.Items;
 using Server.Mobiles;
@@ -64,7 +65,7 @@ namespace Server.Engines.Events
             {
                 target.SolidHueOverride = Utility.RandomMinMax(2501, 2644);
 
-                Timer.DelayCall(TimeSpan.FromSeconds(10), RemoveHueMod, target);
+                Timer.StartTimer(TimeSpan.FromSeconds(10), () => RemoveHueMod(target));
             }
         }
 
@@ -106,14 +107,14 @@ namespace Server.Engines.Events
                 }
 
                 twin.Hue = m_From.Hue;
-                twin.BodyValue = m_From.BodyValue;
+                twin.Body = m_From.Body;
                 twin.Kills = m_From.Kills;
 
                 var point = RandomPointOneAway(m_From.X, m_From.Y, m_From.Z, m_From.Map);
 
                 twin.MoveToWorld(m_From.Map.CanSpawnMobile(point) ? point : m_From.Location, m_From.Map);
 
-                Timer.DelayCall(TimeSpan.FromSeconds(5), DeleteTwin, twin);
+                Timer.StartTimer(TimeSpan.FromSeconds(5), () => DeleteTwin(twin));
             }
         }
 
@@ -134,6 +135,7 @@ namespace Server.Engines.Events
             return loc;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool CheckMobile(Mobile mobile) =>
             mobile?.Map != null && !mobile.Deleted && mobile.Alive && mobile.Map != Map.Internal;
 
@@ -214,15 +216,15 @@ namespace Server.Engines.Events
 
                         if (action == 0)
                         {
-                            Timer.DelayCall(OneSecond, OneSecond, 10, Bleeding, from);
+                            Timer.StartTimer(OneSecond, OneSecond, 10, () => Bleeding(from));
                         }
                         else if (action == 1)
                         {
-                            Timer.DelayCall(TimeSpan.FromSeconds(2), SolidHueMobile, from);
+                            Timer.StartTimer(TimeSpan.FromSeconds(2), () => SolidHueMobile(from));
                         }
                         else
                         {
-                            Timer.DelayCall(TimeSpan.FromSeconds(2), MakeTwin, from);
+                            Timer.StartTimer(TimeSpan.FromSeconds(2), () => MakeTwin(from));
                         }
                     }
                 }
@@ -230,7 +232,8 @@ namespace Server.Engines.Events
         }
     }
 
-    public class NaughtyTwin : BaseCreature
+    [Serializable(0, false)]
+    public partial class NaughtyTwin : BaseCreature
     {
         private static readonly Point3D[] Felucca_Locations =
         {
@@ -282,13 +285,8 @@ namespace Server.Engines.Events
                 m_From = from;
                 Name = $"{from.Name}\'s Naughty Twin";
 
-                Timer.DelayCall(TrickOrTreat.OneSecond, StealCandyOrGate, m_From);
+                Timer.StartTimer(TrickOrTreat.OneSecond, () => StealCandyOrGate(m_From));
             }
-        }
-
-        public NaughtyTwin(Serial serial)
-            : base(serial)
-        {
         }
 
         public override void OnThink()
@@ -304,12 +302,7 @@ namespace Server.Engines.Events
             Type[] types =
                 { typeof(WrappedCandy), typeof(Lollipops), typeof(NougatSwirl), typeof(Taffy), typeof(JellyBeans) };
 
-            if (TrickOrTreat.CheckMobile(target))
-            {
-                return target.Backpack.FindItemByType(types);
-            }
-
-            return null;
+            return TrickOrTreat.CheckMobile(target) ? target.Backpack.FindItemByType(types) : null;
         }
 
         public static void StealCandyOrGate(Mobile target)
@@ -344,18 +337,6 @@ namespace Server.Engines.Events
                 4 => Tokuno_Locations.RandomElement(),
                 _ => Felucca_Locations.RandomElement()
             };
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

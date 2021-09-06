@@ -8,15 +8,15 @@ namespace Server.Engines.Events
 {
     public static class HalloweenHauntings
     {
-        private static Timer m_Timer;
-        private static Timer m_ClearTimer;
+        private static Timer _timer;
+        private static Timer _clearTimer;
 
         private static int m_TotalZombieLimit;
         private static int m_DeathQueueLimit;
         private static int m_QueueDelaySeconds;
         private static int m_QueueClearIntervalSeconds;
 
-        private static List<PlayerMobile> m_DeathQueue;
+        private static HashSet<PlayerMobile> _deathQueue;
 
         private static readonly Rectangle2D[] m_Cemetaries =
         {
@@ -39,7 +39,7 @@ namespace Server.Engines.Events
             new(5224, 3655, 5, 14)   // T2A
         };
 
-        public static Dictionary<PlayerMobile, ZombieSkeleton> ReAnimated { get; set; }
+        internal static Dictionary<PlayerMobile, ZombieSkeleton> _reAnimated;
 
         public static void Initialize()
         {
@@ -52,14 +52,13 @@ namespace Server.Engines.Events
             var tick = TimeSpan.FromSeconds(m_QueueDelaySeconds);
             var clear = TimeSpan.FromSeconds(m_QueueClearIntervalSeconds);
 
-            ReAnimated = new Dictionary<PlayerMobile, ZombieSkeleton>();
-            m_DeathQueue = new List<PlayerMobile>();
+            _reAnimated = new Dictionary<PlayerMobile, ZombieSkeleton>();
+            _deathQueue = new HashSet<PlayerMobile>();
 
             if (today >= HolidaySettings.StartHalloween && today <= HolidaySettings.FinishHalloween)
             {
-                m_Timer = Timer.DelayCall(tick, tick, Timer_Callback);
-
-                m_ClearTimer = Timer.DelayCall(clear, clear, Clear_Callback);
+                _timer = Timer.DelayCall(tick, 0, Timer_Callback);
+                _clearTimer = Timer.DelayCall(clear, 0, Clear_Callback);
 
                 EventSink.PlayerDeath += EventSink_PlayerDeath;
             }
@@ -67,65 +66,69 @@ namespace Server.Engines.Events
 
         public static void EventSink_PlayerDeath(Mobile m)
         {
-            if (m is PlayerMobile pm && !pm.Deleted && m_Timer.Running && !m_DeathQueue.Contains(pm) &&
-                m_DeathQueue.Count < m_DeathQueueLimit)
+            if (m is PlayerMobile { Deleted: false } pm &&
+                _timer.Running && !_deathQueue.Contains(pm) && _deathQueue.Count < m_DeathQueueLimit)
             {
-                m_DeathQueue.Add(pm);
+                _deathQueue.Add(pm);
             }
         }
 
         private static void Clear_Callback()
         {
-            ReAnimated.Clear();
-
-            m_DeathQueue.Clear();
-
-            if (Core.Now <= HolidaySettings.FinishHalloween)
+            if (Core.Now > HolidaySettings.FinishHalloween)
             {
-                m_ClearTimer.Stop();
+                _clearTimer.Stop();
+                _clearTimer = null;
+                _reAnimated = null;
+                _deathQueue = null;
+                return;
             }
+
+            _reAnimated.Clear();
+            _deathQueue.Clear();
         }
 
         private static void Timer_Callback()
         {
+
+            if (Core.Now > HolidaySettings.FinishHalloween)
+            {
+                _timer.Stop();
+                _timer = null;
+                return;
+            }
+
             PlayerMobile player = null;
 
-            if (Core.Now <= HolidaySettings.FinishHalloween)
+            foreach (var entry in _deathQueue)
             {
-                for (var index = 0; m_DeathQueue.Count > 0 && index < m_DeathQueue.Count; index++)
+                if (!_reAnimated.ContainsKey(entry))
                 {
-                    var entry = m_DeathQueue[index];
-
-                    if (!ReAnimated.ContainsKey(entry))
-                    {
-                        player = entry;
-                        break;
-                    }
-                }
-
-                if (player?.Deleted == false && ReAnimated.Count < m_TotalZombieLimit)
-                {
-                    var map = Utility.RandomBool() ? Map.Trammel : Map.Felucca;
-
-                    var home = GetRandomPointInRect(m_Cemetaries.RandomElement(), map);
-
-                    if (map.CanSpawnMobile(home))
-                    {
-                        var zombieskel = new ZombieSkeleton(player);
-
-                        ReAnimated.Add(player, zombieskel);
-                        zombieskel.Home = home;
-                        zombieskel.RangeHome = 10;
-
-                        zombieskel.MoveToWorld(home, map);
-
-                        m_DeathQueue.Remove(player);
-                    }
+                    player = entry;
+                    break;
                 }
             }
-            else
+
+            if (player?.Deleted != false || _reAnimated.Count >= m_TotalZombieLimit)
             {
-                m_Timer.Stop();
+                return;
+            }
+
+            var map = Utility.RandomBool() ? Map.Trammel : Map.Felucca;
+
+            var home = GetRandomPointInRect(m_Cemetaries.RandomElement(), map);
+
+            if (map.CanSpawnMobile(home))
+            {
+                var zombieskel = new ZombieSkeleton(player);
+
+                _reAnimated.Add(player, zombieskel);
+                zombieskel.Home = home;
+                zombieskel.RangeHome = 10;
+
+                zombieskel.MoveToWorld(home, map);
+
+                _deathQueue.Remove(player);
             }
         }
 
@@ -138,7 +141,8 @@ namespace Server.Engines.Events
         }
     }
 
-    public class PlayerBones : BaseContainer
+    [Serializable(0, false)]
+    public partial class PlayerBones : BaseContainer
     {
         [Constructible]
         public PlayerBones(string name)
@@ -154,37 +158,20 @@ namespace Server.Engines.Events
                 _ => Hue
             };
         }
-
-        public PlayerBones(Serial serial)
-            : base(serial)
-        {
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-        }
     }
 
-    public class ZombieSkeleton : BaseCreature
+    [Serializable(0, false)]
+    public partial class ZombieSkeleton : BaseCreature
     {
-        private static readonly string m_Name = "Zombie Skeleton";
+        [SerializableField(0, "private", "private")]
+        private PlayerMobile _deadPlayer;
 
-        private PlayerMobile m_DeadPlayer;
+        public override string DefaultName => _deadPlayer != null ? $"{_deadPlayer.Name}'s Zombie Skeleton" : "Zombie Skeleton";
 
         public ZombieSkeleton(PlayerMobile player = null)
             : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
         {
-            m_DeadPlayer = player;
-
-            Name = player != null ? $"{player.Name}'s {m_Name}" : m_Name;
+            _deadPlayer = player;
 
             Body = 0x93;
             BaseSoundID = 0x1c3;
@@ -218,11 +205,6 @@ namespace Server.Engines.Events
             VirtualArmor = 18;
         }
 
-        public ZombieSkeleton(Serial serial)
-            : base(serial)
-        {
-        }
-
         public override string CorpseName => "a rotting corpse";
 
         public override bool BleedImmune => true;
@@ -231,7 +213,7 @@ namespace Server.Engines.Events
 
         public override void GenerateLoot()
         {
-            var deadPlayerExists = m_DeadPlayer?.Deleted == false;
+            var deadPlayerExists = _deadPlayer?.Deleted == false;
 
             PackItem(
                 Utility.Random(deadPlayerExists ? 8 : 10) switch
@@ -241,7 +223,7 @@ namespace Server.Engines.Events
                     2 => new Torso(),
                     3 => new Bone(),
                     4 => new RibCage(),
-                    9 => deadPlayerExists ? new PlayerBones(m_DeadPlayer.Name) : null,
+                    9 => deadPlayerExists ? new PlayerBones(_deadPlayer.Name) : null,
                     _ => null // 5-8, 10 (50%)
                 }
             );
@@ -251,26 +233,10 @@ namespace Server.Engines.Events
 
         public override void OnDelete()
         {
-            if (m_DeadPlayer?.Deleted == false)
+            if (_deadPlayer?.Deleted == false)
             {
-                HalloweenHauntings.ReAnimated?.Remove(m_DeadPlayer);
+                HalloweenHauntings._reAnimated?.Remove(_deadPlayer);
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-
-            writer.Write(m_DeadPlayer);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-
-            m_DeadPlayer = reader.ReadEntity<PlayerMobile>();
         }
     }
 }

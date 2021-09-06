@@ -1,6 +1,5 @@
 using Server.Engines.MLQuests.Objectives;
 using Server.Engines.MLQuests.Rewards;
-using Server.Engines.Spawners;
 using Server.Items;
 using Server.Mobiles;
 
@@ -23,13 +22,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1074282, typeof(AndricSatchel))); // Craftsmans's Satchel
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Andric"), new Point3D(3742, 2582, 40), Map.Trammel);
-        }
     }
 
     public class IShotAnArrowIntoTheAir : MLQuest
@@ -46,13 +38,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new KillObjective(10, new[] { typeof(Sheep) }, 1018270)); // sheep
 
             Rewards.Add(ItemReward.BagOfTrinkets);
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Kashiel"), new Point3D(3744, 2586, 40), Map.Trammel);
         }
     }
 
@@ -73,13 +58,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new CollectObjective(5, typeof(CookieMix), 1024159)); // cookie mix
 
             Rewards.Add(new ItemReward(1074282, typeof(AsandosSatchel))); // Craftsmans's Satchel
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Asandos"), new Point3D(3505, 2513, 27), Map.Trammel);
         }
     }
 
@@ -103,13 +81,6 @@ namespace Server.Engines.MLQuests.Definitions
             Rewards.Add(new ItemReward(1075524, typeof(AnOldRing)));     // an old ring
             Rewards.Add(new ItemReward(1075525, typeof(AnOldNecklace))); // an old necklace
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Clairesse"), new Point3D(3492, 2546, 20), Map.Trammel);
-        }
     }
 
     public class BatteredBucklers : MLQuest
@@ -129,13 +100,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new CollectObjective(10, typeof(Buckler), 1027027)); // buckler
 
             Rewards.Add(new ItemReward(1074282, typeof(GervisSatchel))); // Craftsmans's Satchel
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Gervis"), new Point3D(3505, 2749, 0), Map.Trammel);
         }
     }
 
@@ -157,13 +121,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new InternalObjective());
 
             Rewards.Add(new ItemReward(1074282, typeof(MuggSatchel))); // Craftsmans's Satchel
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Mugg"), new Point3D(3507, 2747, 0), Map.Trammel);
         }
 
         private class InternalObjective : CollectObjective
@@ -195,13 +152,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1074282, typeof(LowelSatchel))); // Craftsmans's Satchel
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Lowel"), new Point3D(3440, 2645, 27), Map.Trammel);
-        }
     }
 
     public class ThePenIsMightier : MLQuest
@@ -224,13 +174,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1075545, typeof(RedLeatherBook))); // a book bound in red leather
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Lyle"), new Point3D(3503, 2584, 14), Map.Trammel);
-        }
     }
 
     public class AClockworkPuzzle : MLQuest
@@ -249,13 +192,6 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new CollectObjective(5, typeof(ClockParts), 1024175)); // clock parts
 
             Rewards.Add(new ItemReward(1074282, typeof(NibbetSatchel))); // Craftsmans's Satchel
-        }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Nibbet"), new Point3D(3459, 2525, 53), Map.Trammel);
         }
     }
 
@@ -279,13 +215,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1075557, typeof(PeppercornFishsteak), 3)); // peppercorn fishsteak
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Norton"), new Point3D(3502, 2603, 1), Map.Trammel);
-        }
     }
 
     public class FleeAndFatigue : MLQuest
@@ -308,13 +237,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1074282, typeof(SadrahSatchel))); // Craftsmans's Satchel
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Sadrah"), new Point3D(3742, 2731, 7), Map.Trammel);
-        }
     }
 
     public class ChopChopOnTheDouble : MLQuest
@@ -335,13 +257,6 @@ namespace Server.Engines.MLQuests.Definitions
 
             Rewards.Add(new ItemReward(1074282, typeof(HargroveSatchel))); // Craftsmans's Satchel
         }
-
-        public override void Generate()
-        {
-            base.Generate();
-
-            PutSpawner(new Spawner(1, 5, 10, 0, 0, "Hargrove"), new Point3D(3445, 2633, 28), Map.Trammel);
-        }
     }
 
     public class Andric : BaseCreature
@@ -352,7 +267,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the archer trainer";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -430,7 +345,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the archer";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -492,7 +407,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the chef";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -552,7 +467,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the servant";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -608,7 +523,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the blacksmith trainer";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -676,7 +591,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the miner";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -729,7 +644,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the carpenter";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -787,7 +702,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the mage";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -843,7 +758,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the tinker";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -888,7 +803,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the fisher";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -946,7 +861,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the courier";
             Race = Race.Human;
-            BodyValue = 0x191;
+            Body = 0x191;
             Female = true;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);
@@ -1006,7 +921,7 @@ namespace Server.Engines.MLQuests.Definitions
         {
             Title = "the Lumberjack";
             Race = Race.Human;
-            BodyValue = 0x190;
+            Body = 0x190;
             Female = false;
             Hue = Race.RandomSkinHue();
             InitStats(100, 100, 25);

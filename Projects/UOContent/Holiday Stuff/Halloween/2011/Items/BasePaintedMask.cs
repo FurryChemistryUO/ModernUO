@@ -1,60 +1,31 @@
-﻿// using System.Collections.Generic;
-
-namespace Server.Items.Holiday
+﻿namespace Server.Items.Holiday
 {
+    [Serializable(0, false)]
     [TypeAlias("Server.Items.ClownMask", "Server.Items.DaemonMask", "Server.Items.PlagueMask")]
-    public class BasePaintedMask : Item
+    public partial class BasePaintedMask : Item
     {
-        private static readonly string[] m_Staffers =
+        private static readonly string[] Staffers =
         {
-            "Ryan",
-            "Mark",
-            "Krrios",
-            "Zippy",
-            "Athena",
-            "Eos",
-            "Xavier"
+            "Owyn",
+            "Luthius",
+            "Kamron",
+            "Jaedan",
+            "Vorspire"
         };
 
-        private string m_Staffer;
+        [InternString]
+        [SerializableField(0, setter: "private")]
+        private string _staffer;
 
-        public BasePaintedMask(int itemid) : this(m_Staffers.RandomElement(), itemid)
+        public BasePaintedMask(int itemid) : this(Staffers.RandomElement(), itemid)
         {
         }
 
-        public BasePaintedMask(string staffer, int itemid) : base(itemid + Utility.Random(2))
-        {
-            m_Staffer = staffer;
+        public BasePaintedMask(string staffer, int itemid) : base(itemid + Utility.Random(2)) =>
+            _staffer = Utility.Intern(staffer);
 
-            Utility.Intern(m_Staffer);
-        }
-
-        public BasePaintedMask(Serial serial) : base(serial)
-        {
-        }
-
-        public override string DefaultName => m_Staffer != null ? $"{MaskName} hand painted by {m_Staffer}" : MaskName;
+        public override string DefaultName => _staffer != null ? $"{MaskName} hand painted by {_staffer}" : MaskName;
 
         public virtual string MaskName => "A Mask";
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(1); // version
-            writer.Write(m_Staffer);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-
-            if (version == 1)
-            {
-                m_Staffer = Utility.Intern(reader.ReadString());
-            }
-        }
     }
 }

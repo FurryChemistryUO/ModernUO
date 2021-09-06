@@ -114,16 +114,14 @@ namespace Server.Items
             }
         }
 
-        public virtual Race RequiredRace =>
-            null; // On OSI, there are no weapons with race requirements, this is for custom stuff
-
         public virtual bool UseSkillMod => !Core.AOS;
 
         public static bool InDoubleStrike { get; set; }
 
         public virtual int VirtualDamageBonus => 0;
 
-        [Hue, CommandProperty(AccessLevel.GameMaster)]
+        [Hue]
+        [CommandProperty(AccessLevel.GameMaster)]
         public override int Hue
         {
             get => base.Hue;
@@ -801,31 +799,17 @@ namespace Server.Items
 
         public int GetDurabilityBonus()
         {
-            var bonus = 0;
+            var bonus = m_Quality == WeaponQuality.Exceptional ? 20 : 0;
 
-            if (m_Quality == WeaponQuality.Exceptional)
+            bonus += m_DurabilityLevel switch
             {
-                bonus += 20;
-            }
-
-            switch (m_DurabilityLevel)
-            {
-                case WeaponDurabilityLevel.Durable:
-                    bonus += 20;
-                    break;
-                case WeaponDurabilityLevel.Substantial:
-                    bonus += 50;
-                    break;
-                case WeaponDurabilityLevel.Massive:
-                    bonus += 70;
-                    break;
-                case WeaponDurabilityLevel.Fortified:
-                    bonus += 100;
-                    break;
-                case WeaponDurabilityLevel.Indestructible:
-                    bonus += 120;
-                    break;
-            }
+                WeaponDurabilityLevel.Durable        => 20,
+                WeaponDurabilityLevel.Substantial    => 50,
+                WeaponDurabilityLevel.Massive        => 70,
+                WeaponDurabilityLevel.Fortified      => 100,
+                WeaponDurabilityLevel.Indestructible => 120,
+                _                                    => 0
+            };
 
             if (Core.AOS)
             {
@@ -914,17 +898,8 @@ namespace Server.Items
                 return false;
             }
 
-            if (RequiredRace != null && from.Race != RequiredRace)
+            if (!CheckRace(from))
             {
-                if (RequiredRace == Race.Elf)
-                {
-                    from.SendLocalizedMessage(1072203); // Only Elves may use this.
-                }
-                else
-                {
-                    from.SendMessage("Only {0} may use this.", RequiredRace.PluralName);
-                }
-
                 return false;
             }
 
@@ -1530,32 +1505,15 @@ namespace Server.Items
             {
                 var positionChance = Utility.RandomDouble();
 
-                Item armorItem;
-
-                if (positionChance < 0.07)
+                Item armorItem = positionChance switch
                 {
-                    armorItem = defender.NeckArmor;
-                }
-                else if (positionChance < 0.14)
-                {
-                    armorItem = defender.HandArmor;
-                }
-                else if (positionChance < 0.28)
-                {
-                    armorItem = defender.ArmsArmor;
-                }
-                else if (positionChance < 0.43)
-                {
-                    armorItem = defender.HeadArmor;
-                }
-                else if (positionChance < 0.65)
-                {
-                    armorItem = defender.LegsArmor;
-                }
-                else
-                {
-                    armorItem = defender.ChestArmor;
-                }
+                    < 0.07 => defender.NeckArmor,
+                    < 0.14 => defender.HandArmor,
+                    < 0.28 => defender.ArmsArmor,
+                    < 0.43 => defender.HeadArmor,
+                    < 0.65 => defender.LegsArmor,
+                    _      => defender.ChestArmor
+                };
 
                 if (armorItem is IWearableDurability armor)
                 {
@@ -1580,32 +1538,15 @@ namespace Server.Items
 
             var chance = Utility.RandomDouble();
 
-            Item armorItem;
-
-            if (chance < 0.07)
+            Item armorItem = chance switch
             {
-                armorItem = defender.NeckArmor;
-            }
-            else if (chance < 0.14)
-            {
-                armorItem = defender.HandArmor;
-            }
-            else if (chance < 0.28)
-            {
-                armorItem = defender.ArmsArmor;
-            }
-            else if (chance < 0.43)
-            {
-                armorItem = defender.HeadArmor;
-            }
-            else if (chance < 0.65)
-            {
-                armorItem = defender.LegsArmor;
-            }
-            else
-            {
-                armorItem = defender.ChestArmor;
-            }
+                < 0.07 => defender.NeckArmor,
+                < 0.14 => defender.HandArmor,
+                < 0.28 => defender.ArmsArmor,
+                < 0.43 => defender.HeadArmor,
+                < 0.65 => defender.LegsArmor,
+                _      => defender.ChestArmor
+            };
 
             if (armorItem is IWearableDurability armor)
             {
@@ -1616,28 +1557,14 @@ namespace Server.Items
 
             if (virtualArmor > 0)
             {
-                double scalar;
-
-                if (chance < 0.14)
+                double scalar = chance switch
                 {
-                    scalar = 0.07;
-                }
-                else if (chance < 0.28)
-                {
-                    scalar = 0.14;
-                }
-                else if (chance < 0.43)
-                {
-                    scalar = 0.15;
-                }
-                else if (chance < 0.65)
-                {
-                    scalar = 0.22;
-                }
-                else
-                {
-                    scalar = 0.35;
-                }
+                    < 0.14 => 0.07,
+                    < 0.28 => 0.14,
+                    < 0.43 => 0.15,
+                    < 0.65 => 0.22,
+                    _      => 0.35
+                };
 
                 var from = (int)(virtualArmor * scalar) / 2;
                 var to = (int)(virtualArmor * scalar);
@@ -1689,12 +1616,10 @@ namespace Server.Items
                 {
                     if (m?.Summoned == true && m.SummonMaster == defender)
                     {
-                        attacker.SendLocalizedMessage(
-                            1063141
-                        ); // Your attack has been diverted to a nearby mirror image of your target!
-                        defender.SendLocalizedMessage(
-                            1063140
-                        ); // You manage to divert the attack onto one of your nearby mirror images.
+                        // Your attack has been diverted to a nearby mirror image of your target!
+                        attacker.SendLocalizedMessage(1063141);
+                        // You manage to divert the attack onto one of your nearby mirror images.
+                        defender.SendLocalizedMessage(1063140);
 
                         /*
                          * TODO: What happens if the Clone parries a blow?
@@ -1859,12 +1784,9 @@ namespace Server.Items
                 out var direct
             );
 
-            if (Core.ML && this is BaseRanged)
+            if (Core.ML && this is BaseRanged && attacker.FindItemOnLayer(Layer.Cloak) is BaseQuiver quiver)
             {
-                if (attacker.FindItemOnLayer(Layer.Cloak) is BaseQuiver quiver)
-                {
-                    quiver.AlterBowDamage(ref phys, ref fire, ref cold, ref pois, ref nrgy, ref chaos, ref direct);
-                }
+                quiver.AlterBowDamage(out phys, out fire, out cold, out pois, out nrgy, out chaos, out direct);
             }
 
             if (Consecrated)
@@ -1930,8 +1852,6 @@ namespace Server.Items
                 ImmolatingWeaponSpell.DoEffect(this, defender);
             }
 
-            var damageGiven = damage;
-
             if (a?.OnBeforeDamage(attacker, defender) == false)
             {
                 WeaponAbility.ClearCurrentAbility(attacker);
@@ -1946,7 +1866,7 @@ namespace Server.Items
 
             var ignoreArmor = a is ArmorIgnore || move?.IgnoreArmor(attacker) == true;
 
-            damageGiven = AOS.Damage(
+            var damageGiven = AOS.Damage(
                 defender,
                 attacker,
                 damage,
@@ -2462,28 +2382,15 @@ namespace Server.Items
                 return 0;
             }
 
-            var bonus = 0;
-
-            switch (m_AccuracyLevel)
+            return m_AccuracyLevel switch
             {
-                case WeaponAccuracyLevel.Accurate:
-                    bonus += 02;
-                    break;
-                case WeaponAccuracyLevel.Surpassingly:
-                    bonus += 04;
-                    break;
-                case WeaponAccuracyLevel.Eminently:
-                    bonus += 06;
-                    break;
-                case WeaponAccuracyLevel.Exceedingly:
-                    bonus += 08;
-                    break;
-                case WeaponAccuracyLevel.Supremely:
-                    bonus += 10;
-                    break;
-            }
-
-            return bonus;
+                WeaponAccuracyLevel.Accurate     => 2,
+                WeaponAccuracyLevel.Surpassingly => 4,
+                WeaponAccuracyLevel.Eminently    => 6,
+                WeaponAccuracyLevel.Exceedingly  => 8,
+                WeaponAccuracyLevel.Supremely    => 10,
+                _                                => 0
+            };
         }
 
         public virtual int GetDamageBonus()
@@ -2946,9 +2853,14 @@ namespace Server.Items
                 list.Add(1060636); // exceptional
             }
 
-            if (RequiredRace == Race.Elf)
+            if (RequiredRaces == Race.AllowElvesOnly)
             {
                 list.Add(1075086); // Elves Only
+            }
+
+            if (RequiredRaces == Race.AllowGargoylesOnly)
+            {
+                list.Add(1111709); // Gargoyles Only
             }
 
             if (ArtifactRarity > 0)
@@ -4038,22 +3950,18 @@ namespace Server.Items
                             m_Resource = CraftResource.Iron;
                         }
 
+                        Attributes = new AosAttributes(this);
+
                         if (GetSaveFlag(flags, SaveFlag.xAttributes))
                         {
-                            Attributes = new AosAttributes(this, reader);
+                            Attributes.Deserialize(reader);
                         }
-                        else
-                        {
-                            Attributes = new AosAttributes(this);
-                        }
+
+                        WeaponAttributes = new AosWeaponAttributes(this);
 
                         if (GetSaveFlag(flags, SaveFlag.xWeaponAttributes))
                         {
-                            WeaponAttributes = new AosWeaponAttributes(this, reader);
-                        }
-                        else
-                        {
-                            WeaponAttributes = new AosWeaponAttributes(this);
+                            WeaponAttributes.Deserialize(reader);
                         }
 
                         if (UseSkillMod && m_AccuracyLevel != WeaponAccuracyLevel.Regular && parentMobile != null)
@@ -4079,13 +3987,11 @@ namespace Server.Items
                             PlayerConstructed = true;
                         }
 
+                        SkillBonuses = new AosSkillBonuses(this);
+
                         if (GetSaveFlag(flags, SaveFlag.SkillBonuses))
                         {
-                            SkillBonuses = new AosSkillBonuses(this, reader);
-                        }
-                        else
-                        {
-                            SkillBonuses = new AosSkillBonuses(this);
+                            SkillBonuses.Deserialize(reader);
                         }
 
                         if (GetSaveFlag(flags, SaveFlag.Slayer2))
@@ -4093,13 +3999,11 @@ namespace Server.Items
                             m_Slayer2 = (SlayerName)reader.ReadInt();
                         }
 
+                        AosElementDamages = new AosElementAttributes(this);
+
                         if (GetSaveFlag(flags, SaveFlag.ElementalDamages))
                         {
-                            AosElementDamages = new AosElementAttributes(this, reader);
-                        }
-                        else
-                        {
-                            AosElementDamages = new AosElementAttributes(this);
+                            AosElementDamages.Deserialize(reader);
                         }
 
                         if (GetSaveFlag(flags, SaveFlag.EngravedText))
