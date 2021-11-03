@@ -11,6 +11,7 @@ using System.Xml;
 using Microsoft.Toolkit.HighPerformance;
 using Server.Buffers;
 using Server.Random;
+using Server.Text;
 
 namespace Server
 {
@@ -484,7 +485,6 @@ namespace Server
                         break;
                     }
 
-
                     num = BinaryPrimitives.ReadUInt16BigEndian(ip.Slice(byteIndex, 2));
                     byteIndex += 2;
 
@@ -633,207 +633,42 @@ namespace Server
             }
         }
 
-        public static void FormatBuffer(TextWriter output, Stream input, int length)
+        public static void FormatBuffer(this TextWriter op, ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, int totalLength)
         {
-            output.WriteLine("        0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F");
-            output.WriteLine("       -- -- -- -- -- -- -- --  -- -- -- -- -- -- -- --");
+            op.WriteLine("        0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F");
+            op.WriteLine("       -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --");
 
-            var byteIndex = 0;
-
-            var whole = length >> 4;
-            var rem = length & 0xF;
-
-            for (var i = 0; i < whole; ++i, byteIndex += 16)
+            if (totalLength <= 0)
             {
-                var bytes = new StringBuilder(49);
-                var chars = new StringBuilder(16);
-
-                for (var j = 0; j < 16; ++j)
-                {
-                    var c = input.ReadByte();
-
-                    bytes.Append(c.ToString("X2"));
-
-                    if (j != 7)
-                    {
-                        bytes.Append(' ');
-                    }
-                    else
-                    {
-                        bytes.Append("  ");
-                    }
-
-                    if (c >= 0x20 && c < 0x7F)
-                    {
-                        chars.Append((char)c);
-                    }
-                    else
-                    {
-                        chars.Append('.');
-                    }
-                }
-
-                output.Write(byteIndex.ToString("X4"));
-                output.Write("   ");
-                output.Write(bytes.ToString());
-                output.Write("  ");
-                output.WriteLine(chars.ToString());
+                op.WriteLine("0000   ");
+                return;
             }
 
-            if (rem != 0)
+            Span<byte> lineBytes = stackalloc byte[16];
+            Span<char> lineChars = stackalloc char[47];
+            for (var i = 0; i < totalLength; i += 16)
             {
-                var bytes = new StringBuilder(49);
-                var chars = new StringBuilder(rem);
-
-                for (var j = 0; j < 16; ++j)
+                var length = Math.Min(totalLength - i, 16);
+                if (i < first.Length)
                 {
-                    if (j < rem)
+                    var firstLength = Math.Min(length, first.Length - i);
+                    first.Slice(i, firstLength).CopyTo(lineBytes);
+
+                    if (firstLength < length)
                     {
-                        var c = input.ReadByte();
-
-                        bytes.Append(c.ToString("X2"));
-
-                        if (j != 7)
-                        {
-                            bytes.Append(' ');
-                        }
-                        else
-                        {
-                            bytes.Append("  ");
-                        }
-
-                        if (c >= 0x20 && c < 0x7F)
-                        {
-                            chars.Append((char)c);
-                        }
-                        else
-                        {
-                            chars.Append('.');
-                        }
-                    }
-                    else
-                    {
-                        bytes.Append("   ");
+                        second[..(length - first.Length - i)].CopyTo(lineBytes[(length - firstLength)..]);
                     }
                 }
-
-                output.Write(byteIndex.ToString("X4"));
-                output.Write("   ");
-                output.Write(bytes.ToString());
-                output.Write("  ");
-                output.WriteLine(chars.ToString());
-            }
-        }
-
-        public static void FormatBuffer(TextWriter output, params Memory<byte>[] mems)
-        {
-            output.WriteLine("        0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F");
-            output.WriteLine("       -- -- -- -- -- -- -- --  -- -- -- -- -- -- -- --");
-
-            var byteIndex = 0;
-
-            var length = 0;
-            for (var i = 0; i < mems.Length; i++)
-            {
-                length += mems[i].Length;
-            }
-
-            var position = 0;
-            var memIndex = 0;
-            var span = mems[memIndex].Span;
-
-            var whole = length >> 4;
-            var rem = length & 0xF;
-
-            for (var i = 0; i < whole; ++i, byteIndex += 16)
-            {
-                var bytes = new StringBuilder(49);
-                var chars = new StringBuilder(16);
-
-                for (var j = 0; j < 16; ++j)
+                else
                 {
-                    var c = span[position++];
-                    if (position > span.Length)
-                    {
-                        span = mems[memIndex++].Span;
-                        position = 0;
-                    }
-
-                    bytes.Append(c.ToString("X2"));
-
-                    if (j != 7)
-                    {
-                        bytes.Append(' ');
-                    }
-                    else
-                    {
-                        bytes.Append("  ");
-                    }
-
-                    if (c >= 0x20 && c < 0x7F)
-                    {
-                        chars.Append((char)c);
-                    }
-                    else
-                    {
-                        chars.Append('.');
-                    }
+                    second.Slice(i - first.Length, length).CopyTo(lineBytes);
                 }
 
-                output.Write(byteIndex.ToString("X4"));
-                output.Write("   ");
-                output.Write(bytes.ToString());
-                output.Write("  ");
-                output.WriteLine(chars.ToString());
-            }
+                var charsWritten = ((ReadOnlySpan<byte>)lineBytes[..length]).ToSpacedHexString(lineChars);
 
-            if (rem != 0)
-            {
-                var bytes = new StringBuilder(49);
-                var chars = new StringBuilder(rem);
-
-                for (var j = 0; j < 16; ++j)
-                {
-                    if (j < rem)
-                    {
-                        var c = span[position++];
-                        if (position > span.Length)
-                        {
-                            span = mems[memIndex++].Span;
-                            position = 0;
-                        }
-
-                        bytes.Append(c.ToString("X2"));
-
-                        if (j != 7)
-                        {
-                            bytes.Append(' ');
-                        }
-                        else
-                        {
-                            bytes.Append("  ");
-                        }
-
-                        if (c >= 0x20 && c < 0x7F)
-                        {
-                            chars.Append((char)c);
-                        }
-                        else
-                        {
-                            chars.Append('.');
-                        }
-                    }
-                    else
-                    {
-                        bytes.Append("   ");
-                    }
-                }
-
-                output.Write(byteIndex.ToString("X4"));
-                output.Write("   ");
-                output.Write(bytes.ToString());
-                output.Write("  ");
-                output.WriteLine(chars.ToString());
+                op.Write("{0:X4}   ", i);
+                op.Write(lineChars[..charsWritten]);
+                op.WriteLine();
             }
         }
 
@@ -927,14 +762,11 @@ namespace Server
             return outputList;
         }
 
-        public static bool ToBoolean(string value)
-        {
-#pragma warning disable CA1806 // Do not ignore method results
-            bool.TryParse(value, out var b);
-#pragma warning restore CA1806 // Do not ignore method results
-
-            return b;
-        }
+        public static bool ToBoolean(string value) =>
+            bool.TryParse(value, out var b) && b ||
+            value.InsensitiveEquals("enabled") ||
+            value.InsensitiveEquals("on") ||
+            !value.InsensitiveEquals("disabled") && !value.InsensitiveEquals("off");
 
         public static double ToDouble(string value)
         {
@@ -1335,28 +1167,6 @@ namespace Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Max<T>(T val, T max) where T : IComparable<T> => val.CompareTo(max) > 0 ? val : max;
 
-        public static string TrimMultiline(this string str, string lineSeparator = "\n")
-        {
-            var parts = str.Split(lineSeparator);
-            for (var i = 0; i < parts.Length; i++)
-            {
-                parts[i] = parts[i].Trim();
-            }
-
-            return string.Join(lineSeparator, parts);
-        }
-
-        public static string IndentMultiline(this string str, string indent = "\t", string lineSeparator = "\n")
-        {
-            var parts = str.Split(lineSeparator);
-            for (var i = 0; i < parts.Length; i++)
-            {
-                parts[i] = $"{indent}{parts[i]}";
-            }
-
-            return string.Join(lineSeparator, parts);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Tidy<T>(this List<T> list) where T : ISerializable
         {
@@ -1484,7 +1294,10 @@ namespace Server
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetTimeStamp() => Core.Now.ToString("yyyy-MM-dd-HH-mm-ss");
+        public static string GetTimeStamp() => Core.Now.ToTimeStamp();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ToTimeStamp(this DateTime dt) => dt.ToString("yyyy-MM-dd-HH-mm-ss");
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Add<T>(ref List<T> list, T value)
@@ -1638,6 +1451,27 @@ namespace Server
         {
             dict.Clear();
             dict = null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void DateToComponents(
+            DateTime date,
+            out int year,
+            out int month,
+            out int day,
+            out DayOfWeek dayOfWeek,
+            out int hour,
+            out int min,
+            out int sec
+        )
+        {
+            year = date.Year;
+            month = date.Month;
+            day = date.Day;
+            dayOfWeek = date.DayOfWeek;
+            hour = date.Hour;
+            min = date.Minute;
+            sec = date.Second;
         }
     }
 }
