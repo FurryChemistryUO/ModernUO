@@ -1,4 +1,5 @@
 using System;
+using ModernUO.Serialization;
 
 namespace Server.Items
 {
@@ -21,17 +22,15 @@ namespace Server.Items
     }
 
     [PropertyObject]
-    [EmbeddedSerializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class AquariumState
     {
-        [SerializableParent]
+        [DirtyTrackingEntity]
         private Aquarium _aquarium;
-
-        private int _state;
 
         public AquariumState(Aquarium parent) => _aquarium = parent;
 
-        [SerializableField(0)]
+        [SerializableProperty(0)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int State
         {
@@ -41,21 +40,21 @@ namespace Server.Items
                 if (_state != value)
                 {
                     _state = Math.Clamp(value, 0, 4);
-                    _aquarium.MarkDirty();
+                    this.MarkDirty();
                 }
             }
         }
 
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _maintain;
 
         [SerializableField(2)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _improve;
 
         [SerializableField(3)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _added;
 
         public override string ToString() => "...";

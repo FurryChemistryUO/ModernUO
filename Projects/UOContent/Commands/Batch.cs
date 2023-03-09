@@ -48,15 +48,14 @@ namespace Server.Commands
                     if (command == null)
                     {
                         e.Mobile.SendMessage(
-                            "That is either an invalid command name or one that does not support this modifier: {0}.",
-                            commandString
+                            $"That is either an invalid command name or one that does not support this modifier: {commandString}."                            
                         );
                         return;
                     }
 
                     if (e.Mobile.AccessLevel < command.AccessLevel)
                     {
-                        e.Mobile.SendMessage("You do not have access to that command: {0}.", commandString);
+                        e.Mobile.SendMessage($"You do not have access to that command: {commandString}.");
                         return;
                     }
 
@@ -177,7 +176,8 @@ namespace Server.Commands
             CommandSystem.Register("Batch", AccessLevel.Counselor, Batch_OnCommand);
         }
 
-        [Usage("Batch"), Description("Allows multiple commands to be run at the same time.")]
+        [Usage("Batch")]
+        [Description("Allows multiple commands to be run at the same time.")]
         public static void Batch_OnCommand(CommandEventArgs e)
         {
             e.Mobile.SendGump(new BatchGump(e.Mobile, new Batch()));

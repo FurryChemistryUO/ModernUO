@@ -27,11 +27,9 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074940,
-                "",
-                0x2A
-            ); // You have gained the boon of Maul!  Your understanding of the seasons grows.  You are one step closer to claiming your elven heritage.
+            // You have gained the boon of Maul!  Your understanding of the seasons grows.
+            // You are one step closer to claiming your elven heritage.
+            instance.Player.SendLocalizedMessage(1074940, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -58,11 +56,9 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074941,
-                "",
-                0x2A
-            ); // You have gained the boon of Strongroot!  You have been approved by one whose roots touch the bones of Sosaria.  You are one step closer to claiming your elven heritage.
+            // You have gained the boon of Strongroot!  You have been approved by one whose roots touch the bones of Sosaria.
+            // You are one step closer to claiming your elven heritage.
+            instance.Player.SendLocalizedMessage(1074941, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -89,11 +85,9 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074945,
-                "",
-                0x2A
-            ); // You have gained the boon of Enigma!  You are wise enough to know how little you know.  You are one step closer to claiming your elven heritage.
+            // You have gained the boon of Enigma!  You are wise enough to know how little you know.
+            // You are one step closer to claiming your elven heritage.
+            instance.Player.SendLocalizedMessage(1074945, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
 
@@ -125,7 +119,7 @@ namespace Server.Engines.MLQuests.Definitions
 
             Objectives.Add(
                 new EscortObjective(new QuestArea(1074779, "Bravehorn's drinking pool"))
-            ); // Bravehorn's drinking pool
+            );
 
             Rewards.Add(new DummyReward(1072806)); // The boon of Bravehorn.
         }
@@ -134,11 +128,10 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074942,
-                "",
-                0x2A
-            ); // You have gained the boon of Bravehorn!  You have glimpsed the nobility of those that sacrifice themselves for their people.  You are one step closer to claiming your elven heritage.
+            // You have gained the boon of Bravehorn!
+            // You have glimpsed the nobility of those that sacrifice themselves for their people.
+            // You are one step closer to claiming your elven heritage.
+            instance.Player.SendLocalizedMessage(1074942, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -161,7 +154,7 @@ namespace Server.Engines.MLQuests.Definitions
                     "timber wolves",
                     new QuestArea(1074833, "Huntsman's Forest")
                 )
-            ); // Huntsman's Forest
+            );
 
             Rewards.Add(new DummyReward(1072807)); // The boon of the Huntsman.
         }
@@ -170,11 +163,10 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074943,
-                "",
-                0x2A
-            ); // You have gained the boon of the Huntsman!  You have been given a taste of the bittersweet duty of those who guard the balance.  You are one step closer to claiming your elven heritage.
+            // You have gained the boon of the Huntsman!
+            // You have been given a taste of the bittersweet duty of those who guard the balance.
+            // You are one step closer to claiming your elven heritage.
+            instance.Player.SendLocalizedMessage(1074943, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -200,11 +192,10 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074944,
-                "",
-                0x2A
-            ); // You have gained the boon of Arielle!  You have been taught the importance of laughter and light spirits.  You are one step closer to claiming your elven heritage.
+            // You have gained the boon of Arielle!
+            // You have been taught the importance of laughter and light spirits.
+            // You are one step closer to claiming your elven heritage.
+            instance.Player.SendLocalizedMessage(1074944, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -278,12 +269,12 @@ namespace Server.Engines.MLQuests.Definitions
     public class Enigma : BaseCreature
     {
         [Constructible]
-        public Enigma()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
+        public Enigma() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Body = 788;
             BaseSoundID = 0x3EE;
 
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
         }
 
@@ -494,11 +485,10 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074946,
-                "",
-                0x2A
-            ); // You have demonstrated your ingenuity!  Humans are jacks of all trades and know a little about a lot of things.  You are one step closer to achieving humanity.
+            // You have demonstrated your ingenuity!
+            // Humans are jacks of all trades and know a little about a lot of things.
+            // You are one step closer to achieving humanity.
+            instance.Player.SendLocalizedMessage(1074946, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -534,11 +524,9 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074948,
-                "",
-                0x2A
-            ); // You have demonstrated your physical strength!  Humans can carry vast loads without complaint.  You are one step closer to achieving humanity.
+            // You have demonstrated your physical strength!
+            // Humans can carry vast loads without complaint.  You are one step closer to achieving humanity.
+            instance.Player.SendLocalizedMessage(1074948, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -559,11 +547,8 @@ namespace Server.Engines.MLQuests.Definitions
         public static void AwardTo(PlayerMobile pm)
         {
             MLQuestSystem.GetOrCreateContext(pm).SetDoneQuest(MLQuestSystem.FindQuest(typeof(HumanInNeed)));
-            pm.SendLocalizedMessage(
-                1074949,
-                "",
-                0x2A
-            ); // You have demonstrated your compassion!  Your kind actions have been noted.
+            // You have demonstrated your compassion!  Your kind actions have been noted.
+            pm.SendLocalizedMessage(1074949, "", 0x2A);
         }
     }
 
@@ -586,7 +571,7 @@ namespace Server.Engines.MLQuests.Definitions
                     "efreets",
                     new QuestArea(1074808, "Fire")
                 )
-            ); // Fire
+            );
             Objectives.Add(
                 new KillObjective(
                     5,
@@ -594,7 +579,7 @@ namespace Server.Engines.MLQuests.Definitions
                     "ice fiends",
                     new QuestArea(1074809, "Ice")
                 )
-            ); // Ice
+            );
 
             Rewards.Add(new DummyReward(1074875)); // Another step closer to becoming human.
         }
@@ -603,11 +588,10 @@ namespace Server.Engines.MLQuests.Definitions
 
         public override void GetRewards(MLQuestInstance instance)
         {
-            instance.Player.SendLocalizedMessage(
-                1074947,
-                "",
-                0x2A
-            ); // You have demonstrated your toughness!  Humans are able to endure unimaginable hardships in pursuit of their goals.  You are one step closer to achieving humanity.
+            // You have demonstrated your toughness!
+            // Humans are able to endure unimaginable hardships in pursuit of their goals.
+            // You are one step closer to achieving humanity.
+            instance.Player.SendLocalizedMessage(1074947, "", 0x2A);
             instance.ClaimRewards(); // skip gump
         }
     }
@@ -616,12 +600,13 @@ namespace Server.Engines.MLQuests.Definitions
     public class Sledge : BaseCreature
     {
         [Constructible]
-        public Sledge()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
+        public Sledge() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Title = "the Versatile";
             Body = 400;
             Hue = Race.RandomSkinHue();
+
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
 
             AddItem(new Tunic(Utility.RandomNeutralHue()));
@@ -647,9 +632,9 @@ namespace Server.Engines.MLQuests.Definitions
                 pm,
                 Utility.RandomList(
                     1074188, // Weakling! You are not up to the task I have.
-                    1074195
+                    1074195  // You there, in the stupid hat!  Come here.
                 )
-            ); // You there, in the stupid hat!   Come here.
+            );
         }
 
         public override void Serialize(IGenericWriter writer)
@@ -671,12 +656,13 @@ namespace Server.Engines.MLQuests.Definitions
     public class Patricus : BaseCreature
     {
         [Constructible]
-        public Patricus()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
+        public Patricus() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Title = "the Trader";
             Body = 400;
             Hue = Race.RandomSkinHue();
+
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
 
             AddItem(new FancyShirt(Utility.RandomNeutralHue()));
@@ -713,13 +699,14 @@ namespace Server.Engines.MLQuests.Definitions
     public class Belulah : BaseCreature
     {
         [Constructible]
-        public Belulah()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2)
+        public Belulah() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Title = "the scorned";
             Female = true;
             Body = 401;
             Hue = Race.RandomSkinHue();
+
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
 
             Utility.AssignRandomHair(this);

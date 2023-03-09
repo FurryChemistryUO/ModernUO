@@ -116,16 +116,6 @@ namespace Server.Factions
             }
         }
 
-        public void Broadcast(string format, params object[] args)
-        {
-            Broadcast(string.Format(format, args));
-        }
-
-        public void Broadcast(int hue, string format, params object[] args)
-        {
-            Broadcast(hue, string.Format(format, args));
-        }
-
         public void BeginBroadcast(Mobile from)
         {
             from.SendLocalizedMessage(1010265); // Enter Faction Message
@@ -139,7 +129,7 @@ namespace Server.Factions
                 State.RegisterBroadcast();
             }
 
-            Broadcast(Definition.HueBroadcast, "{0} [Commander] {1} : {2}", from.Name, Definition.FriendlyName, text);
+            Broadcast(Definition.HueBroadcast, $"{from.Name} [Commander] {Definition.FriendlyName} : {text}");
         }
 
         public static void HandleAtrophy()
@@ -273,9 +263,14 @@ namespace Server.Factions
                 return false;
             }
 
-            var eable = mob.Map.GetObjectsInRange(mob.Location, range, items, mobs);
+            var eable = mob.Map.GetObjectsInRange(mob.Location, range);
             foreach (var obj in eable)
             {
+                if (!mobs && obj is Mobile || !items && obj is Item)
+                {
+                    continue;
+                }
+
                 if (type.IsInstanceOfType(obj))
                 {
                     eable.Free();
@@ -502,7 +497,7 @@ namespace Server.Factions
 
         public static bool IsFactionBanned(Mobile mob)
         {
-            if (!(mob.Account is Account acct))
+            if (mob.Account is not Account acct)
             {
                 return false;
             }
@@ -512,7 +507,7 @@ namespace Server.Factions
 
         public void OnJoinAccepted(Mobile mob)
         {
-            if (!(mob is PlayerMobile pm))
+            if (mob is not PlayerMobile pm)
             {
                 return; // sanity
             }
@@ -571,7 +566,7 @@ namespace Server.Factions
 
                     for (var i = 0; i < members.Count; ++i)
                     {
-                        if (!(members[i] is PlayerMobile member))
+                        if (members[i] is not PlayerMobile member)
                         {
                             continue;
                         }
@@ -767,7 +762,7 @@ namespace Server.Factions
 
             foreach (var item in World.Items.Values)
             {
-                if (item is IFactionItem && !(item is HoodedShroudOfShadows))
+                if (item is IFactionItem && item is not HoodedShroudOfShadows)
                 {
                     items.Add(item);
                 }
@@ -811,7 +806,7 @@ namespace Server.Factions
                 }
             }
 
-            e.Mobile.SendMessage("{0} items reset", count);
+            e.Mobile.SendMessage($"{count} items reset");
         }
 
         public static void FactionCommander_OnCommand(CommandEventArgs e)
@@ -1315,7 +1310,7 @@ namespace Server.Factions
             var context = new SkillLossContext();
             m_SkillLoss[mob] = context;
 
-            var mods = context.m_Mods = new List<SkillMod>();
+            var mods = context.m_Mods = new HashSet<SkillMod>();
 
             for (var i = 0; i < mob.Skills.Length; ++i)
             {
@@ -1324,7 +1319,12 @@ namespace Server.Factions
 
                 if (baseValue > 0)
                 {
-                    SkillMod mod = new DefaultSkillMod(sk.SkillName, true, -(baseValue * SkillLossFactor));
+                    SkillMod mod = new DefaultSkillMod(
+                        sk.SkillName,
+                        $"{sk.Name}FactionSkillLoss",
+                        true,
+                        -(baseValue * SkillLossFactor)
+                    );
 
                     mods.Add(mod);
                     mob.AddSkillMod(mod);
@@ -1347,11 +1347,12 @@ namespace Server.Factions
 
             var mods = context.m_Mods;
 
-            for (var i = 0; i < mods.Count; ++i)
+            foreach (var mod in mods)
             {
-                mob.RemoveSkillMod(mods[i]);
+                mod.Remove();
             }
 
+            context.m_Mods = null;
             context._timerToken.Cancel();
 
             return true;
@@ -1371,7 +1372,7 @@ namespace Server.Factions
 
         private class SkillLossContext
         {
-            public List<SkillMod> m_Mods;
+            public HashSet<SkillMod> m_Mods;
             public TimerExecutionToken _timerToken;
         }
     }

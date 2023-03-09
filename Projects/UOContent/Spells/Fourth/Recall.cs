@@ -22,6 +22,10 @@ namespace Server.Spells.Fourth
 
         private readonly RunebookEntry m_Entry;
 
+        public RecallSpell(Mobile caster, Item scroll) : base(caster, scroll, _info)
+        {
+        }
+
         public RecallSpell(Mobile caster, RunebookEntry entry = null, Runebook book = null, Item scroll = null) : base(
             caster,
             scroll,
@@ -44,11 +48,13 @@ namespace Server.Spells.Fourth
             {
                 Caster.SendLocalizedMessage(1005569); // You can not recall to another facet.
             }
-            else if (!SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom))
+            else if (!SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom, out var failureMessage))
             {
+                failureMessage.SendMessageTo(Caster);
             }
-            else if (!SpellHelper.CheckTravel(Caster, map, loc, TravelCheckType.RecallTo))
+            else if (!SpellHelper.CheckTravel(Caster, map, loc, TravelCheckType.RecallTo, out failureMessage))
             {
+                failureMessage.SendMessageTo(Caster);
             }
             else if (map == Map.Felucca && Caster is PlayerMobile mobile && mobile.Young)
             {
@@ -153,7 +159,13 @@ namespace Server.Spells.Fourth
                 return false;
             }
 
-            return SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom);
+            if (!SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom, out var failureMessage))
+            {
+                failureMessage.SendMessageTo(Caster);
+                return false;
+            }
+
+            return true;
         }
     }
 }

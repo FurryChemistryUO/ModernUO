@@ -1,7 +1,6 @@
 using System;
 using Server.Items;
 using Server.Mobiles;
-using Server.Network;
 using Server.Spells;
 using Server.Spells.Necromancy;
 using Server.Spells.Ninjitsu;
@@ -158,8 +157,8 @@ namespace Server
 
                 AOS.Damage(m_Mobile, From, damage, 0, 0, 0, 100, 0);
 
-                if (Utility.RandomDouble() >= 0.60
-                ) // OSI: randomly revealed between first and third damage tick, guessing 60% chance
+                // OSI: randomly revealed between first and third damage tick, guessing 60% chance
+                if (Utility.RandomDouble() < 0.40)
                 {
                     m_Mobile.RevealingAction();
                 }

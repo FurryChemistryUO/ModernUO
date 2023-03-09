@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class WandererOfTheVoid : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class WandererOfTheVoid : BaseCreature
     {
         [Constructible]
-        public WandererOfTheVoid() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public WandererOfTheVoid() : base(AIType.AI_Mage)
         {
             Body = 316;
             BaseSoundID = 377;
@@ -48,10 +50,6 @@ namespace Server.Mobiles
             }
         }
 
-        public WandererOfTheVoid(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a wanderer of the void corpse";
         public override string DefaultName => "a wanderer of the void";
 
@@ -62,18 +60,6 @@ namespace Server.Mobiles
         public override void GenerateLoot()
         {
             AddLoot(LootPack.FilthyRich);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

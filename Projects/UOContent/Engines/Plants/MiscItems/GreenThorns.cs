@@ -1,6 +1,5 @@
 using System;
 using Server.Mobiles;
-using Server.Network;
 using Server.Targeting;
 using Server.Utilities;
 
@@ -33,11 +32,8 @@ namespace Server.Items
 
             if (!from.CanBeginAction<GreenThorns>())
             {
-                from.LocalOverheadMessage(
-                    MessageType.Regular,
-                    0x3B2,
-                    1061908
-                ); // * You must wait a while before planting another thorn. *
+                // * You must wait a while before planting another thorn. *
+                from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1061908);
                 return;
             }
 
@@ -80,11 +76,8 @@ namespace Server.Items
 
                 if (!from.CanBeginAction<GreenThorns>())
                 {
-                    from.LocalOverheadMessage(
-                        MessageType.Regular,
-                        0x3B2,
-                        1061908
-                    ); // * You must wait a while before planting another thorn. *
+                    // * You must wait a while before planting another thorn. *
+                    from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1061908);
                     return;
                 }
 
@@ -99,13 +92,10 @@ namespace Server.Items
                     return;
                 }
 
-                if (!(targeted is LandTarget land))
+                if (targeted is not LandTarget land)
                 {
-                    from.LocalOverheadMessage(
-                        MessageType.Regular,
-                        0x3B2,
-                        1061912
-                    ); // * You cannot plant a green thorn there! *
+                    // * You cannot plant a green thorn there! *
+                    from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1061912);
                 }
                 else
                 {
@@ -113,27 +103,18 @@ namespace Server.Items
 
                     if (effect == null)
                     {
-                        from.LocalOverheadMessage(
-                            MessageType.Regular,
-                            0x3B2,
-                            1061913
-                        ); // * You sense it would be useless to plant a green thorn there. *
+                        // * You sense it would be useless to plant a green thorn there. *
+                        from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1061913);
                     }
                     else
                     {
                         m_Thorn.Consume();
 
-                        from.LocalOverheadMessage(
-                            MessageType.Emote,
-                            0x961,
-                            1061914
-                        ); // * You push the strange green thorn into the ground *
-                        from.NonlocalOverheadMessage(
-                            MessageType.Emote,
-                            0x961,
-                            1061915,
-                            from.Name
-                        ); // * ~1_PLAYER_NAME~ pushes a strange green thorn into the ground. *
+                        // * You push the strange green thorn into the ground *
+                        from.LocalOverheadMessage(MessageType.Emote, 0x961, 1061914);
+
+                        // * ~1_PLAYER_NAME~ pushes a strange green thorn into the ground. *
+                        from.NonlocalOverheadMessage(MessageType.Emote, 0x961, 1061915, from.Name);
 
                         from.BeginAction<GreenThorns>();
                         new EndActionTimer(from).Start();

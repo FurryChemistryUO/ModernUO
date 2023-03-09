@@ -1,8 +1,9 @@
+using ModernUO.Serialization;
 using Server.Targets;
 
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public abstract partial class BaseKnife : BaseMeleeWeapon
     {
         public BaseKnife(int itemID) : base(itemID)
@@ -31,7 +32,7 @@ namespace Server.Items
             {
                 --PoisonCharges;
 
-                if (Utility.RandomDouble() >= 0.5) // 50% chance to poison
+                if (Utility.RandomBool()) // 50% chance to poison
                 {
                     defender.ApplyPoison(attacker, Poison);
                 }

@@ -382,10 +382,7 @@ namespace Server.Commands.Generic
                     {
                         CommandLogging.WriteLine(
                             m_From,
-                            "{0} {1} deleting {2}",
-                            m_From.AccessLevel,
-                            CommandLogging.Format(m_From),
-                            CommandLogging.Format(m_Item)
+                            $"{m_From.AccessLevel} {CommandLogging.Format(m_From)} deleting {CommandLogging.Format(m_Item)}"
                         );
                         m_Item.Delete();
                         m_From.SendGump(new InterfaceGump(m_From, m_Columns, m_List, m_Page, m_Item));
@@ -394,7 +391,7 @@ namespace Server.Commands.Generic
                 case 4: // Go there
                     {
                         m_From.SendGump(new InterfaceItemGump(m_From, m_Columns, m_List, m_Page, m_Item));
-                        InvokeCommand($"Go {m_Item.Serial.Value}");
+                        InvokeCommand($"Go {m_Item.Serial}");
                         break;
                     }
                 case 5: // Move to target
@@ -553,10 +550,7 @@ namespace Server.Commands.Generic
                         {
                             CommandLogging.WriteLine(
                                 m_From,
-                                "{0} {1} deleting {2}",
-                                m_From.AccessLevel,
-                                CommandLogging.Format(m_From),
-                                CommandLogging.Format(m_Mobile)
+                                $"{m_From.AccessLevel} {CommandLogging.Format(m_From)} deleting {CommandLogging.Format(m_Mobile)}"
                             );
                             m_Mobile.Delete();
                             m_From.SendGump(new InterfaceGump(m_From, m_Columns, m_List, m_Page, m_Mobile));
@@ -567,7 +561,7 @@ namespace Server.Commands.Generic
                 case 4: // Go there
                     {
                         m_From.SendGump(new InterfaceMobileGump(m_From, m_Columns, m_List, m_Page, m_Mobile));
-                        InvokeCommand($"Go {m_Mobile.Serial.Value}");
+                        InvokeCommand($"Go {m_Mobile.Serial}");
                         break;
                     }
                 case 5: // Bring them here

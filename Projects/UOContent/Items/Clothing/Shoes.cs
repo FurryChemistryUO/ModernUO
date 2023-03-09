@@ -1,6 +1,8 @@
+using ModernUO.Serialization;
+
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public abstract partial class BaseShoes : BaseClothing
     {
         public BaseShoes(int itemID, int hue = 0) : base(itemID, Layer.Shoes, hue)
@@ -20,7 +22,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2307, 0x2308)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class FurBoots : BaseShoes
     {
         [Constructible]
@@ -28,7 +30,7 @@ namespace Server.Items
     }
 
     [Flippable(0x170b, 0x170c)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class Boots : BaseShoes
     {
         [Constructible]
@@ -38,19 +40,16 @@ namespace Server.Items
     }
 
     [Flippable]
-    [Serializable(2, false)]
+    [SerializationGenerator(2, false)]
     public partial class ThighBoots : BaseShoes, IArcaneEquip
     {
-        private int _maxArcaneCharges;
-        private int _curArcaneCharges;
-
         [Constructible]
         public ThighBoots(int hue = 0) : base(0x1711, hue) => Weight = 4.0;
 
         public override CraftResource DefaultResource => CraftResource.RegularLeather;
 
         [EncodedInt]
-        [SerializableField(0)]
+        [SerializableProperty(0)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int CurArcaneCharges
         {
@@ -65,7 +64,7 @@ namespace Server.Items
         }
 
         [EncodedInt]
-        [SerializableField(1)]
+        [SerializableProperty(1)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int MaxArcaneCharges
         {
@@ -118,13 +117,13 @@ namespace Server.Items
             }
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
             if (IsArcane)
             {
-                list.Add(1061837, "{0}\t{1}", _curArcaneCharges, _maxArcaneCharges); // arcane charges: ~1_val~ / ~2_val~
+                list.Add(1061837, $"{_curArcaneCharges}\t{_maxArcaneCharges}"); // arcane charges: ~1_val~ / ~2_val~
             }
         }
 
@@ -140,7 +139,7 @@ namespace Server.Items
     }
 
     [Flippable(0x170f, 0x1710)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class Shoes : BaseShoes
     {
         [Constructible]
@@ -150,7 +149,7 @@ namespace Server.Items
     }
 
     [Flippable(0x170d, 0x170e)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class Sandals : BaseShoes
     {
         [Constructible]
@@ -162,7 +161,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2797, 0x27E2)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class NinjaTabi : BaseShoes
     {
         [Constructible]
@@ -170,7 +169,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2796, 0x27E1)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class SamuraiTabi : BaseShoes
     {
         [Constructible]
@@ -178,7 +177,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2796, 0x27E1)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class Waraji : BaseShoes
     {
         [Constructible]
@@ -186,7 +185,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2FC4, 0x317A)]
-    [Serializable(0)]
+    [SerializationGenerator(0)]
     public partial class ElvenBoots : BaseShoes
     {
         [Constructible]

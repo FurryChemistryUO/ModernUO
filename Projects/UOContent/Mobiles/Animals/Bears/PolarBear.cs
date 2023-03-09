@@ -1,10 +1,13 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
     [TypeAlias("Server.Mobiles.Polarbear")]
-    public class PolarBear : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class PolarBear : BaseCreature
     {
         [Constructible]
-        public PolarBear() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public PolarBear() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = 213;
             BaseSoundID = 0xA3;
@@ -39,10 +42,6 @@ namespace Server.Mobiles
             MinTameSkill = 35.1;
         }
 
-        public PolarBear(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a polar bear corpse";
         public override string DefaultName => "a polar bear";
 
@@ -50,19 +49,5 @@ namespace Server.Mobiles
         public override int Hides => 16;
         public override FoodType FavoriteFood => FoodType.Fish | FoodType.FruitsAndVegies | FoodType.Meat;
         public override PackInstinct PackInstinct => PackInstinct.Bear;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

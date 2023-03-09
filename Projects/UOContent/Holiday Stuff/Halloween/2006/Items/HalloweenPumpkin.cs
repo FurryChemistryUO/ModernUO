@@ -1,8 +1,9 @@
-﻿using Server.Mobiles;
+﻿using ModernUO.Serialization;
+using Server.Mobiles;
 
 namespace Server.Items
 {
-    [Serializable(1, false)]
+    [SerializationGenerator(1, false)]
     public partial class HalloweenPumpkin : Item
     {
         private static readonly string[] m_Staff =
@@ -18,7 +19,7 @@ namespace Server.Items
         public HalloweenPumpkin()
         {
             Weight = Utility.RandomMinMax(3, 20);
-            ItemID = Utility.RandomDouble() <= .02
+            ItemID = Utility.RandomDouble() < 0.02
                 ? Utility.RandomList(0x4694, 0x4698)
                 : Utility.RandomList(0xc6a, 0xc6b, 0xc6c);
         }
@@ -62,7 +63,7 @@ namespace Server.Items
 
         public override bool OnDragLift(Mobile from)
         {
-            if (Name == null && (ItemID == 0x4694 || ItemID == 0x4691 || ItemID == 0x4698 || ItemID == 0x4695))
+            if (Name == null && ItemID is 0x4694 or 0x4691 or 0x4698 or 0x4695)
             {
                 if (Utility.RandomBool())
                 {

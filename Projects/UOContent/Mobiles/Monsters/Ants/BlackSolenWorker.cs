@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class BlackSolenWorker : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class BlackSolenWorker : BaseCreature
     {
         [Constructible]
-        public BlackSolenWorker() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public BlackSolenWorker() : base(AIType.AI_Melee)
         {
             Body = 805;
             BaseSoundID = 959;
@@ -43,10 +45,6 @@ namespace Server.Mobiles
             PackItem(new ZoogiFungus());
         }
 
-        public BlackSolenWorker(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a solen worker corpse";
         public override string DefaultName => "a black solen worker";
 
@@ -80,18 +78,6 @@ namespace Server.Mobiles
             SolenHelper.OnBlackDamage(from);
 
             base.OnDamage(amount, from, willKill);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

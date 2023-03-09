@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class Doppleganger : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Doppleganger : BaseCreature
     {
         [Constructible]
-        public Doppleganger() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public Doppleganger() : base(AIType.AI_Melee)
         {
             Body = 0x309;
             BaseSoundID = 0x451;
@@ -32,10 +35,6 @@ namespace Server.Mobiles
             VirtualArmor = 55;
         }
 
-        public Doppleganger(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a doppleganger corpse";
         public override string DefaultName => "a doppleganger";
 
@@ -45,18 +44,6 @@ namespace Server.Mobiles
         public override void GenerateLoot()
         {
             AddLoot(LootPack.Average);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

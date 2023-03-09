@@ -1,12 +1,14 @@
 using System;
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class Savage : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Savage : BaseCreature
     {
         [Constructible]
-        public Savage() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public Savage() : base(AIType.AI_Melee)
         {
             Name = NameList.RandomName("savage");
 
@@ -52,7 +54,7 @@ namespace Server.Mobiles
             AddItem(new BoneArms());
             AddItem(new BoneLegs());
 
-            if (Utility.RandomDouble() < 0.5)
+            if (Utility.RandomBool())
             {
                 AddItem(new SavageMask());
             }
@@ -60,10 +62,6 @@ namespace Server.Mobiles
             {
                 AddItem(new OrcishKinMask());
             }
-        }
-
-        public Savage(Serial serial) : base(serial)
-        {
         }
 
         public override string CorpseName => "a savage corpse";
@@ -111,23 +109,10 @@ namespace Server.Mobiles
 
         public override void AlterMeleeDamageTo(Mobile to, ref int damage)
         {
-            if (to is Dragon || to is WhiteWyrm || to is SwampDragon || to is Drake || to is Nightmare || to is Hiryu ||
-                to is LesserHiryu || to is Daemon)
+            if (to is Dragon or WhiteWyrm or SwampDragon or Drake or Nightmare or Hiryu or LesserHiryu or Daemon)
             {
                 damage *= 3;
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

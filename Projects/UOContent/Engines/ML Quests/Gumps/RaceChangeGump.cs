@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ModernUO.Serialization;
 using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
@@ -76,11 +77,11 @@ namespace Server.Engines.MLQuests.Gumps
             }
         }
 
-        public static void Initialize()
+        public static unsafe void Initialize()
         {
             m_Pending = new Dictionary<NetState, RaceChangeState>();
 
-            IncomingExtendedCommandPackets.RegisterExtended(0x2A, true, RaceChangeReply);
+            IncomingExtendedCommandPackets.RegisterExtended(0x2A, true, &RaceChangeReply);
         }
 
         public static bool IsPending(NetState state) => state != null && m_Pending.ContainsKey(state);
@@ -167,9 +168,10 @@ namespace Server.Engines.MLQuests.Gumps
             {
                 from.SendLocalizedMessage(1073647); // You may not continue while mounted...
             }
-            else if (!from.CanBeginAction<PolymorphSpell>() || DisguiseTimers.IsDisguised(from) ||
+            // TODO: Does this cover everything?
+            else if (!from.CanBeginAction<PolymorphSpell>() || DisguisePersistence.IsDisguised(from) ||
                      AnimalForm.UnderTransformation(from) || !from.CanBeginAction<IncognitoSpell>() ||
-                     from.IsBodyMod)                // TODO: Does this cover everything?
+                     from.IsBodyMod)
             {
                 from.SendLocalizedMessage(1073648); // You may only proceed while in your original state...
             }
@@ -193,7 +195,7 @@ namespace Server.Engines.MLQuests.Gumps
             return false;
         }
 
-        private static void RaceChangeReply(NetState state, CircularBufferReader reader, ref int packetLength)
+        private static void RaceChangeReply(NetState state, CircularBufferReader reader, int packetLength)
         {
             if (!m_Pending.TryGetValue(state, out var raceChangeState))
             {
@@ -202,7 +204,7 @@ namespace Server.Engines.MLQuests.Gumps
 
             CloseCurrent(state);
 
-            if (!(state.Mobile is PlayerMobile pm))
+            if (state.Mobile is not PlayerMobile pm)
             {
                 return;
             }
@@ -261,7 +263,7 @@ namespace Server.Engines.MLQuests.Gumps
             }
             else
             {
-                pm.SendMessage("You have fully changed your race to {0}.", targetRace.Name);
+                pm.SendMessage($"You have fully changed your race to {targetRace.Name}.");
             }
 
             owner?.ConsumeNeeded(pm);
@@ -284,17 +286,11 @@ namespace Server.Engines.MLQuests.Gumps
         }
     }
 
-    public class RaceChangeDeed : Item, IRaceChanger
+    [SerializationGenerator(0, false)]
+    public partial class RaceChangeDeed : Item, IRaceChanger
     {
         [Constructible]
-        public RaceChangeDeed()
-            : base(0x14F0) =>
-            LootType = LootType.Blessed;
-
-        public RaceChangeDeed(Serial serial)
-            : base(serial)
-        {
-        }
+        public RaceChangeDeed() : base(0x14F0) => LootType = LootType.Blessed;
 
         public override string DefaultName => "a race change deed";
 
@@ -325,7 +321,7 @@ namespace Server.Engines.MLQuests.Gumps
 
         public override void OnDoubleClick(Mobile from)
         {
-            if (!(from is PlayerMobile pm))
+            if (from is not PlayerMobile pm)
             {
                 return;
             }
@@ -334,20 +330,6 @@ namespace Server.Engines.MLQuests.Gumps
             {
                 pm.SendGump(new RaceChangeConfirmGump(this, pm, pm.Race == Race.Human ? Race.Elf : Race.Human));
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

@@ -53,7 +53,8 @@ namespace Server.Spells.First
                  * 15 + (Inscription/20) Physcial bonus
                  * -5 Elemental
                  * The reactive armor spell has an indefinite duration, becoming active when cast, and deactivated when re-cast.
-                 * Reactive Armor, Protection, and Magic Reflection will stay on�even after logging out, even after dying�until you �turn them off� by casting them again.
+                 * Reactive Armor, Protection, and Magic Reflection will stay on even after logging out,
+                 * even after dying, until you turn them off by casting them again.
                  * (+20 physical -5 elemental at 100 Inscription)
                  */
 
@@ -82,12 +83,13 @@ namespace Server.Spells.First
                         {
                             new ResistanceMod(
                                 ResistanceType.Physical,
+                                "PhysicalResistReactiveArmorSpell",
                                 15 + (int)(targ.Skills.Inscribe.Value / 20)
                             ),
-                            new ResistanceMod(ResistanceType.Fire, -5),
-                            new ResistanceMod(ResistanceType.Cold, -5),
-                            new ResistanceMod(ResistanceType.Poison, -5),
-                            new ResistanceMod(ResistanceType.Energy, -5)
+                            new ResistanceMod(ResistanceType.Fire, "FireResistReactiveArmorSpell", -5),
+                            new ResistanceMod(ResistanceType.Cold, "ColdResistReactiveArmorSpell", -5),
+                            new ResistanceMod(ResistanceType.Poison, "PoisonResistReactiveArmorSpell", -5),
+                            new ResistanceMod(ResistanceType.Energy, "EnergyResistReactiveArmorSpell", -5)
                         };
 
                         _table[targ] = mods;

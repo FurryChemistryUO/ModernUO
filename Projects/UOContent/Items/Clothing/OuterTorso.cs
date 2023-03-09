@@ -1,10 +1,11 @@
 using System;
 using System.Runtime.CompilerServices;
+using ModernUO.Serialization;
 using Server.Engines.VeteranRewards;
 
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public abstract partial class BaseOuterTorso : BaseClothing
     {
         public BaseOuterTorso(int itemID, int hue = 0) : base(itemID, Layer.OuterTorso, hue)
@@ -12,7 +13,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [Flippable(0x230E, 0x230D)]
     public partial class GildedDress : BaseOuterTorso
     {
@@ -20,7 +21,7 @@ namespace Server.Items
         public GildedDress(int hue = 0) : base(0x230E, hue) => Weight = 3.0;
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [Flippable(0x1F00, 0x1EFF)]
     public partial class FancyDress : BaseOuterTorso
     {
@@ -28,7 +29,7 @@ namespace Server.Items
         public FancyDress(int hue = 0) : base(0x1F00, hue) => Weight = 3.0;
     }
 
-    [Serializable(3, false)]
+    [SerializationGenerator(3, false)]
     public partial class DeathRobe : Robe
     {
         private static readonly TimeSpan m_DefaultDecayTime = TimeSpan.FromMinutes(1.0);
@@ -141,16 +142,16 @@ namespace Server.Items
     }
 
     [Flippable]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class RewardRobe : BaseOuterTorso, IRewardItem
     {
         [InvalidateProperties]
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _number;
 
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private bool _isRewardItem;
 
         [Constructible]
@@ -192,7 +193,7 @@ namespace Server.Items
             return false;
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
@@ -223,16 +224,16 @@ namespace Server.Items
     }
 
     [Flippable]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class RewardDress : BaseOuterTorso, IRewardItem
     {
         [InvalidateProperties]
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _number;
 
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private bool _isRewardItem;
 
         [Constructible]
@@ -274,7 +275,7 @@ namespace Server.Items
             return false;
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
@@ -305,17 +306,14 @@ namespace Server.Items
     }
 
     [Flippable]
-    [Serializable(2, false)]
+    [SerializationGenerator(2, false)]
     public partial class Robe : BaseOuterTorso, IArcaneEquip
     {
-        private int _curArcaneCharges;
-        private int _maxArcaneCharges;
-
         [Constructible]
         public Robe(int hue = 0) : base(0x1F03, hue) => Weight = 3.0;
 
         [EncodedInt]
-        [SerializableField(0)]
+        [SerializableProperty(0)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int CurArcaneCharges
         {
@@ -330,7 +328,7 @@ namespace Server.Items
         }
 
         [EncodedInt]
-        [SerializableField(1)]
+        [SerializableProperty(1)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int MaxArcaneCharges
         {
@@ -373,13 +371,13 @@ namespace Server.Items
             }
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
             if (IsArcane)
             {
-                list.Add(1061837, "{0}\t{1}", _curArcaneCharges, _maxArcaneCharges); // arcane charges: ~1_val~ / ~2_val~
+                list.Add(1061837, $"{_curArcaneCharges}\t{_maxArcaneCharges}"); // arcane charges: ~1_val~ / ~2_val~
             }
         }
 
@@ -404,7 +402,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class MonkRobe : BaseOuterTorso
     {
         [Constructible]
@@ -425,7 +423,7 @@ namespace Server.Items
     }
 
     [Flippable(0x1f01, 0x1f02)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class PlainDress : BaseOuterTorso
     {
         [Constructible]
@@ -433,7 +431,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2799, 0x27E4)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class Kamishimo : BaseOuterTorso
     {
         [Constructible]
@@ -441,7 +439,7 @@ namespace Server.Items
     }
 
     [Flippable(0x279C, 0x27E7)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class HakamaShita : BaseOuterTorso
     {
         [Constructible]
@@ -449,7 +447,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2782, 0x27CD)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class MaleKimono : BaseOuterTorso
     {
         [Constructible]
@@ -457,7 +455,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2783, 0x27CE)]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class FemaleKimono : BaseOuterTorso
     {
         [Constructible]
@@ -465,7 +463,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2FB9, 0x3173)]
-    [Serializable(0)]
+    [SerializationGenerator(0)]
     public partial class MaleElvenRobe : BaseOuterTorso
     {
         [Constructible]
@@ -473,7 +471,7 @@ namespace Server.Items
     }
 
     [Flippable(0x2FBA, 0x3174)]
-    [Serializable(0)]
+    [SerializationGenerator(0)]
     public partial class FemaleElvenRobe : BaseOuterTorso
     {
         [Constructible]

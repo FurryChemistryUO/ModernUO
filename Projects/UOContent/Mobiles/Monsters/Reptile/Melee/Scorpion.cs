@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class Scorpion : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Scorpion : BaseCreature
     {
         [Constructible]
-        public Scorpion() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public Scorpion() : base(AIType.AI_Melee)
         {
             Body = 48;
             BaseSoundID = 397;
@@ -45,10 +47,6 @@ namespace Server.Mobiles
             PackItem(new LesserPoisonPotion());
         }
 
-        public Scorpion(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a scorpion corpse";
         public override string DefaultName => "a scorpion";
 
@@ -56,23 +54,11 @@ namespace Server.Mobiles
         public override FoodType FavoriteFood => FoodType.Meat;
         public override PackInstinct PackInstinct => PackInstinct.Arachnid;
         public override Poison PoisonImmune => Poison.Greater;
-        public override Poison HitPoison => Utility.RandomDouble() <= 0.8 ? Poison.Greater : Poison.Deadly;
+        public override Poison HitPoison => Utility.RandomDouble() < 0.8 ? Poison.Greater : Poison.Deadly;
 
         public override void GenerateLoot()
         {
             AddLoot(LootPack.Meager);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

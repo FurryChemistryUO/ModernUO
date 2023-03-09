@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Server.Engines.ConPVP;
+using Server.Engines.Stealables;
 using Server.Factions;
 using Server.Items;
 using Server.Mobiles;
@@ -79,11 +80,9 @@ namespace Server.SkillHandlers
                 var root = toSteal.RootParent;
                 var mobRoot = root as Mobile;
 
-                StealableArtifactsSpawner.StealableInstance si = null;
-                if (toSteal.Parent == null || !toSteal.Movable)
-                {
-                    si = StealableArtifactsSpawner.GetStealableInstance(toSteal);
-                }
+                StealableArtifacts.StealableInstance si = toSteal.Parent == null || !toSteal.Movable
+                    ? StealableArtifacts.GetStealableInstance(toSteal)
+                    : null;
 
                 if (!IsEmptyHanded(m_Thief))
                 {
@@ -137,7 +136,7 @@ namespace Server.SkillHandlers
                         {
                             m_Thief.SendLocalizedMessage(1010581); // You cannot steal the sigil when you are incognito
                         }
-                        else if (DisguiseTimers.IsDisguised(m_Thief))
+                        else if (DisguisePersistence.IsDisguised(m_Thief))
                         {
                             m_Thief.SendLocalizedMessage(1010583); // You cannot steal the sigil while disguised
                         }
@@ -155,9 +154,8 @@ namespace Server.SkillHandlers
                         }
                         else if (pl.IsLeaving)
                         {
-                            m_Thief.SendLocalizedMessage(
-                                1005589
-                            ); // You are currently quitting a faction and cannot steal the town sigil
+                            // You are currently quitting a faction and cannot steal the town sigil
+                            m_Thief.SendLocalizedMessage(1005589);
                         }
                         else if (sig.IsBeingCorrupted && sig.LastMonolith.Faction == faction)
                         {
@@ -171,15 +169,13 @@ namespace Server.SkillHandlers
                         {
                             if (Sigil.ExistsOn(m_Thief))
                             {
-                                m_Thief.SendLocalizedMessage(
-                                    1010258
-                                ); // The sigil has gone back to its home location because you already have a sigil.
+                                // The sigil has gone back to its home location because you already have a sigil.
+                                m_Thief.SendLocalizedMessage(1010258);
                             }
-                            else if (m_Thief?.Backpack.CheckHold(m_Thief, sig, false, true) != true)
+                            else if (m_Thief.Backpack?.CheckHold(m_Thief, sig, false, true) != true)
                             {
-                                m_Thief.SendLocalizedMessage(
-                                    1010259
-                                ); // The sigil has gone home because your backpack is full
+                                // The sigil has gone home because your backpack is full
+                                m_Thief.SendLocalizedMessage(1010259);
                             }
                             else
                             {
@@ -227,11 +223,8 @@ namespace Server.SkillHandlers
                 }
                 else if (si != null && m_Thief.Skills.Stealing.Value < 100.0)
                 {
-                    m_Thief.SendLocalizedMessage(
-                        1060025,
-                        "",
-                        0x66D
-                    ); // You're not skilled enough to attempt the theft of this item.
+                    // You're not skilled enough to attempt the theft of this item.
+                    m_Thief.SendLocalizedMessage(1060025, "", 0x66D);
                 }
                 else if (toSteal.Parent is Mobile)
                 {

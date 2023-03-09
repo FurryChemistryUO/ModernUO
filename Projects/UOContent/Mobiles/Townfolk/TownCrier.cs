@@ -28,14 +28,9 @@ namespace Server.Mobiles
 
         public TownCrierEntry GetRandomEntry()
         {
-            if (Entries == null || Entries.Count == 0)
+            for (var i = (Entries?.Count ?? 0) - 1; i >= 0; --i)
             {
-                return null;
-            }
-
-            for (var i = Entries.Count - 1; Entries != null && i >= 0; --i)
-            {
-                if (i >= Entries.Count)
+                if (i >= Entries!.Count)
                 {
                     continue;
                 }
@@ -132,7 +127,7 @@ namespace Server.Mobiles
                 ts = TimeSpan.Zero;
             }
 
-            from.SendMessage("Duration set to: {0}", ts);
+            from.SendMessage($"Duration set to: {ts}");
             from.SendMessage("Enter the first line to shout:");
 
             from.Prompt = new TownCrierLinesPrompt(m_Owner, null, new List<string>(), ts);
@@ -289,7 +284,7 @@ namespace Server.Mobiles
                     var tce = entries[index];
                     var ts = Utility.Max(tce.ExpireTime - Core.Now, TimeSpan.Zero);
 
-                    m_From.SendMessage("Editing entry #{0}.", index + 1);
+                    m_From.SendMessage($"Editing entry #{index + 1}.");
                     m_From.SendMessage("Enter the first line to shout:");
                     m_From.Prompt = new TownCrierLinesPrompt(m_Owner, tce, new List<string>(), ts);
                 }
@@ -366,14 +361,10 @@ namespace Server.Mobiles
 
         public TownCrierEntry GetRandomEntry()
         {
-            if (Entries == null || Entries.Count == 0)
+            var count = Entries?.Count ?? 0;
+            for (var i = count - 1; i >= 0; --i)
             {
-                return GlobalTownCrierEntryList.Instance.GetRandomEntry();
-            }
-
-            for (var i = Entries.Count - 1; Entries != null && i >= 0; --i)
-            {
-                if (i >= Entries.Count)
+                if (i >= Entries!.Count)
                 {
                     continue;
                 }
@@ -387,8 +378,12 @@ namespace Server.Mobiles
             }
 
             var entry = GlobalTownCrierEntryList.Instance.GetRandomEntry();
+            if (count > 0 && entry != null && Utility.RandomBool())
+            {
+                return entry;
+            }
 
-            return entry ?? (Entries?.Count > 0 && Utility.RandomBool() ? Entries.RandomElement() : null);
+            return Entries?.RandomElement();
         }
 
         public TownCrierEntry AddEntry(string[] lines, TimeSpan duration)
@@ -420,7 +415,7 @@ namespace Server.Mobiles
 
             if (Entries == null && GlobalTownCrierEntryList.Instance.IsEmpty)
             {
-                _autoShoutTimer.Stop();
+                _autoShoutTimer?.Stop();
                 _autoShoutTimer = null;
             }
         }

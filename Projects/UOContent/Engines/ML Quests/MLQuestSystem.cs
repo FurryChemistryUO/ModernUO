@@ -8,7 +8,6 @@ using Server.Engines.MLQuests.Objectives;
 using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
-using Server.Network;
 using Server.Utilities;
 
 namespace Server.Engines.MLQuests
@@ -186,7 +185,7 @@ namespace Server.Engines.MLQuests
 
             if (e.Length == 0)
             {
-                m.SendMessage("Quest table length: {0}", Quests.Count);
+                m.SendMessage($"Quest table length: {Quests.Count}");
                 return;
             }
 
@@ -198,10 +197,10 @@ namespace Server.Engines.MLQuests
                 return;
             }
 
-            m.SendMessage("Activated: {0}", quest.Activated);
-            m.SendMessage("Number of objectives: {0}", quest.Objectives.Count);
-            m.SendMessage("Objective type: {0}", quest.ObjectiveType);
-            m.SendMessage("Number of active instances: {0}", quest.Instances.Count);
+            m.SendMessage($"Activated: {quest.Activated}");
+            m.SendMessage($"Number of objectives: {quest.Objectives.Count}");
+            m.SendMessage($"Objective type: {quest.ObjectiveType}");
+            m.SendMessage($"Number of active instances: {quest.Instances.Count}");
         }
 
         [Usage("SaveQuest <type> [saveEnabled=true]"),
@@ -210,7 +209,7 @@ namespace Server.Engines.MLQuests
         {
             var m = e.Mobile;
 
-            if (e.Length == 0 || e.Length > 2)
+            if (e.Length is 0 or > 2)
             {
                 m.SendMessage("Syntax: SaveQuest <id> [saveEnabled=true]");
                 return;
@@ -227,7 +226,15 @@ namespace Server.Engines.MLQuests
             var enable = e.Length == 2 ? e.GetBoolean(1) : true;
 
             quest.SaveEnabled = enable;
-            m.SendMessage("Serialization for quest {0} is now {1}.", quest.GetType().Name, enable ? "enabled" : "disabled");
+
+            if (enable)
+            {
+                m.SendMessage($"Serialization for quest {quest.GetType().Name} is now enabled.");
+            }
+            else
+            {
+                m.SendMessage($"Serialization for quest {quest.GetType().Name} is now disabled.");
+            }
 
             if (AutoGenerateNew && !enable)
             {
@@ -256,7 +263,14 @@ namespace Server.Engines.MLQuests
                 quest.SaveEnabled = enable;
             }
 
-            m.SendMessage("Serialization for all quests is now {0}.", enable ? "enabled" : "disabled");
+            if (enable)
+            {
+                m.SendMessage($"Serialization for all quests is now enabled.");
+            }
+            else
+            {
+                m.SendMessage($"Serialization for all quests is now disabled.");
+            }
 
             if (AutoGenerateNew && !enable)
             {
@@ -638,7 +652,7 @@ namespace Server.Engines.MLQuests
 
         public static void EventSink_QuestGumpRequest(Mobile m)
         {
-            if (!Enabled || !(m is PlayerMobile pm))
+            if (!Enabled || m is not PlayerMobile pm)
             {
                 return;
             }
@@ -809,7 +823,7 @@ namespace Server.Engines.MLQuests
             {
                 var from = e.Mobile;
 
-                if (!(obj is PlayerMobile pm))
+                if (obj is not PlayerMobile pm)
                 {
                     LogFailure("That is not a player.");
                     return;
@@ -817,10 +831,7 @@ namespace Server.Engines.MLQuests
 
                 CommandLogging.WriteLine(
                     from,
-                    "{0} {1} viewing quest overview of {2}",
-                    from.AccessLevel,
-                    CommandLogging.Format(from),
-                    CommandLogging.Format(pm)
+                    $"{from.AccessLevel} {CommandLogging.Format(from)} viewing quest overview of {CommandLogging.Format(pm)}"
                 );
                 from.SendGump(new QuestLogGump(pm, false));
             }
@@ -840,7 +851,7 @@ namespace Server.Engines.MLQuests
 
             public override void Execute(CommandEventArgs e, object obj)
             {
-                if (!(obj is PlayerMobile pm))
+                if (obj is not PlayerMobile pm)
                 {
                     LogFailure("They have no ML quest context.");
                 }

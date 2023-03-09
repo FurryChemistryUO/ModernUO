@@ -1,6 +1,6 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Copyright 2019-2022 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: CharacterStatuePackets.cs                                       *
  *                                                                       *
@@ -47,7 +47,7 @@ namespace Server.Engines.VeteranRewards
 
         public static void SendStatueAnimation(this NetState ns, Serial serial, int status, int anim, int frame)
         {
-            if (ns == null)
+            if (ns.CannotSendPackets())
             {
                 return;
             }

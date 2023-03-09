@@ -8,7 +8,7 @@ namespace Server.Engines.Craft
     {
         ChanceMinusSixty,
         FiftyPercentChanceMinusTenPercent,
-        ChanceMinusSixtyToFourtyFive
+        ChanceMinusSixtyToFortyFive
     }
 
     public abstract class CraftSystem
@@ -50,8 +50,7 @@ namespace Server.Engines.Craft
 
         public abstract SkillName MainSkill { get; }
 
-        public virtual int GumpTitleNumber => 0;
-        public virtual string GumpTitleString => "";
+        public virtual TextDefinition GumpTitle => TextDefinition.Empty;
 
         public virtual CraftECA ECA => CraftECA.ChanceMinusSixty;
 
@@ -127,20 +126,32 @@ namespace Server.Engines.Craft
         public int AddCraft(
             Type typeItem, TextDefinition group, TextDefinition name, double minSkill, double maxSkill,
             Type typeRes, TextDefinition nameRes, int amount
-        ) =>
-            AddCraft(typeItem, group, name, MainSkill, minSkill, maxSkill, typeRes, nameRes, amount, "");
+        ) => AddCraft(typeItem, group, name, MainSkill, minSkill, maxSkill, typeRes, nameRes, amount, "");
+
+        public int AddCraft(
+            Type typeItem, TextDefinition group, TextDefinition name, int itemId, double minSkill, double maxSkill,
+            Type typeRes, TextDefinition nameRes, int amount
+        ) => AddCraft(typeItem, group, name, itemId, MainSkill, minSkill, maxSkill, typeRes, nameRes, amount, "");
 
         public int AddCraft(
             Type typeItem, TextDefinition group, TextDefinition name, double minSkill, double maxSkill,
             Type typeRes, TextDefinition nameRes, int amount, TextDefinition message
-        ) =>
-            AddCraft(typeItem, group, name, MainSkill, minSkill, maxSkill, typeRes, nameRes, amount, message);
+        ) => AddCraft(typeItem, group, name, MainSkill, minSkill, maxSkill, typeRes, nameRes, amount, message);
+
+        public int AddCraft(
+            Type typeItem, TextDefinition group, TextDefinition name, int itemId, double minSkill, double maxSkill,
+            Type typeRes, TextDefinition nameRes, int amount, TextDefinition message
+        ) => AddCraft(typeItem, group, name, itemId, MainSkill, minSkill, maxSkill, typeRes, nameRes, amount, message);
 
         public int AddCraft(
             Type typeItem, TextDefinition group, TextDefinition name, SkillName skillToMake, double minSkill,
             double maxSkill, Type typeRes, TextDefinition nameRes, int amount
-        ) =>
-            AddCraft(typeItem, group, name, skillToMake, minSkill, maxSkill, typeRes, nameRes, amount, "");
+        ) => AddCraft(typeItem, group, name, skillToMake, minSkill, maxSkill, typeRes, nameRes, amount, "");
+
+        public int AddCraft(
+            Type typeItem, TextDefinition group, TextDefinition name, int itemId, SkillName skillToMake, double minSkill,
+            double maxSkill, Type typeRes, TextDefinition nameRes, int amount
+        ) => AddCraft(typeItem, group, name, itemId, skillToMake, minSkill, maxSkill, typeRes, nameRes, amount, "");
 
         public int AddCraft(
             Type typeItem, TextDefinition group, TextDefinition name, SkillName skillToMake, double minSkill,
@@ -148,6 +159,20 @@ namespace Server.Engines.Craft
         )
         {
             var craftItem = new CraftItem(typeItem, group, name);
+            craftItem.AddRes(typeRes, nameRes, amount, message);
+            craftItem.AddSkill(skillToMake, minSkill, maxSkill);
+
+            DoGroup(group, craftItem);
+            CraftItems.Add(craftItem);
+            return CraftItems.Count - 1;
+        }
+
+        public int AddCraft(
+            Type typeItem, TextDefinition group, TextDefinition name, int itemId, SkillName skillToMake, double minSkill,
+            double maxSkill, Type typeRes, TextDefinition nameRes, int amount, TextDefinition message
+        )
+        {
+            var craftItem = new CraftItem(typeItem, group, name, itemId);
             craftItem.AddRes(typeRes, nameRes, amount, message);
             craftItem.AddSkill(skillToMake, minSkill, maxSkill);
 
@@ -269,65 +294,39 @@ namespace Server.Engines.Craft
             CraftItems[index].ForceNonExceptional = true;
         }
 
-        public void SetSubRes(Type type, string name)
+        public void SetSubRes(Type type, TextDefinition name)
         {
             CraftSubRes.ResType = type;
-            CraftSubRes.NameString = name;
+            CraftSubRes.Name = name;
             CraftSubRes.Init = true;
         }
 
-        public void SetSubRes(Type type, int name)
-        {
-            CraftSubRes.ResType = type;
-            CraftSubRes.NameNumber = name;
-            CraftSubRes.Init = true;
-        }
-
-        public void AddSubRes(Type type, int name, double reqSkill, object message)
-        {
-            var craftSubRes = new CraftSubRes(type, name, reqSkill, message);
-            CraftSubRes.Add(craftSubRes);
-        }
-
-        public void AddSubRes(Type type, int name, double reqSkill, int genericName, object message)
+        public void AddSubRes(Type type, TextDefinition name, double reqSkill, int genericName, TextDefinition message)
         {
             var craftSubRes = new CraftSubRes(type, name, reqSkill, genericName, message);
             CraftSubRes.Add(craftSubRes);
         }
 
-        public void AddSubRes(Type type, string name, double reqSkill, object message)
+        public void AddSubRes(Type type, TextDefinition name, double reqSkill, TextDefinition message)
         {
             var craftSubRes = new CraftSubRes(type, name, reqSkill, message);
             CraftSubRes.Add(craftSubRes);
         }
 
-        public void SetSubRes2(Type type, string name)
+        public void SetSubRes2(Type type, TextDefinition name)
         {
             CraftSubRes2.ResType = type;
-            CraftSubRes2.NameString = name;
+            CraftSubRes2.Name = name;
             CraftSubRes2.Init = true;
         }
 
-        public void SetSubRes2(Type type, int name)
-        {
-            CraftSubRes2.ResType = type;
-            CraftSubRes2.NameNumber = name;
-            CraftSubRes2.Init = true;
-        }
-
-        public void AddSubRes2(Type type, int name, double reqSkill, object message)
-        {
-            var craftSubRes = new CraftSubRes(type, name, reqSkill, message);
-            CraftSubRes2.Add(craftSubRes);
-        }
-
-        public void AddSubRes2(Type type, int name, double reqSkill, int genericName, object message)
+        public void AddSubRes2(Type type, TextDefinition name, double reqSkill, int genericName, TextDefinition message)
         {
             var craftSubRes = new CraftSubRes(type, name, reqSkill, genericName, message);
             CraftSubRes2.Add(craftSubRes);
         }
 
-        public void AddSubRes2(Type type, string name, double reqSkill, object message)
+        public void AddSubRes2(Type type, TextDefinition name, double reqSkill, TextDefinition message)
         {
             var craftSubRes = new CraftSubRes(type, name, reqSkill, message);
             CraftSubRes2.Add(craftSubRes);

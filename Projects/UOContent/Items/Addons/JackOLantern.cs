@@ -1,6 +1,8 @@
+using ModernUO.Serialization;
+
 namespace Server.Items
 {
-    [Serializable(0)]
+    [SerializationGenerator(0)]
     public partial class JackOLantern : BaseAddon
     {
         [Constructible]
@@ -37,19 +39,5 @@ namespace Server.Items
                 Hue = hue,
                 Name = "jack-o-lantern"
             };
-
-        private void Deserialize(IGenericReader reader, int version)
-        {
-            for (var i = 0; i < Components.Count; ++i)
-            {
-                var ac = Components[i];
-                ac.Name = "jack-o-lantern";
-
-                if (ac.Hue == 2118)
-                {
-                    ac.Hue = 1161;
-                }
-            }
-        }
     }
 }

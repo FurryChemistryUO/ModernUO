@@ -1,10 +1,12 @@
+using ModernUO.Serialization;
 using System;
 using System.Collections.Generic;
 using Server.Engines.BulkOrders;
 
 namespace Server.Mobiles
 {
-    public class Tailor : BaseVendor
+    [SerializationGenerator(0, false)]
+    public partial class Tailor : BaseVendor
     {
         private readonly List<SBInfo> m_SBInfos = new();
 
@@ -12,10 +14,6 @@ namespace Server.Mobiles
         public Tailor() : base("the tailor")
         {
             SetSkill(SkillName.Tailoring, 64.0, 100.0);
-        }
-
-        public Tailor(Serial serial) : base(serial)
-        {
         }
 
         protected override List<SBInfo> SBInfos => m_SBInfos;
@@ -27,20 +25,6 @@ namespace Server.Mobiles
         public override void InitSBInfo()
         {
             m_SBInfos.Add(new SBTailor());
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
 
         public override Item CreateBulkOrder(Mobile from, bool fromContextMenu)
@@ -68,7 +52,7 @@ namespace Server.Mobiles
             return null;
         }
 
-        public override bool IsValidBulkOrder(Item item) => item is SmallTailorBOD || item is LargeTailorBOD;
+        public override bool IsValidBulkOrder(Item item) => item is SmallTailorBOD or LargeTailorBOD;
 
         public override bool SupportsBulkOrders(Mobile from) => from is PlayerMobile && from.Skills.Tailoring.Base > 0;
 

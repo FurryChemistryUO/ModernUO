@@ -1,10 +1,13 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
     [TypeAlias("Server.Mobiles.Icesnake")]
-    public class IceSnake : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class IceSnake : BaseCreature
     {
         [Constructible]
-        public IceSnake() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public IceSnake() : base(AIType.AI_Melee)
         {
             Body = 52;
             Hue = 0x480;
@@ -37,10 +40,6 @@ namespace Server.Mobiles
             VirtualArmor = 30;
         }
 
-        public IceSnake(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "an ice snake corpse";
         public override string DefaultName => "an ice snake";
 
@@ -51,20 +50,6 @@ namespace Server.Mobiles
         public override void GenerateLoot()
         {
             AddLoot(LootPack.Meager);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

@@ -1,10 +1,13 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
     [TypeAlias("Server.Mobiles.Bullfrog")]
-    public class BullFrog : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class BullFrog : BaseCreature
     {
         [Constructible]
-        public BullFrog() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public BullFrog() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = 81;
             Hue = Utility.RandomList(0x5AC, 0x5A3, 0x59A, 0x591, 0x588, 0x57F);
@@ -37,10 +40,6 @@ namespace Server.Mobiles
             MinTameSkill = 23.1;
         }
 
-        public BullFrog(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a bull frog corpse";
         public override string DefaultName => "a bull frog";
 
@@ -51,20 +50,6 @@ namespace Server.Mobiles
         public override void GenerateLoot()
         {
             AddLoot(LootPack.Poor);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

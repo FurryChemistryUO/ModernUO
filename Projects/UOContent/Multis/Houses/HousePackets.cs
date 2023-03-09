@@ -1,6 +1,6 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Copyright 2019-2022 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: HousePackets.cs                                                 *
  *                                                                       *
@@ -29,7 +29,7 @@ namespace Server.Multis
 
         public static void SendBeginHouseCustomization(this NetState ns, Serial house)
         {
-            if (ns == null)
+            if (ns.CannotSendPackets())
             {
                 return;
             }
@@ -50,7 +50,7 @@ namespace Server.Multis
 
         public static void SendEndHouseCustomization(this NetState ns, Serial house)
         {
-            if (ns == null)
+            if (ns.CannotSendPackets())
             {
                 return;
             }
@@ -71,7 +71,7 @@ namespace Server.Multis
 
         public static void SendDesignStateGeneral(this NetState ns, Serial house, int revision)
         {
-            if (ns == null)
+            if (ns.CannotSendPackets())
             {
                 return;
             }
@@ -251,7 +251,7 @@ namespace Server.Multis
 
             if (ce != ZlibError.Okay)
             {
-                logger.Warning("ZLib error: {0} (#{1})", ce, (int)ce);
+                logger.Warning("ZLib error: {Error} (#{ErrorCode})", ce, (int)ce);
                 length = 0;
                 size = 0;
             }

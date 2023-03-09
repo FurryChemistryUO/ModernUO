@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class KhaldunSummoner : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class KhaldunSummoner : BaseCreature
     {
         [Constructible]
-        public KhaldunSummoner() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public KhaldunSummoner() : base(AIType.AI_Mage)
         {
             Body = 0x190;
             Title = "the Summoner";
@@ -63,10 +65,6 @@ namespace Server.Mobiles
             AddItem(sandals);
         }
 
-        public KhaldunSummoner(Serial serial) : base(serial)
-        {
-        }
-
         public override bool ClickTitle => false;
         public override bool ShowFameTitle => false;
 
@@ -109,20 +107,6 @@ namespace Server.Mobiles
 
             Delete();
             return false;
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

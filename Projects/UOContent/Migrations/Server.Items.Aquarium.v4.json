@@ -31,7 +31,7 @@
       "type": "Server.Items.AquariumState",
       "rule": "RawSerializableMigrationRule",
       "ruleArguments": [
-        ""
+        "DeserializationRequiresParent"
       ]
     },
     {
@@ -39,7 +39,7 @@
       "type": "Server.Items.AquariumState",
       "rule": "RawSerializableMigrationRule",
       "ruleArguments": [
-        ""
+        "DeserializationRequiresParent"
       ]
     },
     {
@@ -47,7 +47,6 @@
       "type": "System.Collections.Generic.List\u003Cint\u003E",
       "rule": "ListMigrationRule",
       "ruleArguments": [
-        "",
         "int",
         "PrimitiveTypeMigrationRule",
         ""

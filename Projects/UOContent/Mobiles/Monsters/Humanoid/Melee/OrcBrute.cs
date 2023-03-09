@@ -1,12 +1,13 @@
-using System.Linq;
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class OrcBrute : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class OrcBrute : BaseCreature
     {
         [Constructible]
-        public OrcBrute() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public OrcBrute() : base(AIType.AI_Melee)
         {
             Body = 189;
             BaseSoundID = 0x45A;
@@ -53,10 +54,6 @@ namespace Server.Mobiles
             }
         }
 
-        public OrcBrute(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "an orcish corpse";
         public override string DefaultName => "an orc brute";
 
@@ -75,23 +72,14 @@ namespace Server.Mobiles
             AddLoot(LootPack.Rich);
         }
 
-        public override bool IsEnemy(Mobile m)
-        {
-            if (m.Player && m.FindItemOnLayer(Layer.Helm) is OrcishKinMask)
-            {
-                return false;
-            }
-
-            return base.IsEnemy(m);
-        }
+        public override bool IsEnemy(Mobile m) =>
+            (!m.Player || m.FindItemOnLayer<OrcishKinMask>(Layer.Helm) == null) && base.IsEnemy(m);
 
         public override void AggressiveAction(Mobile aggressor, bool criminal)
         {
             base.AggressiveAction(aggressor, criminal);
 
-            var item = aggressor.FindItemOnLayer(Layer.Helm);
-
-            if (item is OrcishKinMask)
+            if (aggressor.FindItemOnLayer(Layer.Helm) is OrcishKinMask item)
             {
                 AOS.Damage(aggressor, 50, 0, 100, 0, 0, 0);
                 item.Delete();
@@ -100,7 +88,7 @@ namespace Server.Mobiles
             }
         }
 
-        public override void OnDamagedBySpell(Mobile caster)
+        public override void OnDamagedBySpell(Mobile caster, int damage)
         {
             if (caster == this)
             {
@@ -120,8 +108,16 @@ namespace Server.Mobiles
             }
 
             var eable = GetMobilesInRange<OrcishLord>(10);
+            var count = 0;
+            foreach (var m in eable)
+            {
+                if (++count == 10)
+                {
+                    break;
+                }
+            }
 
-            if (eable.Count() < 10)
+            if (count < 10)
             {
                 BaseCreature orc = new SpawnedOrcishLord { Team = Team };
 
@@ -130,18 +126,6 @@ namespace Server.Mobiles
             }
 
             eable.Free();
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

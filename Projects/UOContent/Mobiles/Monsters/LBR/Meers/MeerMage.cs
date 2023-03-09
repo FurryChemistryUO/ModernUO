@@ -1,18 +1,19 @@
+using ModernUO.Serialization;
 using System;
 using System.Collections.Generic;
 using Server.Items;
-using Server.Network;
 
 namespace Server.Mobiles
 {
-    public class MeerMage : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class MeerMage : BaseCreature
     {
         private static readonly Dictionary<Mobile, TimerExecutionToken> m_Table = new();
 
         private DateTime m_NextAbilityTime;
 
         [Constructible]
-        public MeerMage() : base(AIType.AI_Mage, FightMode.Evil, 10, 1, 0.2, 0.4)
+        public MeerMage() : base(AIType.AI_Mage, FightMode.Evil)
         {
             Body = 770;
 
@@ -45,10 +46,6 @@ namespace Server.Mobiles
             VirtualArmor = 16;
 
             m_NextAbilityTime = Core.Now + TimeSpan.FromSeconds(Utility.RandomMinMax(2, 5));
-        }
-
-        public MeerMage(Serial serial) : base(serial)
-        {
         }
 
         public override string CorpseName => "a meer's corpse";
@@ -181,7 +178,7 @@ namespace Server.Mobiles
                 return;
             }
 
-            if (m.FindItemOnLayer(Layer.TwoHanded) is Torch { Burning: true })
+            if (m.FindItemOnLayer<Torch>(Layer.TwoHanded)?.Burning == true)
             {
                 StopEffect(m, true);
                 return;
@@ -213,18 +210,6 @@ namespace Server.Mobiles
             {
                 StopEffect(m, false);
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

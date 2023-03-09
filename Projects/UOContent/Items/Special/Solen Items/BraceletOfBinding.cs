@@ -89,21 +89,19 @@ namespace Server.Items
 
         public string TranslocationItemName => "bracelet of binding";
 
-        public override void AddNameProperty(ObjectPropertyList list)
+        public override void AddNameProperty(IPropertyList list)
         {
-            list.Add(
-                1054000,
-                $"{m_Charges}\t{m_Inscription.DefaultIfNullOrEmpty(" ")}"
-            ); // a bracelet of binding : ~1_val~ ~2_val~
+            // a bracelet of binding : ~1_val~ ~2_val~
+            list.Add(1054000, $"{m_Charges}\t{m_Inscription.DefaultIfNullOrEmpty(" ")}");
         }
 
         public override void OnSingleClick(Mobile from)
         {
             LabelTo(
                 from,
-                1054000,
+                1054000, // a bracelet of binding : ~1_val~ ~2_val~
                 $"{m_Charges}\t{m_Inscription.DefaultIfNullOrEmpty(" ")}"
-            ); // a bracelet of binding : ~1_val~ ~2_val~
+            );
         }
 
         public override void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
@@ -235,13 +233,15 @@ namespace Server.Items
                 return false;
             }
 
-            if (!SpellHelper.CheckTravel(from, TravelCheckType.RecallFrom))
+            if (!SpellHelper.CheckTravel(from, TravelCheckType.RecallFrom, out var failureMessage))
             {
+                failureMessage.SendMessageTo(from);
                 return false;
             }
 
-            if (!SpellHelper.CheckTravel(from, boundRoot.Map, boundRoot.Location, TravelCheckType.RecallTo))
+            if (!SpellHelper.CheckTravel(from, boundRoot.Map, boundRoot.Location, TravelCheckType.RecallTo, out failureMessage))
             {
+                failureMessage.SendMessageTo(from);
                 return false;
             }
 
@@ -412,7 +412,7 @@ namespace Server.Items
 
                 if (m_Bracelet.Deleted || m_From.Deleted ||
                     !m_Bracelet.CheckUse(m_From, false) ||
-                    !(m_Bracelet.Bound.RootParent is Mobile boundRoot))
+                    m_Bracelet.Bound.RootParent is not Mobile boundRoot)
                 {
                     return;
                 }

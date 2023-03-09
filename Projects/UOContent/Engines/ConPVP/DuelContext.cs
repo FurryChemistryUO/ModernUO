@@ -6,7 +6,6 @@ using Server.Factions;
 using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
-using Server.Network;
 using Server.Regions;
 using Server.Spells;
 using Server.Spells.Bushido;
@@ -99,7 +98,7 @@ namespace Server.Engines.ConPVP
 
         public static bool IsFreeConsume(Mobile mob)
         {
-            if (!(mob is PlayerMobile pm) || pm.DuelContext?.m_EventGame == null)
+            if (mob is not PlayerMobile pm || pm.DuelContext?.m_EventGame == null)
             {
                 return false;
             }
@@ -134,16 +133,12 @@ namespace Server.Engines.ConPVP
                 return false;
             }
 
-            string title = null;
-
-            if (move is NinjaMove)
+            string title = move switch
             {
-                title = "Bushido";
-            }
-            else if (move is SamuraiMove)
-            {
-                title = "Ninjitsu";
-            }
+                NinjaMove   => "Bushido",
+                SamuraiMove => "Ninjitsu",
+                _           => null
+            };
 
             if (title == null || name == null || Ruleset.GetOption(title, name))
             {
@@ -257,7 +252,7 @@ namespace Server.Engines.ConPVP
 
         public static bool AllowSpecialAbility(Mobile from, string name, bool message)
         {
-            if (!(from is PlayerMobile pm))
+            if (from is not PlayerMobile pm)
             {
                 return true;
             }
@@ -345,7 +340,7 @@ namespace Server.Engines.ConPVP
                     return false;
                 }
 
-                if (!(weapon is BaseRanged) && !Ruleset.GetOption("Weapons", "Melee"))
+                if (weapon is not BaseRanged && !Ruleset.GetOption("Weapons", "Melee"))
                 {
                     return false;
                 }
@@ -411,7 +406,7 @@ namespace Server.Engines.ConPVP
                 return true;
             }
 
-            if (!(item is BaseRefreshPotion))
+            if (item is not BaseRefreshPotion)
             {
                 if (CantDoAnything(from))
                 {
@@ -513,7 +508,7 @@ namespace Server.Engines.ConPVP
                 return false;
             }
 
-            if (item is BasePotion && !(item is BaseExplosionPotion) && !(item is BaseRefreshPotion) && IsSuddenDeath)
+            if (item is BasePotion && item is not BaseExplosionPotion && item is not BaseRefreshPotion && IsSuddenDeath)
             {
                 from.SendMessage(0x22, "You may not drink potions in sudden death.");
                 return false;
@@ -655,7 +650,7 @@ namespace Server.Engines.ConPVP
 
         public void Requip(Mobile from, Container cont)
         {
-            if (!(cont is Corpse corpse))
+            if (cont is not Corpse corpse)
             {
                 return;
             }
@@ -670,7 +665,7 @@ namespace Server.Engines.ConPVP
             {
                 var item = items[i];
 
-                if (item.Layer == Layer.Hair || item.Layer == Layer.FacialHair || !item.Movable)
+                if (item.Layer is Layer.Hair or Layer.FacialHair || !item.Movable)
                 {
                     continue;
                 }
@@ -721,10 +716,7 @@ namespace Server.Engines.ConPVP
             {
                 mob.Resurrect();
 
-                if (mob.FindItemOnLayer(Layer.OuterTorso) is DeathRobe robe)
-                {
-                    robe.Delete();
-                }
+                mob.FindItemOnLayer<DeathRobe>(Layer.OuterTorso)?.Delete();
 
                 if (cont is Corpse corpse)
                 {
@@ -900,11 +892,11 @@ namespace Server.Engines.ConPVP
 
             if (newLevel > oldLevel)
             {
-                us.SendMessage(0x59, "You have achieved level {0}!", newLevel);
+                us.SendMessage(0x59, $"You have achieved level {newLevel}!");
             }
             else if (newLevel < oldLevel)
             {
-                us.SendMessage(0x22, "You have lost a level. You are now at {0}.", newLevel);
+                us.SendMessage(0x22, $"You have lost a level. You are now at {newLevel}.");
             }
         }
 
@@ -1295,7 +1287,7 @@ namespace Server.Engines.ConPVP
 
         private static void EventSink_Login(Mobile m)
         {
-            if (!(m is PlayerMobile pm))
+            if (m is not PlayerMobile pm)
             {
                 return;
             }
@@ -1385,7 +1377,7 @@ namespace Server.Engines.ConPVP
                 return;
             }
 
-            if (!(e.Mobile is PlayerMobile pm))
+            if (e.Mobile is not PlayerMobile pm)
             {
                 return;
             }
@@ -1775,18 +1767,32 @@ namespace Server.Engines.ConPVP
                     {
                         if (mob != rejector)
                         {
-                            mob.SendMessage(0x22, "{0} has yielded.", rejector.Name);
+                            mob.SendMessage(0x22, $"{rejector.Name} has yielded.");
                         }
                     }
                     else
                     {
                         if (mob == rejector)
                         {
-                            mob.SendMessage(0x22, "You have rejected the {0}.", Rematch ? "rematch" : page);
+                            if (Rematch)
+                            {
+                                mob.SendMessage(0x22, $"You have rejected the rematch.");
+                            }
+                            else
+                            {
+                                mob.SendMessage(0x22, $"You have rejected the {page}.");
+                            }
                         }
                         else
                         {
-                            mob.SendMessage(0x22, "{0} has rejected the {1}.", rejector.Name, Rematch ? "rematch" : page);
+                            if (Rematch)
+                            {
+                                mob.SendMessage(0x22, $"{rejector.Name} has rejected the rematch.");
+                            }
+                            else
+                            {
+                                mob.SendMessage(0x22, $"{rejector.Name} has rejected the {page}.");
+                            }
                         }
                     }
 
@@ -1817,12 +1823,18 @@ namespace Server.Engines.ConPVP
 
         public static void Debuff(Mobile mob)
         {
-            mob.RemoveStatMod("[Magic] Str Offset");
-            mob.RemoveStatMod("[Magic] Dex Offset");
-            mob.RemoveStatMod("[Magic] Int Offset");
+            mob.RemoveStatMod("[Magic] Str Buff");
+            mob.RemoveStatMod("[Magic] Dex Buff");
+            mob.RemoveStatMod("[Magic] Int Buff");
+            mob.RemoveStatMod("[Magic] Str Curse");
+            mob.RemoveStatMod("[Magic] Dex Curse");
+            mob.RemoveStatMod("[Magic] Int Curse");
             mob.RemoveStatMod("Concussion");
             mob.RemoveStatMod("blood-rose");
             mob.RemoveStatMod("clarity-potion");
+            mob.RemoveStatMod("RoseOfTrinsicPetal");
+            mob.RemoveStatMod("Holy Bless");
+            mob.RemoveStatMod("Holy Curse");
 
             OrangePetals.RemoveContext(mob);
 
@@ -1842,11 +1854,7 @@ namespace Server.Engines.ConPVP
 
             TransformationSpellHelper.RemoveContext(mob, true);
             AnimalForm.RemoveContext(mob, true);
-
-            if (DisguiseTimers.IsDisguised(mob))
-            {
-                DisguiseTimers.StopTimer(mob);
-            }
+            DisguisePersistence.StopTimer(mob);
 
             if (!mob.CanBeginAction<PolymorphSpell>())
             {
@@ -2048,7 +2056,7 @@ namespace Server.Engines.ConPVP
                     int number = item switch
                     {
                         BaseWeapon _ => 1062001, // You can no longer wield your ~1_WEAPON~
-                        _ when !(item is BaseShield) && (item is BaseArmor || item is BaseClothing) => 1062002, // You can no longer wear your ~1_ARMOR~
+                        not BaseShield when item is BaseArmor or BaseClothing => 1062002, // You can no longer wear your ~1_ARMOR~
                         _ => 1062003 // You can no longer equip your ~1_SHIELD~
                     };
 
@@ -2087,7 +2095,7 @@ namespace Server.Engines.ConPVP
             var ruleset = Ruleset;
             var basedef = ruleset.Base;
 
-            mob.SendMessage("Ruleset: {0}", basedef.Title);
+            mob.SendMessage($"Ruleset: {basedef.Title}");
 
             BitArray defs;
 
@@ -2099,7 +2107,7 @@ namespace Server.Engines.ConPVP
                 {
                     defs.Or(ruleset.Flavors[i].Options);
 
-                    mob.SendMessage(" + {0}", ruleset.Flavors[i].Title);
+                    mob.SendMessage($" + {ruleset.Flavors[i].Title}");
                 }
             }
             else
@@ -2126,7 +2134,14 @@ namespace Server.Engines.ConPVP
                             mob.SendMessage("Modifications:");
                         }
 
-                        mob.SendMessage("{0}: {1}", name, opts[i] ? "enabled" : "disabled");
+                        if (opts[i])
+                        {
+                            mob.SendMessage($"{name}: enabled");
+                        }
+                        else
+                        {
+                            mob.SendMessage($"{name}: disabled");
+                        }
                     }
                 }
             }
@@ -2338,7 +2353,7 @@ namespace Server.Engines.ConPVP
                         {
                             var dp = p.Players[j];
 
-                            dp?.Mobile.SendMessage("The duel could not be started because {0}.", error);
+                            dp?.Mobile.SendMessage($"The duel could not be started because {error}.");
                         }
                     }
 
@@ -2403,7 +2418,7 @@ namespace Server.Engines.ConPVP
                         m_GateFacet = Initiator.Map;
                     }
 
-                    if (!(arena.Teleporter is ExitTeleporter tp))
+                    if (arena.Teleporter is not ExitTeleporter tp)
                     {
                         arena.Teleporter = tp = new ExitTeleporter();
                         tp.MoveToWorld(arena.GateOut == Point3D.Zero ? arena.Outside : arena.GateOut, arena.Facet);
@@ -2749,7 +2764,7 @@ namespace Server.Engines.ConPVP
                 GumpWidth = 300;
                 GumpHeight = 150;
                 MessageColor = 0xFFC000;
-                MessageString = "Are you sure you wish to spectate this duel?";
+                Message = "Are you sure you wish to spectate this duel?";
                 TitleColor = 0x7800;
                 TitleNumber = 1062051; // Gate Warning
 

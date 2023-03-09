@@ -1,10 +1,13 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
     [TypeAlias("Server.Mobiles.Greywolf")]
-    public class GreyWolf : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class GreyWolf : BaseCreature
     {
         [Constructible]
-        public GreyWolf() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public GreyWolf() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = Utility.RandomList(25, 27);
             BaseSoundID = 0xE5;
@@ -40,10 +43,6 @@ namespace Server.Mobiles
             MinTameSkill = 53.1;
         }
 
-        public GreyWolf(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a grey wolf corpse";
         public override string DefaultName => "a grey wolf";
 
@@ -51,19 +50,5 @@ namespace Server.Mobiles
         public override int Hides => 6;
         public override FoodType FavoriteFood => FoodType.Meat;
         public override PackInstinct PackInstinct => PackInstinct.Canine;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

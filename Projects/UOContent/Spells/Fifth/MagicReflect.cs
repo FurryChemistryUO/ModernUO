@@ -52,7 +52,8 @@ namespace Server.Spells.Fifth
                  * Physical decrease = 25 - (Inscription/20).
                  * Elemental resistance = +10 (-20 physical, +10 elemental at GM Inscription)
                  * The magic reflection spell has an indefinite duration, becoming active when cast, and deactivated when re-cast.
-                 * Reactive Armor, Protection, and Magic Reflection will stay on�even after logging out, even after dying�until you �turn them off� by casting them again.
+                 * Reactive Armor, Protection, and Magic Reflection will stay on even after logging out,
+                 * even after dying, until you turn them off by casting them again.
                  */
 
                 if (CheckSequence())
@@ -77,15 +78,15 @@ namespace Server.Spells.Fifth
                         targ.FixedParticles(0x375A, 10, 15, 5037, EffectLayer.Waist);
 
                         var physiMod = -25 + (int)(targ.Skills.Inscribe.Value / 20);
-                        var otherMod = 10;
+                        const int otherMod = 10;
 
                         mods = new[]
                         {
-                            new ResistanceMod(ResistanceType.Physical, physiMod),
-                            new ResistanceMod(ResistanceType.Fire, otherMod),
-                            new ResistanceMod(ResistanceType.Cold, otherMod),
-                            new ResistanceMod(ResistanceType.Poison, otherMod),
-                            new ResistanceMod(ResistanceType.Energy, otherMod)
+                            new ResistanceMod(ResistanceType.Physical, "PhysicalResistMagicResist", physiMod),
+                            new ResistanceMod(ResistanceType.Fire, "FireResistMagicResist", otherMod),
+                            new ResistanceMod(ResistanceType.Cold, "ColdResistMagicResist", otherMod),
+                            new ResistanceMod(ResistanceType.Poison, "PoisonResistMagicResist", otherMod),
+                            new ResistanceMod(ResistanceType.Energy, "EnergyResistMagicResist", otherMod)
                         };
 
                         _table[targ] = mods;

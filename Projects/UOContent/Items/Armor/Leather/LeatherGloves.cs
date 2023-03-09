@@ -1,12 +1,11 @@
+using ModernUO.Serialization;
+
 namespace Server.Items
 {
     [Flippable]
-    [Serializable(2, false)]
+    [SerializationGenerator(2, false)]
     public partial class LeatherGloves : BaseArmor, IArcaneEquip
     {
-        private int _maxArcaneCharges;
-        private int _curArcaneCharges;
-
         [Constructible]
         public LeatherGloves() : base(0x13C6) => Weight = 1.0;
 
@@ -30,7 +29,7 @@ namespace Server.Items
         public override ArmorMeditationAllowance DefMedAllowance => ArmorMeditationAllowance.All;
 
         [EncodedInt]
-        [SerializableField(0)]
+        [SerializableProperty(0)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int CurArcaneCharges
         {
@@ -44,7 +43,7 @@ namespace Server.Items
         }
 
         [EncodedInt]
-        [SerializableField(1)]
+        [SerializableProperty(1)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int MaxArcaneCharges
         {
@@ -86,13 +85,13 @@ namespace Server.Items
             }
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
             if (IsArcane)
             {
-                list.Add(1061837, "{0}\t{1}", _curArcaneCharges, _maxArcaneCharges); // arcane charges: ~1_val~ / ~2_val~
+                list.Add(1061837, $"{_curArcaneCharges}\t{_maxArcaneCharges}"); // arcane charges: ~1_val~ / ~2_val~
             }
         }
 

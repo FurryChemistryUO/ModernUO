@@ -79,11 +79,11 @@ namespace Server.Mobiles
             AddLoot(LootPack.UltraRich, 4);
         }
 
-        public override void OnGaveMeleeAttack(Mobile defender)
+        public override void OnGaveMeleeAttack(Mobile defender, int damage)
         {
-            base.OnGaveMeleeAttack(defender);
+            base.OnGaveMeleeAttack(defender, damage);
 
-            if (Utility.RandomDouble() <= 0.2)
+            if (Utility.RandomDouble() < 0.2)
             {
                 Earthquake();
             }
@@ -109,7 +109,7 @@ namespace Server.Mobiles
                     continue;
                 }
 
-                if (!(m is BaseCreature bc) || !(bc.Controlled || bc.Summoned || bc.Team != Team))
+                if (m is not BaseCreature bc || !(bc.Controlled || bc.Summoned || bc.Team != Team))
                 {
                     continue;
                 }

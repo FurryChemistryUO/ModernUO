@@ -1,13 +1,16 @@
+using ModernUO.Serialization;
 using System;
 using Server.Items;
-using Server.Network;
 
 namespace Server.Mobiles
 {
-    public class Unicorn : BaseMount
+    [SerializationGenerator(0, false)]
+    public partial class Unicorn : BaseMount
     {
+        public override string DefaultName => "a unicorn";
+
         [Constructible]
-        public Unicorn(string name = "a unicorn") : base(name, 0x7A, 0x3EB4, AIType.AI_Mage, FightMode.Evil, 10, 1, 0.2, 0.4)
+        public Unicorn() : base(0x7A, 0x3EB4, AIType.AI_Mage, FightMode.Evil)
         {
             BaseSoundID = 0x4BC;
 
@@ -41,10 +44,6 @@ namespace Server.Mobiles
             Tamable = true;
             ControlSlots = 2;
             MinTameSkill = 95.1;
-        }
-
-        public Unicorn(Serial serial) : base(serial)
-        {
         }
 
         public override string CorpseName => "a unicorn corpse";
@@ -87,8 +86,8 @@ namespace Server.Mobiles
 
                     if (chanceToCure > Utility.Random(100))
                     {
-                        if (Rider.CurePoison(this)
-                        ) // TODO: Confirm if mount is the one flagged for curing it or the rider is
+                        // TODO: Confirm if mount is the one flagged for curing it or the rider is
+                        if (Rider.CurePoison(this))
                         {
                             Rider.LocalOverheadMessage(
                                 MessageType.Regular,
@@ -124,20 +123,6 @@ namespace Server.Mobiles
             {
                 c.DropItem(new UnicornRibs());
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

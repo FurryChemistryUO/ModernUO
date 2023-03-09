@@ -194,12 +194,13 @@ namespace Server.Gumps
 
             protected override void OnTarget(Mobile from, object targeted)
             {
-                if (targeted is IPoint3D p)
+                if (targeted is IPoint3D point3D)
                 {
                     try
                     {
-                        CommandLogging.LogChangeProperty(m_Mobile, m_Object, m_Property.Name, new Point2D(p).ToString());
-                        m_Property.SetValue(m_Object, new Point2D(p), null);
+                        var p = new Point2D(point3D);
+                        CommandLogging.LogChangeProperty(m_Mobile, m_Object, m_Property.Name, p.ToString());
+                        m_Property.SetValue(m_Object, p, null);
                         m_PropertiesGump.OnValueChanged(m_Object, m_Property);
                     }
                     catch

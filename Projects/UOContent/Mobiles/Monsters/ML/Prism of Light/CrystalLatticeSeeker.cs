@@ -1,10 +1,13 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class CrystalLatticeSeeker : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class CrystalLatticeSeeker : BaseCreature
     {
         [Constructible]
         public CrystalLatticeSeeker()
-            : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+            : base(AIType.AI_Mage)
         {
             Body = 0x7B;
             Hue = 0x47E;
@@ -39,11 +42,6 @@ namespace Server.Mobiles
             PackArcaneScroll(0, 2);
         }
 
-        public CrystalLatticeSeeker(Serial serial)
-            : base(serial)
-        {
-        }
-
         public override string CorpseName => "a Crystal Lattice Seeker corpse";
         public override string DefaultName => "Crystal Lattice Seeker";
 
@@ -52,10 +50,10 @@ namespace Server.Mobiles
         public override void OnDeath( Container c )
         {
           base.OnDeath( c );
-    
+
           if (Utility.RandomDouble() < 0.75)
             c.DropItem( new CrystallineFragments() );
-    
+
           if (Utility.RandomDouble() < 0.07)
             c.DropItem( new PiecesOfCrystal() );
         }
@@ -72,9 +70,9 @@ namespace Server.Mobiles
             AddLoot(LootPack.Gems);
         }
 
-        public override void OnGaveMeleeAttack(Mobile defender)
+        public override void OnGaveMeleeAttack(Mobile defender, int damage)
         {
-            base.OnGaveMeleeAttack(defender);
+            base.OnGaveMeleeAttack(defender, damage);
 
             if (Utility.RandomDouble() < 0.1)
             {
@@ -82,9 +80,9 @@ namespace Server.Mobiles
             }
         }
 
-        public override void OnGotMeleeAttack(Mobile attacker)
+        public override void OnGotMeleeAttack(Mobile attacker, int damage)
         {
-            base.OnGotMeleeAttack(attacker);
+            base.OnGotMeleeAttack(attacker, damage);
 
             if (Utility.RandomDouble() < 0.1)
             {
@@ -140,19 +138,5 @@ namespace Server.Mobiles
         public override int GetHurtSound() => 0x2F9;
 
         public override int GetIdleSound() => 0x2FA;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

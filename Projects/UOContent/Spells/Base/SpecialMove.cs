@@ -10,15 +10,14 @@ namespace Server.Spells
 {
     public abstract class SpecialMove
     {
-        private static readonly Dictionary<Mobile, SpecialMoveContext> m_PlayersTable =
-            new();
+        private static readonly Dictionary<Mobile, SpecialMoveContext> _playersTable = new();
 
         public virtual int BaseMana => 0;
 
         public virtual SkillName MoveSkill => SkillName.Bushido;
         public virtual double RequiredSkill => 0.0;
 
-        public virtual TextDefinition AbilityMessage => 0;
+        public virtual TextDefinition AbilityMessage => TextDefinition.Empty;
 
         public virtual bool BlockedByAnimalForm => true;
         public virtual bool DelayedContext => false;
@@ -65,11 +64,8 @@ namespace Server.Spells
         {
             if (m.Skills[MoveSkill].Value < RequiredSkill)
             {
-                var args = $"{RequiredSkill:F1}\t{MoveSkill.ToString()}\t ";
-                m.SendLocalizedMessage(
-                    1063013,
-                    args
-                ); // You need at least ~1_SKILL_REQUIREMENT~ ~2_SKILL_NAME~ skill to use that ability.
+                // You need at least ~1_SKILL_REQUIREMENT~ ~2_SKILL_NAME~ skill to use that ability.
+                m.SendLocalizedMessage(1063013, $"{RequiredSkill:F1}\t{MoveSkill}\t ");
                 return false;
             }
 
@@ -106,10 +102,8 @@ namespace Server.Spells
 
             if (from.Mana < mana)
             {
-                from.SendLocalizedMessage(
-                    1060181,
-                    mana.ToString()
-                ); // You need ~1_MANA_REQUIREMENT~ mana to perform that attack
+                // You need ~1_MANA_REQUIREMENT~ mana to perform that attack
+                from.SendLocalizedMessage(1060181, mana.ToString());
                 return false;
             }
 
@@ -159,40 +153,18 @@ namespace Server.Spells
                 return false;
             }
 
-            string option = null;
-
-            if (this is Backstab)
+            string option = this switch
             {
-                option = "Backstab";
-            }
-            else if (this is DeathStrike)
-            {
-                option = "Death Strike";
-            }
-            else if (this is FocusAttack)
-            {
-                option = "Focus Attack";
-            }
-            else if (this is KiAttack)
-            {
-                option = "Ki Attack";
-            }
-            else if (this is SurpriseAttack)
-            {
-                option = "Surprise Attack";
-            }
-            else if (this is HonorableExecution)
-            {
-                option = "Honorable Execution";
-            }
-            else if (this is LightningStrike)
-            {
-                option = "Lightning Strike";
-            }
-            else if (this is MomentumStrike)
-            {
-                option = "Momentum Strike";
-            }
+                Backstab           => "Backstab",
+                DeathStrike        => "Death Strike",
+                FocusAttack        => "Focus Attack",
+                KiAttack           => "Ki Attack",
+                SurpriseAttack     => "Surprise Attack",
+                HonorableExecution => "Honorable Execution",
+                LightningStrike    => "Lightning Strike",
+                MomentumStrike     => "Momentum Strike",
+                _                  => null
+            };
 
             if (option != null && !DuelContext.AllowSpecialMove(from, option, this))
             {
@@ -280,7 +252,7 @@ namespace Server.Spells
                     m.NetState.SendToggleSpecialAbility(moveID + 1, true);
                 }
 
-                TextDefinition.SendMessageTo(m, move.AbilityMessage);
+                move.AbilityMessage.SendMessageTo(m);
             }
 
             return true;
@@ -303,7 +275,7 @@ namespace Server.Spells
 
         private static void AddContext(Mobile m, SpecialMoveContext context)
         {
-            m_PlayersTable[m] = context;
+            _playersTable[m] = context;
         }
 
         private static void RemoveContext(Mobile m)
@@ -312,23 +284,20 @@ namespace Server.Spells
 
             if (context != null)
             {
-                m_PlayersTable.Remove(m);
+                _playersTable.Remove(m);
 
                 context.Timer.Stop();
             }
         }
 
         private static SpecialMoveContext GetContext(Mobile m) =>
-            m_PlayersTable.TryGetValue(m, out var context) ? context : null;
+            _playersTable.TryGetValue(m, out var context) ? context : null;
 
         private class SpecialMoveTimer : Timer
         {
             private readonly Mobile m_Mobile;
 
-            public SpecialMoveTimer(Mobile from) : base(TimeSpan.FromSeconds(3.0))
-            {
-                m_Mobile = from;
-            }
+            public SpecialMoveTimer(Mobile from) : base(TimeSpan.FromSeconds(3.0)) => m_Mobile = from;
 
             protected override void OnTick()
             {

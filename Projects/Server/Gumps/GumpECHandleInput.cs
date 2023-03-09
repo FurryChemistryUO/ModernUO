@@ -1,6 +1,6 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright 2019-2020 - ModernUO Development Team                       *
+ * Copyright 2019-2022 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: GumpECHandleInput.cs                                            *
  *                                                                       *
@@ -16,16 +16,14 @@
 using System.Buffers;
 using Server.Collections;
 
-namespace Server.Gumps
-{
-    public class GumpECHandleInput : GumpEntry
-    {
-        public static readonly byte[] LayoutName = Gump.StringToBuffer("echandleinput");
-        public override string Compile(OrderedHashSet<string> strings) => "{ echandleinput }";
+namespace Server.Gumps;
 
-        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
-        {
-            writer.WriteAscii("{ echandleinput }");
-        }
+public class GumpECHandleInput : GumpEntry
+{
+    private static byte[] _layout = Gump.StringToBuffer("{ echandleinput }");
+
+    public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, scoped ref int entries, scoped ref int switches)
+    {
+        writer.Write(_layout);
     }
 }

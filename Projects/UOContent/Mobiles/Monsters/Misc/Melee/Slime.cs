@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class Slime : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Slime : BaseCreature
     {
         [Constructible]
-        public Slime() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public Slime() : base(AIType.AI_Melee)
         {
             Body = 51;
             BaseSoundID = 456;
@@ -38,10 +41,6 @@ namespace Server.Mobiles
             MinTameSkill = 23.1;
         }
 
-        public Slime(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a slimey corpse";
         public override string DefaultName => "a slime";
 
@@ -55,18 +54,6 @@ namespace Server.Mobiles
         {
             AddLoot(LootPack.Poor);
             AddLoot(LootPack.Gems);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

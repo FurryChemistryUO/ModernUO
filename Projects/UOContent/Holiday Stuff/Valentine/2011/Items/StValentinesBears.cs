@@ -1,34 +1,35 @@
 using System;
+using ModernUO.Serialization;
 using Server.Gumps;
 using Server.Network;
 
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public abstract partial class StValentinesBear : Item
     {
         [InternString]
         [InvalidateProperties]
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private string _owner;
 
         [InternString]
         [InvalidateProperties]
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private string _line1;
 
         [InternString]
         [InvalidateProperties]
         [SerializableField(2)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private string _line2;
 
         [InternString]
         [InvalidateProperties]
         [SerializableField(3)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private string _line3;
 
         public StValentinesBear(int itemid, string name) : base(itemid)
@@ -46,7 +47,7 @@ namespace Server.Items
 
         public bool CanSign => !IsSigned || Core.Now <= EditLimit;
 
-        public override void AddNameProperty(ObjectPropertyList list)
+        public override void AddNameProperty(IPropertyList list)
         {
             if (_owner != null)
             {
@@ -62,7 +63,7 @@ namespace Server.Items
             AddLine(list, 1150303, _line3); // [ ~1_LINE2~ ]
         }
 
-        private static void AddLine(ObjectPropertyList list, int cliloc, string line)
+        private static void AddLine(IPropertyList list, int cliloc, string line)
         {
             if (line != null)
             {
@@ -190,7 +191,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [Flippable(0x48E0, 0x48E1)]
     public partial class StValentinesPanda : StValentinesBear
     {
@@ -200,7 +201,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [Flippable(0x48E2, 0x48E3)]
     public partial class StValentinesPolarBear : StValentinesBear
     {

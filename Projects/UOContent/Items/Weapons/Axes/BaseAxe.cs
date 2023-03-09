@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using ModernUO.Serialization;
 using Server.ContextMenus;
 using Server.Engines.ConPVP;
 using Server.Engines.Harvest;
-using Server.Network;
 
 namespace Server.Items
 {
@@ -12,17 +12,17 @@ namespace Server.Items
         bool Axe(Mobile from, BaseAxe axe);
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public abstract partial class BaseAxe : BaseMeleeWeapon
     {
         [SerializableField(0)]
         [InvalidateProperties]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private bool _showUsesRemaining;
 
         [SerializableField(1)]
         [InvalidateProperties]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _usesRemaining;
 
         public BaseAxe(int itemID) : base(itemID) => _usesRemaining = 150;
@@ -87,7 +87,7 @@ namespace Server.Items
                 return;
             }
 
-            if (!(HarvestSystem is Mining))
+            if (HarvestSystem is not Mining)
             {
                 from.SendLocalizedMessage(1010018); // What do you want to use this item on?
             }

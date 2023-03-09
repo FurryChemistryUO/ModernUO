@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class BlackSolenInfiltratorQueen : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class BlackSolenInfiltratorQueen : BaseCreature
     {
         [Constructible]
-        public BlackSolenInfiltratorQueen() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public BlackSolenInfiltratorQueen() : base(AIType.AI_Melee)
         {
             Body = 807;
             BaseSoundID = 959;
@@ -42,10 +44,6 @@ namespace Server.Mobiles
             PackItem(new ZoogiFungus(Utility.RandomDouble() < 0.05 ? 16 : 4));
         }
 
-        public BlackSolenInfiltratorQueen(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a solen infiltrator corpse";
         public override string DefaultName => "a black solen infiltrator";
 
@@ -79,18 +77,6 @@ namespace Server.Mobiles
             SolenHelper.OnBlackDamage(from);
 
             base.OnDamage(amount, from, willKill);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

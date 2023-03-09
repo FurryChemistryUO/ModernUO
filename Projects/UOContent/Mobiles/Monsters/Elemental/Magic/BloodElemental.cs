@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class BloodElemental : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class BloodElemental : BaseCreature
     {
         [Constructible]
-        public BloodElemental() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public BloodElemental() : base(AIType.AI_Mage)
         {
             Body = 159;
             BaseSoundID = 278;
@@ -39,10 +42,6 @@ namespace Server.Mobiles
             VirtualArmor = 60;
         }
 
-        public BloodElemental(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a blood elemental corpse";
         public override string DefaultName => "a blood elemental";
 
@@ -52,18 +51,6 @@ namespace Server.Mobiles
         {
             AddLoot(LootPack.FilthyRich);
             AddLoot(LootPack.Rich);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

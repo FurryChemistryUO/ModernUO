@@ -1,10 +1,13 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class CrystalDaemon : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class CrystalDaemon : BaseCreature
     {
         [Constructible]
         public CrystalDaemon()
-            : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+            : base(AIType.AI_Mage)
         {
             Body = 0x310;
             Hue = 0x3E8;
@@ -46,16 +49,11 @@ namespace Server.Mobiles
         public override void OnDeath( Container c )
         {
           base.OnDeath( c );
-    
+
           if (Utility.RandomDouble() < 0.4)
             c.DropItem( new ScatteredCrystals() );
         }
         */
-
-        public CrystalDaemon(Serial serial)
-            : base(serial)
-        {
-        }
 
         public override string CorpseName => "a crystal daemon corpse";
         public override string DefaultName => "a crystal daemon";
@@ -63,20 +61,6 @@ namespace Server.Mobiles
         public override void GenerateLoot()
         {
             AddLoot(LootPack.FilthyRich, 3);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

@@ -1,3 +1,4 @@
+using ModernUO.Serialization;
 using System;
 using System.Collections.Generic;
 using Server.Items;
@@ -5,10 +6,11 @@ using Server.Spells;
 
 namespace Server.Mobiles
 {
-    public class SavageShaman : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class SavageShaman : BaseCreature
     {
         [Constructible]
-        public SavageShaman() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public SavageShaman() : base(AIType.AI_Mage)
         {
             Name = NameList.RandomName("savage shaman");
 
@@ -61,10 +63,6 @@ namespace Server.Mobiles
             AddItem(new DeerMask());
         }
 
-        public SavageShaman(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a savage corpse";
 
         public override int Meat => 1;
@@ -110,16 +108,15 @@ namespace Server.Mobiles
 
         public override void AlterMeleeDamageTo(Mobile to, ref int damage)
         {
-            if (to is Dragon || to is WhiteWyrm || to is SwampDragon || to is Drake || to is Nightmare || to is Hiryu ||
-                to is LesserHiryu || to is Daemon)
+            if (to is Dragon or WhiteWyrm or SwampDragon or Drake or Nightmare or Hiryu or LesserHiryu or Daemon)
             {
                 damage *= 3;
             }
         }
 
-        public override void OnGotMeleeAttack(Mobile attacker)
+        public override void OnGotMeleeAttack(Mobile attacker, int damage)
         {
-            base.OnGotMeleeAttack(attacker);
+            base.OnGotMeleeAttack(attacker, damage);
 
             if (Utility.RandomDouble() < 0.1)
             {
@@ -184,7 +181,7 @@ namespace Server.Mobiles
                     {
                         foreach (var m in eable)
                         {
-                            var isFriendly = m is Savage || m is SavageRider || m is SavageShaman || m is SavageRidgeback;
+                            var isFriendly = m is Savage or SavageRider or SavageShaman or SavageRidgeback;
 
                             if (!isFriendly)
                             {
@@ -215,7 +212,7 @@ namespace Server.Mobiles
                     {
                         foreach (var m in eable)
                         {
-                            var isFriendly = m is Savage || m is SavageRider || m is SavageShaman || m is SavageRidgeback;
+                            var isFriendly = m is Savage or SavageRider or SavageShaman or SavageRidgeback;
 
                             if (isFriendly)
                             {
@@ -253,7 +250,7 @@ namespace Server.Mobiles
                     {
                         foreach (var m in eable)
                         {
-                            var isFriendly = m is Savage || m is SavageRider || m is SavageShaman || m is SavageRidgeback;
+                            var isFriendly = m is Savage or SavageRider or SavageShaman or SavageRidgeback;
 
                             if (isFriendly)
                             {
@@ -310,18 +307,6 @@ namespace Server.Mobiles
             }
 
             eable.Free();
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

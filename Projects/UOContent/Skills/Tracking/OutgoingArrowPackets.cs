@@ -1,6 +1,6 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright 2019-2020 - ModernUO Development Team                       *
+ * Copyright 2019-2022 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: OutgoingArrowPackets.cs                                         *
  *                                                                       *
@@ -28,7 +28,7 @@ namespace Server.Network
 
         public static void SendArrow(this NetState ns, byte command, int x, int y, Serial s)
         {
-            if (ns == null)
+            if (ns.CannotSendPackets())
             {
                 return;
             }

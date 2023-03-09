@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class Phoenix : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Phoenix : BaseCreature
     {
         [Constructible]
-        public Phoenix() : base(AIType.AI_Mage, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public Phoenix() : base(AIType.AI_Mage, FightMode.Aggressor)
         {
             Body = 5;
             Hue = 0x674;
@@ -38,10 +41,6 @@ namespace Server.Mobiles
             VirtualArmor = 60;
         }
 
-        public Phoenix(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a phoenix corpse";
         public override string DefaultName => "a phoenix";
 
@@ -54,18 +53,6 @@ namespace Server.Mobiles
         {
             AddLoot(LootPack.FilthyRich);
             AddLoot(LootPack.Rich);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

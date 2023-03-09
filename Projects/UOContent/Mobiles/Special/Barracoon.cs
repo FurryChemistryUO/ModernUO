@@ -145,7 +145,7 @@ namespace Server.Mobiles
 
             foreach (var m in eable)
             {
-                if (m is Ratman || m is RatmanArcher || m is RatmanMage)
+                if (m is Ratman or RatmanArcher or RatmanMage)
                 {
                     rats++;
                     if (rats >= 16)
@@ -185,12 +185,12 @@ namespace Server.Mobiles
                 return;
             }
 
-            if (Utility.RandomDouble() <= 0.6) // 60% chance to polymorph attacker into a ratman
+            if (Utility.RandomDouble() < 0.6) // 60% chance to polymorph attacker into a ratman
             {
                 Polymorph(target);
             }
 
-            if (Utility.RandomDouble() <= 0.2) // 20% chance to more ratmen
+            if (Utility.RandomDouble() < 0.2) // 20% chance to spawn more ratmen
             {
                 SpawnRatmen(target);
             }
@@ -201,16 +201,16 @@ namespace Server.Mobiles
             }
         }
 
-        public override void OnGotMeleeAttack(Mobile attacker)
+        public override void OnGotMeleeAttack(Mobile attacker, int damage)
         {
-            base.OnGotMeleeAttack(attacker);
+            base.OnGotMeleeAttack(attacker, damage);
 
             DoSpecialAbility(attacker);
         }
 
-        public override void OnGaveMeleeAttack(Mobile defender)
+        public override void OnGaveMeleeAttack(Mobile defender, int damage)
         {
-            base.OnGaveMeleeAttack(defender);
+            base.OnGaveMeleeAttack(defender, damage);
 
             DoSpecialAbility(defender);
         }

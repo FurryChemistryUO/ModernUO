@@ -1,47 +1,41 @@
 using System;
 
-namespace Server.Engines.Craft
+namespace Server.Engines.Craft;
+
+public class CraftRes
 {
-    public class CraftRes
+    private TextDefinition _name;
+
+    public CraftRes(Type type, TextDefinition name, int amount, TextDefinition message = null)
     {
-        public CraftRes(Type type, TextDefinition name, int amount, TextDefinition message = null)
+        ItemType = type;
+        Amount = amount;
+
+        _name = name;
+        Message = message;
+    }
+
+    public Type ItemType { get; }
+
+    public TextDefinition Message { get; }
+
+    public TextDefinition Name => _name ??= CraftItem.LabelNumber(ItemType);
+
+    public int Amount { get; }
+
+    public void SendMessage(Mobile from)
+    {
+        if (Message?.Number > 0)
         {
-            ItemType = type;
-            Amount = amount;
-
-            NameNumber = name;
-            MessageNumber = message;
-
-            NameString = name;
-            MessageString = message;
+            from.SendLocalizedMessage(Message.Number);
         }
-
-        public Type ItemType { get; }
-
-        public string MessageString { get; }
-
-        public int MessageNumber { get; }
-
-        public string NameString { get; }
-
-        public int NameNumber { get; }
-
-        public int Amount { get; }
-
-        public void SendMessage(Mobile from)
+        else if (!string.IsNullOrEmpty(Message?.String))
         {
-            if (MessageNumber > 0)
-            {
-                from.SendLocalizedMessage(MessageNumber);
-            }
-            else if (!string.IsNullOrEmpty(MessageString))
-            {
-                from.SendMessage(MessageString);
-            }
-            else
-            {
-                from.SendLocalizedMessage(502925); // You don't have the resources required to make that item.
-            }
+            from.SendMessage(Message.String);
+        }
+        else
+        {
+            from.SendLocalizedMessage(502925); // You don't have the resources required to make that item.
         }
     }
 }

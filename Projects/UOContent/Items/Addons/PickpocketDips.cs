@@ -1,19 +1,20 @@
 using System;
+using ModernUO.Serialization;
 
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [Flippable(0x1EC0, 0x1EC3)]
     public partial class PickpocketDip : AddonComponent
     {
         private Timer m_Timer;
 
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private double _minSkill;
 
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private double _maxSkill;
 
         public PickpocketDip(int itemID) : base(itemID)
@@ -118,7 +119,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class PickpocketDipEastAddon : BaseAddon
     {
         [Constructible]
@@ -126,9 +127,11 @@ namespace Server.Items
         {
             AddComponent(new PickpocketDip(0x1EC3), 0, 0, 0);
         }
+
+        public override BaseAddonDeed Deed => new PickpocketDipEastDeed();
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class PickpocketDipEastDeed : BaseAddonDeed
     {
         [Constructible]
@@ -140,7 +143,7 @@ namespace Server.Items
         public override int LabelNumber => 1044337; // pickpocket dip (east)
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class PickpocketDipSouthAddon : BaseAddon
     {
         [Constructible]
@@ -152,7 +155,7 @@ namespace Server.Items
         public override BaseAddonDeed Deed => new PickpocketDipSouthDeed();
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class PickpocketDipSouthDeed : BaseAddonDeed
     {
         [Constructible]

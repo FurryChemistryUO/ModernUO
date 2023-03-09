@@ -68,7 +68,7 @@ namespace Server.Guilds
 
         public override void OnResponse(NetState sender, RelayInfo info)
         {
-            if (!(sender.Mobile is PlayerMobile pm) || !IsMember(pm, guild) || !IsMember(m_Member, guild))
+            if (sender.Mobile is not PlayerMobile pm || !IsMember(pm, guild) || !IsMember(m_Member, guild))
             {
                 return;
             }
@@ -137,7 +137,7 @@ namespace Server.Guilds
                                 }
                                 else
                                 {
-                                    pm.SendMessage("You can't demote a {0}.", RankDefinition.Lowest.Name);
+                                    pm.SendMessage($"You can't demote a {RankDefinition.Lowest.Name}.");
                                 }
                             }
                             else
@@ -244,12 +244,12 @@ namespace Server.Guilds
 
         public void SetTitle_Callback(Mobile from, string text)
         {
-            if (!(from is PlayerMobile pm) || m_Member == null)
+            if (from is not PlayerMobile pm || m_Member == null)
             {
                 return;
             }
 
-            if (!(m_Member.Guild is Guild g) || !IsMember(pm, g) ||
+            if (m_Member.Guild is not Guild g || !IsMember(pm, g) ||
                 !(pm.GuildRank.GetFlag(RankFlags.CanSetGuildTitle) &&
                   (pm.GuildRank.Rank > m_Member.GuildRank.Rank || pm == m_Member)))
             {

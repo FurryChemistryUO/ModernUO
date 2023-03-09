@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class ElderGazer : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class ElderGazer : BaseCreature
     {
         [Constructible]
-        public ElderGazer() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public ElderGazer() : base(AIType.AI_Mage)
         {
             Body = 22;
             BaseSoundID = 377;
@@ -38,10 +41,6 @@ namespace Server.Mobiles
             VirtualArmor = 50;
         }
 
-        public ElderGazer(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "an elder gazer corpse";
         public override string DefaultName => "an elder gazer";
 
@@ -50,18 +49,6 @@ namespace Server.Mobiles
         public override void GenerateLoot()
         {
             AddLoot(LootPack.FilthyRich);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

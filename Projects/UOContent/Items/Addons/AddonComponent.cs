@@ -1,11 +1,10 @@
-using System.Collections.Generic;
-using Server.ContextMenus;
+using ModernUO.Serialization;
 using Server.Engines.Craft;
 
 namespace Server.Items
 {
     [Anvil]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class AnvilComponent : AddonComponent
     {
         [Constructible]
@@ -15,7 +14,7 @@ namespace Server.Items
     }
 
     [Forge]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class ForgeComponent : AddonComponent
     {
         [Constructible]
@@ -24,12 +23,12 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class LocalizedAddonComponent : AddonComponent
     {
         [InvalidateProperties]
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _number;
 
         [Constructible]
@@ -38,10 +37,10 @@ namespace Server.Items
         public override int LabelNumber => _number;
     }
 
-    [Serializable(1, false)]
+    [SerializationGenerator(1, false)]
     public partial class AddonComponent : Item, IChoppable
     {
-        private static readonly LightEntry[] m_Entries =
+        private static LightEntry[] _entries =
         {
             new(
                 LightType.WestSmall,
@@ -105,11 +104,11 @@ namespace Server.Items
         }
 
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         public BaseAddon _addon;
 
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         public Point3D _offset;
 
         [Hue]
@@ -161,7 +160,7 @@ namespace Server.Items
             }
         }
 /*
-        public override void GetProperties(ObjectPropertyList list) => _addon?.GetProperties(list);
+        public override void GetProperties(IPropertyList list) => _addon?.GetProperties(list);
 
         public override void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list) =>
             _addon?.GetContextMenuEntries(from, list);
@@ -197,9 +196,9 @@ namespace Server.Items
 
             var itemID = item.ItemID;
 
-            for (var i = 0; i < m_Entries.Length; ++i)
+            for (var i = 0; i < _entries.Length; ++i)
             {
-                var entry = m_Entries[i];
+                var entry = _entries[i];
                 var toMatch = entry.m_ItemIDs;
                 var contains = false;
 

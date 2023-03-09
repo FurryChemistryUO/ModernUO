@@ -6,9 +6,9 @@ namespace Server.Items
 {
     public static class WeaponAbilityPackets
     {
-        public static void Configure()
+        public static unsafe void Configure()
         {
-            IncomingPackets.RegisterEncoded(0x19, true, SetAbility);
+            IncomingPackets.RegisterEncoded(0x19, true, &SetAbility);
         }
 
         public static void SetAbility(NetState state, IEntity e, EncodedReader reader)
@@ -18,6 +18,13 @@ namespace Server.Items
 
             if (index >= 1 && index < WeaponAbility.Abilities.Length)
             {
+                if (m.Mounted && index == 6) //dismount
+                {
+                    WeaponAbility.ClearCurrentAbility(m);
+                    m.SendLocalizedMessage(1061283); // You cannot perform that attack while mounted!
+                    return;
+                }
+
                 WeaponAbility.SetCurrentAbility(m, WeaponAbility.Abilities[index]);
             }
             else
@@ -32,7 +39,7 @@ namespace Server.Items
 
         public static void SendToggleSpecialAbility(this NetState ns, int abilityId, bool active)
         {
-            if (ns == null)
+            if (ns.CannotSendPackets())
             {
                 return;
             }

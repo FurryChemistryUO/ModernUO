@@ -1,19 +1,20 @@
 using System;
+using ModernUO.Serialization;
 
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [Flippable(0x1070, 0x1074)]
     public partial class TrainingDummy : AddonComponent
     {
         private Timer m_Timer;
 
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private double _minSkill;
 
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private double _maxSkill;
 
         [Constructible]
@@ -131,7 +132,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class TrainingDummyEastAddon : BaseAddon
     {
         [Constructible]
@@ -143,7 +144,7 @@ namespace Server.Items
         public override BaseAddonDeed Deed => new TrainingDummyEastDeed();
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class TrainingDummyEastDeed : BaseAddonDeed
     {
         [Constructible]
@@ -155,7 +156,7 @@ namespace Server.Items
         public override int LabelNumber => 1044335; // training dummy (east)
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class TrainingDummySouthAddon : BaseAddon
     {
         [Constructible]
@@ -167,7 +168,7 @@ namespace Server.Items
         public override BaseAddonDeed Deed => new TrainingDummySouthDeed();
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class TrainingDummySouthDeed : BaseAddonDeed
     {
         [Constructible]

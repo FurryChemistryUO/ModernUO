@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class CorruptedSoul : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class CorruptedSoul : BaseCreature
     {
         [Constructible]
-        public CorruptedSoul() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, .1, 5)
+        public CorruptedSoul() : base(AIType.AI_Melee)
         {
             Body = 0x3CA;
             Hue = 0x453;
@@ -14,6 +17,7 @@ namespace Server.Mobiles
 
             SetHits(61, 69);
 
+            SetSpeed(0.25, 2.5);
             SetDamage(4, 40);
 
             SetDamageType(ResistanceType.Physical, 100);
@@ -32,10 +36,6 @@ namespace Server.Mobiles
             Karma = -5000;
 
             // VirtualArmor = 6; Not sure
-        }
-
-        public CorruptedSoul(Serial serial) : base(serial)
-        {
         }
 
         public override bool DeleteCorpseOnDeath => true;
@@ -74,18 +74,6 @@ namespace Server.Mobiles
 
             Effects.SendLocationEffect(Location, Map, 0x376A, 10, 1);
             return true;
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

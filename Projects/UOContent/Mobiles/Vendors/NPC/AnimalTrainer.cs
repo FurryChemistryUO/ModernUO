@@ -1,3 +1,4 @@
+using ModernUO.Serialization;
 using System.Collections.Generic;
 using Server.ContextMenus;
 using Server.Gumps;
@@ -7,7 +8,8 @@ using Server.Targeting;
 
 namespace Server.Mobiles
 {
-    public class AnimalTrainer : BaseVendor
+    [SerializationGenerator(0, false)]
+    public partial class AnimalTrainer : BaseVendor
     {
         private readonly List<SBInfo> m_SBInfos = new();
 
@@ -17,10 +19,6 @@ namespace Server.Mobiles
             SetSkill(SkillName.AnimalLore, 64.0, 100.0);
             SetSkill(SkillName.AnimalTaming, 90.0, 100.0);
             SetSkill(SkillName.Veterinary, 65.0, 88.0);
-        }
-
-        public AnimalTrainer(Serial serial) : base(serial)
-        {
         }
 
         protected override List<SBInfo> SBInfos => m_SBInfos;
@@ -230,7 +228,7 @@ namespace Server.Mobiles
                     SayTo( from, 1048053 ); // You can't stable that!
                   }
             */
-            else if ((pet is PackLlama || pet is PackHorse || pet is Beetle) && pet.Backpack?.Items.Count > 0)
+            else if (pet is PackLlama or PackHorse or Beetle && pet.Backpack?.Items.Count > 0)
             {
                 SayTo(from, 1042563); // You need to unload your pet.
             }
@@ -403,20 +401,6 @@ namespace Server.Mobiles
             {
                 base.OnSpeech(e);
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
 
         private class StableEntry : ContextMenuEntry

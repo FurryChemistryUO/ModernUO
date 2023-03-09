@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class Hind : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Hind : BaseCreature
     {
         [Constructible]
-        public Hind() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public Hind() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = 0xED;
 
@@ -35,10 +38,6 @@ namespace Server.Mobiles
             MinTameSkill = 23.1;
         }
 
-        public Hind(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a deer corpse";
         public override string DefaultName => "a hind";
 
@@ -51,19 +50,5 @@ namespace Server.Mobiles
         public override int GetHurtSound() => 0x83;
 
         public override int GetDeathSound() => 0x84;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

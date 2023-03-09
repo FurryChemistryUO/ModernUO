@@ -1,15 +1,16 @@
 ﻿using System;
+using ModernUO.Serialization;
 using Server.Items;
 using Server.Items.Holiday;
 
 namespace Server.Mobiles
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class PumpkinHead : BaseCreature
     {
         [Constructible]
         public PumpkinHead()
-            : base(Utility.RandomBool() ? AIType.AI_Melee : AIType.AI_Mage, FightMode.Closest, 10, 1, 0.05, 0.1)
+            : base(Utility.RandomBool() ? AIType.AI_Melee : AIType.AI_Mage)
         {
             Body = 1246 + Utility.Random(2);
 
@@ -93,7 +94,7 @@ namespace Server.Mobiles
         }
 
         public override Item NewHarmfulItem() =>
-            new PoolOfAcid(TimeSpan.FromSeconds(10), 25, 30)
+            new Acid(TimeSpan.FromSeconds(10), 25, 30)
             {
                 Name = "gooey nasty pumpkin hummus",
                 Hue = 144

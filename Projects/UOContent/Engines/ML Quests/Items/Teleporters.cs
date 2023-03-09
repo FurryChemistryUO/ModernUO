@@ -55,7 +55,7 @@ namespace Server.Engines.MLQuests.Items
                 return true;
             }
 
-            if (!(m is PlayerMobile pm))
+            if (m is not PlayerMobile pm)
             {
                 return false;
             }
@@ -67,11 +67,11 @@ namespace Server.Engines.MLQuests.Items
                 return true;
             }
 
-            TextDefinition.SendMessageTo(m, Message);
+            Message.SendMessageTo(m);
             return false;
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
@@ -88,7 +88,7 @@ namespace Server.Engines.MLQuests.Items
             writer.Write(0); // version
 
             writer.Write(m_QuestType?.FullName);
-            TextDefinition.Serialize(writer, Message);
+            writer.Write(Message);
         }
 
         public override void Deserialize(IGenericReader reader)
@@ -104,7 +104,7 @@ namespace Server.Engines.MLQuests.Items
                 m_QuestType = AssemblyHandler.FindTypeByFullName(typeName);
             }
 
-            Message = TextDefinition.Deserialize(reader);
+            Message = reader.ReadTextDefinition();
         }
     }
 
@@ -170,7 +170,7 @@ namespace Server.Engines.MLQuests.Items
 
             if (ticket == null)
             {
-                TextDefinition.SendMessageTo(m, Message);
+                Message.SendMessageTo(m);
                 return false;
             }
 
@@ -179,7 +179,7 @@ namespace Server.Engines.MLQuests.Items
             return true;
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
@@ -196,7 +196,7 @@ namespace Server.Engines.MLQuests.Items
             writer.Write(0); // version
 
             writer.Write( m_TicketType?.FullName);
-            TextDefinition.Serialize(writer, Message);
+            writer.Write(Message);
         }
 
         public override void Deserialize(IGenericReader reader)
@@ -212,7 +212,7 @@ namespace Server.Engines.MLQuests.Items
                 m_TicketType = AssemblyHandler.FindTypeByFullName(typeName);
             }
 
-            Message = TextDefinition.Deserialize(reader);
+            Message = reader.ReadTextDefinition();
         }
     }
 }

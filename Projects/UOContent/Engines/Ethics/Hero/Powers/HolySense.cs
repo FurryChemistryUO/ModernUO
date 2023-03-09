@@ -1,6 +1,5 @@
 using System;
 using Server.Buffers;
-using Server.Network;
 
 namespace Server.Ethics.Hero
 {
@@ -46,7 +45,7 @@ namespace Server.Ethics.Hero
                 ++enemyCount;
             }
 
-            using var sb = new ValueStringBuilder();
+            using var sb = ValueStringBuilder.Create();
 
             sb.Append("You sense ");
             sb.Append(enemyCount == 0 ? "no" : enemyCount.ToString());

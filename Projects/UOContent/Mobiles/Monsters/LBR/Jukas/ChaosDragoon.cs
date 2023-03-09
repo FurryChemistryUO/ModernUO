@@ -1,14 +1,18 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class ChaosDragoon : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class ChaosDragoon : BaseCreature
     {
         [Constructible]
-        public ChaosDragoon() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.15, 0.4)
+        public ChaosDragoon() : base(AIType.AI_Melee)
         {
             Body = 0x190;
             Hue = Race.Human.RandomSkinHue();
+
+            SetSpeed(0.15, 0.4);
 
             SetStr(176, 225);
             SetDex(81, 95);
@@ -87,19 +91,17 @@ namespace Server.Mobiles
             new SwampDragon().Rider = this;
         }
 
-        public ChaosDragoon(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a chaos dragoon corpse";
         public override string DefaultName => "a chaos dragoon";
 
-        public override bool HasBreath => true;
         public override bool AutoDispel => true;
         public override bool BardImmune => !Core.AOS;
         public override bool CanRummageCorpses => true;
         public override bool AlwaysMurderer => true;
         public override bool ShowFameTitle => false;
+
+        private static MonsterAbility[] _abilities = { MonsterAbilities.FireBreath };
+        public override MonsterAbility[] GetMonsterAbilities() => _abilities;
 
         public override int GetIdleSound() => 0x2CE;
 
@@ -129,23 +131,10 @@ namespace Server.Mobiles
 
         public override void AlterMeleeDamageTo(Mobile to, ref int damage)
         {
-            if (to is Dragon || to is WhiteWyrm || to is SwampDragon || to is Drake || to is Nightmare || to is Hiryu ||
-                to is LesserHiryu || to is Daemon)
+            if (to is Dragon or WhiteWyrm or SwampDragon or Drake or Nightmare or Hiryu or LesserHiryu or Daemon)
             {
                 damage *= 3;
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

@@ -1,6 +1,6 @@
 /*************************************************************************
  * ModernUO                                                              *
- * Copyright 2019-2021 - ModernUO Development Team                       *
+ * Copyright 2019-2022 - ModernUO Development Team                       *
  * Email: hi@modernuo.com                                                *
  * File: ChampionSpawn.cs                                                *
  *                                                                       *
@@ -20,11 +20,14 @@ using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
 using Server.Regions;
+using Server.Logging;
+using Server.Utilities;
 
 namespace Server.Engines.CannedEvil
 {
     public class ChampionSpawn : Item
     {
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(ChampionSpawn));
         private bool m_Active;
         private ChampionSpawnType m_Type;
         private List<Mobile> m_Creatures;
@@ -499,8 +502,10 @@ namespace Server.Engines.CannedEvil
                 {
                     RegisterDamageTo(Champion);
 
-                    //if (m_Champion is BaseChampion)
-                    //	AwardArtifact(((BaseChampion)m_Champion).GetArtifact());
+                    if (Core.ML)
+                    {
+                        AwardArtifact((Champion as BaseChampion)?.GetArtifact());
+                    }
 
                     DamageEntries.Clear();
 
@@ -557,35 +562,26 @@ namespace Server.Engines.CannedEvil
                             {
                                 if (Map == Map.Felucca)
                                 {
-                                    if (Utility.RandomDouble() < 0.001)
+                                    // 1 in 1000 you get either a scroll of transcendence or a powerscroll
+                                    var random = Utility.Random(2000);
+                                    if (random == 0)
                                     {
-                                        double random = Utility.Random (49);
-
-                                        if (random <= 24)
-                                        {
-                                            ScrollofTranscendence SoTF = CreateRandomFelSoT();
-                                            GiveScrollOfTranscendenceFelTo (pm, SoTF);
-                                        }
-                                        else
-                                        {
-                                            PowerScroll PS = CreateRandomFelPS();
-                                            GivePowerScrollFelTo (pm, PS);
-                                        }
+                                        GiveScrollOfTranscendenceFelTo(pm, CreateRandomFelSoT());
+                                    }
+                                    else if (random == 1)
+                                    {
+                                        GivePowerScrollFelTo(pm, CreateRandomFelPS());
                                     }
                                 }
 
-                                if (Map == Map.Ilshenar || Map == Map.Tokuno)
+                                if ((Map == Map.Ilshenar || Map == Map.Tokuno) && Utility.Random(10000) < 15)
                                 {
-                                    if (Utility.RandomDouble() < 0.0015)
-                                    {
-                                        pm.SendLocalizedMessage(1094936); // You have received a Scroll of Transcendence!
-                                        ScrollofTranscendence SoTT = CreateRandomTramSoT();
-                                        pm.AddToBackpack(SoTT);
-                                    }
+                                    pm.SendLocalizedMessage(1094936); // You have received a Scroll of Transcendence!
+                                    pm.AddToBackpack(CreateRandomTramSoT());
                                 }
                             }
 
-                            int mobSubLevel = GetSubLevelfor (m) + 1;
+                            int mobSubLevel = GetSubLevelfor(m) + 1;
 
                             if (mobSubLevel >= 0)
                             {
@@ -597,19 +593,17 @@ namespace Server.Engines.CannedEvil
                                 {
                                     if (gainedPath)
                                     {
-                                        m.SendLocalizedMessage(1054032); // You have gained a path in Valor!
+                                        pm.SendLocalizedMessage(1054032); // You have gained a path in Valor!
                                     }
                                     else
                                     {
-                                        m.SendLocalizedMessage(1054030); // You have gained in Valor!
+                                        pm.SendLocalizedMessage(1054030); // You have gained in Valor!
                                     }
 
-                                    //No delay on Valor gains
+                                    // No delay on Valor gains
                                 }
 
-                                ChampionTitleInfo info = pm.ChampionTitles;
-
-                                info.Award(m_Type, mobSubLevel);
+                                pm.ChampionTitles.Award(m_Type, mobSubLevel);
                             }
                         }
                     }
@@ -684,10 +678,18 @@ namespace Server.Engines.CannedEvil
 
             try
             {
-                Champion = Activator.CreateInstance(ChampionSpawnInfo.GetInfo(m_Type).Champion) as Mobile;
+                Champion = ChampionSpawnInfo.GetInfo(m_Type).Champion.CreateInstance<Mobile>();
             }
             catch (Exception e)
-            { Console.WriteLine($"Exception creating champion {m_Type}: {e}"); }
+            {
+                logger.Error(
+                    e,
+                    "Failed to spawn champion \"{MobileType}\" at {Location} ({Map}).",
+                    m_Type,
+                    Location,
+                    Map
+                );
+            }
 
             if (Champion != null)
             {
@@ -853,12 +855,21 @@ namespace Server.Engines.CannedEvil
 
         public Mobile Spawn(params Type[] types)
         {
+            var type = types[Utility.Random(types.Length)];
             try
             {
-                return Activator.CreateInstance(types[Utility.Random(types.Length)]) as Mobile;
+                return type.CreateInstance<Mobile>();
             }
-            catch
+            catch (Exception e)
             {
+                logger.Error(
+                    e,
+                    "Failed to spawn minion \"{Type}\" for champion {ChampionSpawnType} at {Location} ({Map}).",
+                    type,
+                    m_Type,
+                    Location,
+                    Map
+                );
                 return null;
             }
         }
@@ -934,22 +945,22 @@ namespace Server.Engines.CannedEvil
             return new Point3D(X + x, Y + y, Z - 15);
         }
 
-        public override void AddNameProperty(ObjectPropertyList list)
+        public override void AddNameProperty(IPropertyList list)
         {
             list.Add("champion spawn");
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
             if (m_Active)
             {
-                list.Add(1060742); // active
-                list.Add(1060658, "Type\t{0}", m_Type); // ~1_val~: ~2_val~
-                list.Add(1060659, "Level\t{0}", Level); // ~1_val~: ~2_val~
-                list.Add(1060660, "Kills\t{0} of {1} ({2:F1}%)", m_Kills, MaxKills, 100.0 * ((double)m_Kills / MaxKills)); // ~1_val~: ~2_val~
-                //list.Add(1060661, "Spawn Range\t{0}", m_SpawnRange); // ~1_val~: ~2_val~
+                list.Add(1060742);                         // active
+                list.Add(1060658, $"{"Type"}\t{m_Type}"); // ~1_val~: ~2_val~
+                list.Add(1060659, $"{"Level"}\t{Level}"); // ~1_val~: ~2_val~
+                var killRatio = 100.0 * ((double)m_Kills / MaxKills);
+                list.Add(1060660, $"{"Kills"}\t{m_Kills} of {MaxKills} ({killRatio:F1}%)"); // ~1_val~: ~2_val~
             }
             else
             {
@@ -961,11 +972,11 @@ namespace Server.Engines.CannedEvil
         {
             if (m_Active)
             {
-                LabelTo(from, "{0} (Active; Level: {1}; Kills: {2}/{3})", m_Type, Level, m_Kills, MaxKills);
+                LabelTo(from, $"{m_Type} (Active; Level: {Level}; Kills: {m_Kills}/{MaxKills})");
             }
             else
             {
-                LabelTo(from, "{0} (Inactive)", m_Type);
+                LabelTo(from, $"{m_Type} (Inactive)");
             }
         }
 

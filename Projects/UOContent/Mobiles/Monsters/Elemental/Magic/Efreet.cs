@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class Efreet : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Efreet : BaseCreature
     {
         [Constructible]
-        public Efreet() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public Efreet() : base(AIType.AI_Mage)
         {
             Body = 131;
             BaseSoundID = 768;
@@ -37,10 +39,6 @@ namespace Server.Mobiles
             Karma = -10000;
 
             VirtualArmor = 56;
-        }
-
-        public Efreet(Serial serial) : base(serial)
-        {
         }
 
         public override string CorpseName => "an efreet corpse";
@@ -75,18 +73,6 @@ namespace Server.Mobiles
                         break;
                 }
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

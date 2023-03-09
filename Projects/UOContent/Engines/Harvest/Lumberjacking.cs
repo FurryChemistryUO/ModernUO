@@ -1,6 +1,5 @@
 using System;
 using Server.Items;
-using Server.Network;
 using Server.Targeting;
 
 namespace Server.Engines.Harvest
@@ -169,7 +168,7 @@ namespace Server.Engines.Harvest
             {
                 item.LabelTo(from, 500464); // Use this on corpses to carve away meat and hide
             }
-            else if (toHarvest is StaticTarget || toHarvest is LandTarget)
+            else if (toHarvest is StaticTarget or LandTarget)
             {
                 from.SendLocalizedMessage(500489); // You can't use an axe on that.
             }

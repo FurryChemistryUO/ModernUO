@@ -33,33 +33,35 @@ namespace Server.Spells.Bushido
                 return false;
             }
 
-            if (!(caster.FindItemOnLayer(Layer.OneHanded) is BaseWeapon weap))
-            {
-                weap = caster.FindItemOnLayer(Layer.TwoHanded) as BaseWeapon;
-            }
+            var weap =
+                caster.FindItemOnLayer<BaseWeapon>(Layer.OneHanded) ??
+                caster.FindItemOnLayer<BaseWeapon>(Layer.TwoHanded);
 
-            if (weap != null)
+            if (weap == null)
             {
-                if (Core.ML && caster.Skills[weap.Skill].Base < 50)
+                if (caster.FindItemOnLayer(Layer.TwoHanded) is not BaseShield)
                 {
                     if (messages)
                     {
-                        caster.SendLocalizedMessage(
-                            1076206
-                        ); // Your skill with your equipped weapon must be 50 or higher to use Evasion.
+                        // You must have a weapon or a shield equipped to use this ability!
+                        caster.SendLocalizedMessage(1062944);
                     }
 
                     return false;
                 }
             }
-            else if (!(caster.FindItemOnLayer(Layer.TwoHanded) is BaseShield))
+            else
             {
-                if (messages)
+                if (Core.ML && caster.Skills[weap.Skill].Base < 50)
                 {
-                    caster.SendLocalizedMessage(1062944); // You must have a weapon or a shield equipped to use this ability!
-                }
+                    if (messages)
+                    {
+                        // Your skill with your equipped weapon must be 50 or higher to use Evasion.
+                        caster.SendLocalizedMessage(1076206);
+                    }
 
-                return false;
+                    return false;
+                }
             }
 
             if (!caster.CanBeginAction<Evasion>())
@@ -77,10 +79,9 @@ namespace Server.Spells.Bushido
 
         public static bool CheckSpellEvasion(Mobile defender)
         {
-            if (!(defender.FindItemOnLayer(Layer.OneHanded) is BaseWeapon weap))
-            {
-                weap = defender.FindItemOnLayer(Layer.TwoHanded) as BaseWeapon;
-            }
+            var weap =
+                defender.FindItemOnLayer<BaseWeapon>(Layer.OneHanded) ??
+                defender.FindItemOnLayer<BaseWeapon>(Layer.TwoHanded);
 
             if (Core.ML)
             {
@@ -96,7 +97,7 @@ namespace Server.Spells.Bushido
                         return false;
                     }
                 }
-                else if (!(defender.FindItemOnLayer(Layer.TwoHanded) is BaseShield))
+                else if (defender.FindItemOnLayer(Layer.TwoHanded) is not BaseShield)
                 {
                     return false;
                 }
@@ -162,8 +163,8 @@ namespace Server.Spells.Bushido
                 seconds += (m.Skills.Bushido.Value - 60) / 20;
             }
 
-            if (m.Skills.Anatomy.Value >= 100.0 && m.Skills.Tactics.Value >= 100.0 && m.Skills.Bushido.Value > 100.0
-            ) // Bushido being HIGHER than 100 for bonus is intended
+            // Bushido being HIGHER than 100 for bonus is intended
+            if (m.Skills.Anatomy.Value >= 100.0 && m.Skills.Tactics.Value >= 100.0 && m.Skills.Bushido.Value > 100.0)
             {
                 seconds++;
             }
@@ -194,8 +195,8 @@ namespace Server.Spells.Bushido
                 bonus += (m.Skills.Bushido.Value - 60) * .004 + 0.16;
             }
 
-            if (m.Skills.Anatomy.Value >= 100 && m.Skills.Tactics.Value >= 100 && m.Skills.Bushido.Value > 100
-            ) // Bushido being HIGHER than 100 for bonus is intended
+            // Bushido being HIGHER than 100 for bonus is intended
+            if (m.Skills.Anatomy.Value >= 100 && m.Skills.Tactics.Value >= 100 && m.Skills.Bushido.Value > 100)
             {
                 bonus += 0.10;
             }

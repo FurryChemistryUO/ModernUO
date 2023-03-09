@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ModernUO.Serialization;
 using Server.Buffers;
 using Server.ContextMenus;
 using Server.Gumps;
@@ -7,17 +8,17 @@ using Server.Multis;
 
 namespace Server.Items
 {
-    [Serializable(5, false)]
+    [SerializationGenerator(5, false)]
     public partial class BaseBook : Item, ISecurable
     {
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private SecureLevel _level;
 
         [InternString]
         [InvalidateProperties]
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private string _title;
 
         [SerializableFieldSaveFlag(1)]
@@ -28,7 +29,7 @@ namespace Server.Items
 
         [InvalidateProperties]
         [SerializableField(2)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private string _author;
 
         [SerializableFieldSaveFlag(2)]
@@ -38,7 +39,7 @@ namespace Server.Items
         private string AuthorDefaultValue() => DefaultContent?.Author;
 
         [SerializableField(3)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private bool _writable;
 
         [SerializableFieldSaveFlag(3)]
@@ -173,7 +174,7 @@ namespace Server.Items
             }
         }
 
-        public override void AddNameProperty(ObjectPropertyList list)
+        public override void AddNameProperty(IPropertyList list)
         {
             if (!string.IsNullOrEmpty(_title))
             {
@@ -201,8 +202,8 @@ namespace Server.Items
 
         public override void OnSingleClick(Mobile from)
         {
-            LabelTo(from, "{0} by {1}", _title, _author);
-            LabelTo(from, "[{0} pages]", _pages.Length);
+            LabelTo(from, $"{_title} by {_author}");
+            LabelTo(from, $"[{_pages.Length} pages]");
         }
 
         public override void OnDoubleClick(Mobile from)

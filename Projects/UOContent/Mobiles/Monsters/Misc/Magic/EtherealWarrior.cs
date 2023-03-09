@@ -1,16 +1,18 @@
+using ModernUO.Serialization;
 using System;
 using Server.Gumps;
 
 namespace Server.Mobiles
 {
-    public class EtherealWarrior : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class EtherealWarrior : BaseCreature
     {
         private static readonly TimeSpan ResurrectDelay = TimeSpan.FromSeconds(2.0);
 
         private DateTime m_NextResurrect;
 
         [Constructible]
-        public EtherealWarrior() : base(AIType.AI_Mage, FightMode.Evil, 10, 1, 0.2, 0.4)
+        public EtherealWarrior() : base(AIType.AI_Mage, FightMode.Evil)
         {
             Name = NameList.RandomName("ethereal warrior");
             Body = 123;
@@ -43,10 +45,6 @@ namespace Server.Mobiles
             Karma = 7000;
 
             VirtualArmor = 120;
-        }
-
-        public EtherealWarrior(Serial serial) : base(serial)
-        {
         }
 
         public override string CorpseName => "an ethereal warrior corpse";
@@ -97,34 +95,22 @@ namespace Server.Mobiles
 
         public override int GetDeathSound() => 0x2F7;
 
-        public override void OnGaveMeleeAttack(Mobile defender)
+        public override void OnGaveMeleeAttack(Mobile defender, int damage)
         {
-            base.OnGaveMeleeAttack(defender);
+            base.OnGaveMeleeAttack(defender, damage);
 
             defender.Damage(Utility.Random(10, 10), this);
             defender.Stam -= Utility.Random(10, 10);
             defender.Mana -= Utility.Random(10, 10);
         }
 
-        public override void OnGotMeleeAttack(Mobile attacker)
+        public override void OnGotMeleeAttack(Mobile attacker, int damage)
         {
-            base.OnGotMeleeAttack(attacker);
+            base.OnGotMeleeAttack(attacker, damage);
 
             attacker.Damage(Utility.Random(10, 10), this);
             attacker.Stam -= Utility.Random(10, 10);
             attacker.Mana -= Utility.Random(10, 10);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

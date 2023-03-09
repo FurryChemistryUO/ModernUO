@@ -1,5 +1,3 @@
-using Server.Targeting;
-
 namespace Server.Spells.Sixth
 {
     public class MassCurseSpell : MagerySpell, ISpellTargetingPoint3D
@@ -46,11 +44,10 @@ namespace Server.Spells.Sixth
 
                         Caster.DoHarmful(m);
 
-                        SpellHelper.AddStatCurse(Caster, m, StatType.Str);
-                        SpellHelper.DisableSkillCheck = true;
-                        SpellHelper.AddStatCurse(Caster, m, StatType.Dex);
-                        SpellHelper.AddStatCurse(Caster, m, StatType.Int);
-                        SpellHelper.DisableSkillCheck = false;
+                        var length = SpellHelper.GetDuration(Caster, m);
+                        SpellHelper.AddStatCurse(Caster, m, StatType.Str, length, false);
+                        SpellHelper.AddStatCurse(Caster, m, StatType.Dex, length);
+                        SpellHelper.AddStatCurse(Caster, m, StatType.Int, length);
 
                         m.FixedParticles(0x374A, 10, 15, 5028, EffectLayer.Waist);
                         m.PlaySound(0x1FB);

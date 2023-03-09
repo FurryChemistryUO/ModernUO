@@ -1,14 +1,11 @@
-using Server.Network;
+using ModernUO.Serialization;
 
 namespace Server.Mobiles
 {
-    public class EnragedRabbit : BaseEnraged
+    [SerializationGenerator(0, false)]
+    public partial class EnragedRabbit : BaseEnraged
     {
         public EnragedRabbit(Mobile summoner) : base(summoner) => Body = 0xcd;
-
-        public EnragedRabbit(Serial serial) : base(serial)
-        {
-        }
 
         public override string CorpseName => "a hare corpse";
         public override string DefaultName => "a rabbit";
@@ -18,27 +15,12 @@ namespace Server.Mobiles
         public override int GetHurtSound() => 0xCA;
 
         public override int GetDeathSound() => 0xCB;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-        }
     }
 
-    public class EnragedHart : BaseEnraged
+    [SerializationGenerator(0, false)]
+    public partial class EnragedHart : BaseEnraged
     {
         public EnragedHart(Mobile summoner) : base(summoner) => Body = 0xea;
-
-        public EnragedHart(Serial serial) : base(serial)
-        {
-        }
 
         public override string CorpseName => "a deer corpse";
         public override string DefaultName => "a great hart";
@@ -48,27 +30,12 @@ namespace Server.Mobiles
         public override int GetHurtSound() => 0x83;
 
         public override int GetDeathSound() => 0x84;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-        }
     }
 
-    public class EnragedHind : BaseEnraged
+    [SerializationGenerator(0, false)]
+    public partial class EnragedHind : BaseEnraged
     {
         public EnragedHind(Mobile summoner) : base(summoner) => Body = 0xed;
-
-        public EnragedHind(Serial serial) : base(serial)
-        {
-        }
 
         public override string CorpseName => "a deer corpse";
         public override string DefaultName => "a hind";
@@ -78,21 +45,10 @@ namespace Server.Mobiles
         public override int GetHurtSound() => 0x83;
 
         public override int GetDeathSound() => 0x84;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-        }
     }
 
-    public class EnragedBlackBear : BaseEnraged
+    [SerializationGenerator(0, false)]
+    public partial class EnragedBlackBear : BaseEnraged
     {
         public EnragedBlackBear(Mobile summoner) : base(summoner)
         {
@@ -100,27 +56,12 @@ namespace Server.Mobiles
             BaseSoundID = 0xa3;
         }
 
-        public EnragedBlackBear(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a bear corpse";
         public override string DefaultName => "a black bear";
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-        }
     }
 
-    public class EnragedEagle : BaseEnraged
+    [SerializationGenerator(0, false)]
+    public partial class EnragedEagle : BaseEnraged
     {
         public EnragedEagle(Mobile summoner) : base(summoner)
         {
@@ -128,60 +69,30 @@ namespace Server.Mobiles
             BaseSoundID = 0x2ee;
         }
 
-        public EnragedEagle(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "an eagle corpse";
         public override string DefaultName => "an eagle";
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-        }
     }
 
-    public class BaseEnraged : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class BaseEnraged : BaseCreature
     {
-        public BaseEnraged(Mobile summoner)
-            : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public BaseEnraged(Mobile summoner) : base(AIType.AI_Melee)
         {
             SetStr(50, 200);
             SetDex(50, 200);
-            SetHits(50, 200);
-            SetStam(50, 200);
 
             /*
-              On OSI, all stats are random 50-200, but
-              str is never less than hits, and dex is never
-              less than stam.
+            * On OSI, all stats are random 50-200, but
+            * str is never less than hits, and dex is never
+            * less than stam.
             */
-
-            if (Str < Hits)
-            {
-                Str = Hits;
-            }
-
-            if (Dex < Stam)
-            {
-                Dex = Stam;
-            }
+            SetHits(50, Str);
+            SetStam(50, Dex);
 
             Karma = -1000;
             Tamable = false;
 
             SummonMaster = summoner;
-        }
-
-        public BaseEnraged(Serial serial) : base(serial)
-        {
         }
 
         public override void OnThink()
@@ -230,22 +141,10 @@ namespace Server.Mobiles
             PrivateOverheadMessage(MessageType.Regular, 0x3B2, 1060768, from.NetState); // enraged
         }
 
-        public override void AddNameProperties(ObjectPropertyList list)
+        public override void AddNameProperties(IPropertyList list)
         {
             base.AddNameProperties(list);
             list.Add(1060768); // enraged
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

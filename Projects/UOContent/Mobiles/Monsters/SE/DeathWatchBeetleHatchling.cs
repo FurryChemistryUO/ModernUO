@@ -1,19 +1,14 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
+    [SerializationGenerator(0, false)]
     [TypeAlias("Server.Mobiles.DeathWatchBeetleHatchling")]
-    public class DeathwatchBeetleHatchling : BaseCreature
+    public partial class DeathwatchBeetleHatchling : BaseCreature
     {
         [Constructible]
-        public DeathwatchBeetleHatchling() : base(
-            AIType.AI_Melee,
-            Core.ML ? FightMode.Aggressor : FightMode.Closest,
-            10,
-            1,
-            0.2,
-            0.4
-        )
+        public DeathwatchBeetleHatchling() : base(AIType.AI_Melee, Core.ML ? FightMode.Aggressor : FightMode.Closest)
         {
             Body = 242;
 
@@ -72,10 +67,6 @@ namespace Server.Mobiles
             }
         }
 
-        public DeathwatchBeetleHatchling(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a deathwatchbeetle hatchling corpse";
         public override string DefaultName => "a deathwatch beetle hatchling";
         public override int Hides => 8;
@@ -94,18 +85,6 @@ namespace Server.Mobiles
         {
             AddLoot(LootPack.LowScrolls, 1);
             AddLoot(LootPack.Potions, 1);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

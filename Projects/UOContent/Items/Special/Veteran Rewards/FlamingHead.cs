@@ -1,7 +1,6 @@
 using Server.Engines.VeteranRewards;
 using Server.Gumps;
 using Server.Multis;
-using Server.Network;
 using Server.Targeting;
 
 namespace Server.Items
@@ -73,7 +72,7 @@ namespace Server.Items
             }
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
@@ -154,7 +153,7 @@ namespace Server.Items
             }
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 

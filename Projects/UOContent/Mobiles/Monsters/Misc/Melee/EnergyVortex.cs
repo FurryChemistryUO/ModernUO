@@ -1,15 +1,17 @@
+using ModernUO.Serialization;
 using System;
-using System.Linq;
+using Server.Buffers;
+using Server.Collections;
 
 namespace Server.Mobiles
 {
-    public class EnergyVortex : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class EnergyVortex : BaseCreature
     {
         [Constructible]
-        public EnergyVortex()
-            : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public EnergyVortex() : base(AIType.AI_Melee)
         {
-            if (Core.SE && Utility.RandomDouble() < 0.002) // Per OSI FoF, it's a 1/500 chance.
+            if (Core.SE && Utility.Random(500) == 0) // Per OSI FoF, it's a 1/500 chance.
             {
                 // Llama vortex!
                 Body = 0xDC;
@@ -50,11 +52,6 @@ namespace Server.Mobiles
             ControlSlots = Core.SE ? 2 : 1;
         }
 
-        public EnergyVortex(Serial serial)
-            : base(serial)
-        {
-        }
-
         public override string CorpseName => "an energy vortex corpse";
         public override bool DeleteCorpseOnDeath => Summoned;
         public override bool AlwaysMurderer => true; // Or Llama vortices will appear gray.
@@ -79,40 +76,32 @@ namespace Server.Mobiles
             if (Core.SE && Summoned)
             {
                 var eable = GetMobilesInRange(5);
-                var spiritsOrVortexes = eable
-                    .Where(m => (m is EnergyVortex || m is BladeSpirits) && ((BaseCreature)m).Summoned)
-                    .ToList();
-
+                using var queue = PooledRefQueue<Mobile>.Create();
+                foreach (var m in eable)
+                {
+                    if (m is EnergyVortex or BladeSpirits && ((BaseCreature)m).Summoned)
+                    {
+                        queue.Enqueue(m);
+                    }
+                }
                 eable.Free();
 
-                while (spiritsOrVortexes.Count > 6)
+                var amount = queue.Count - 6;
+                if (amount > 0)
                 {
-                    var random = spiritsOrVortexes.RandomElement();
-                    Dispel(random);
-                    spiritsOrVortexes.Remove(random);
+                    var mobs = queue.ToPooledArray();
+                    mobs.Shuffle();
+
+                    while (amount > 0)
+                    {
+                        Dispel(mobs[amount--]);
+                    }
+
+                    STArrayPool<Mobile>.Shared.Return(mobs, true);
                 }
             }
 
             base.OnThink();
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-
-            if (BaseSoundID == 263)
-            {
-                BaseSoundID = 0;
-            }
         }
     }
 }

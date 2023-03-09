@@ -70,15 +70,17 @@ namespace Server.Misc
                 return true;
             }
 
+            var bcFrom = from as BaseCreature;
+            var bcTarg = target as BaseCreature;
             var pmFrom = from as PlayerMobile;
             var pmTarg = target as PlayerMobile;
 
-            if (pmFrom == null && from is BaseCreature bcFrom && bcFrom.Summoned)
+            if (pmFrom == null && bcFrom?.Summoned == true)
             {
                 pmFrom = bcFrom.SummonMaster as PlayerMobile;
             }
 
-            if (pmTarg == null && target is BaseCreature bcTarg && bcTarg.Summoned)
+            if (pmTarg == null && bcTarg?.Summoned == true)
             {
                 pmTarg = bcTarg.SummonMaster as PlayerMobile;
             }
@@ -131,12 +133,9 @@ namespace Server.Misc
 
             var targetFaction = Faction.Find(target, true);
 
-            if ((!Core.ML || map == Faction.Facet) && targetFaction != null)
+            if ((!Core.ML || map == Faction.Facet) && targetFaction != null && Faction.Find(from, true) != targetFaction)
             {
-                if (Faction.Find(from, true) != targetFaction)
-                {
-                    return false;
-                }
+                return false;
             }
 
             if ((map?.Rules & MapRules.BeneficialRestrictions) == 0)
@@ -149,12 +148,12 @@ namespace Server.Misc
                 return true; // NPCs have no restrictions
             }
 
-            if (target is BaseCreature creature && !creature.Controlled)
+            if (bcTarg?.Controlled == false)
             {
                 return false; // Players cannot heal uncontrolled mobiles
             }
 
-            if (pmFrom?.Young == true || pmTarg?.Young == true)
+            if (pmFrom?.Young == true && pmTarg?.Young != true)
             {
                 return false; // Young players cannot perform beneficial actions towards older players
             }
@@ -176,11 +175,12 @@ namespace Server.Misc
                 return true;
             }
 
+            var bcFrom = from as BaseCreature;
             var pmFrom = from as PlayerMobile;
             var pmTarg = target as PlayerMobile;
             var bcTarg = target as BaseCreature;
 
-            if (pmFrom == null && from is BaseCreature bcFrom && bcFrom.Summoned)
+            if (pmFrom == null && bcFrom?.Summoned == true)
             {
                 pmFrom = bcFrom.SummonMaster as PlayerMobile;
             }
@@ -257,9 +257,15 @@ namespace Server.Misc
                 return true; // Guild allies or enemies can be harmful
             }
 
-            if (bcTarg?.Controlled == true || bcTarg?.Summoned == true && bcTarg.SummonMaster != from)
+            if (bcTarg?.Controlled == true
+                || (bcTarg?.Summoned == true && bcTarg.SummonMaster != from && bcTarg.SummonMaster.Player))
             {
-                return false; // Cannot harm other controlled mobiles
+                return false; // Cannot harm other controlled mobiles from players
+            }
+
+            if (pmFrom == null && bcFrom != null && bcFrom.Summoned && target.Player)
+            {
+                return true; // Summons from monsters can attack players
             }
 
             if (target.Player)
@@ -278,8 +284,7 @@ namespace Server.Misc
             {
                 c.DisplayGuildTitle = false;
 
-                if (c.Map != Map.Internal && (Core.AOS || Guild.NewGuildSystem || c.ControlOrder == OrderType.Attack ||
-                                              c.ControlOrder == OrderType.Guard))
+                if (c.Map != Map.Internal && (Core.AOS || Guild.NewGuildSystem || c.ControlOrder is OrderType.Attack or OrderType.Guard))
                 {
                     g = (Guild)(c.Guild = c.ControlMaster.Guild);
                 }
@@ -385,7 +390,7 @@ namespace Server.Misc
                 return Notoriety.CanBeAttacked;
             }
 
-            if (!(target.Owner is PlayerMobile))
+            if (target.Owner is not PlayerMobile)
             {
                 return Notoriety.CanBeAttacked;
             }
@@ -406,8 +411,7 @@ namespace Server.Misc
         {
             var bcTarg = target as BaseCreature;
 
-            if (Core.AOS && (target.Blessed || bcTarg?.IsInvulnerable == true || target is PlayerVendor ||
-                             target is TownCrier))
+            if (Core.AOS && (target.Blessed || bcTarg?.IsInvulnerable == true || target is PlayerVendor or TownCrier))
             {
                 return Notoriety.Invulnerable;
             }
@@ -458,8 +462,8 @@ namespace Server.Misc
             }
 
             if (target.Kills >= 5 ||
-                target.Body.IsMonster && IsSummoned(bcTarg) && !(target is BaseFamiliar) && !(target is ArcaneFey) &&
-                !(target is Golem) || bcTarg?.AlwaysMurderer == true || bcTarg?.IsAnimatedDead == true)
+                target.Body.IsMonster && IsSummoned(bcTarg) && target is not BaseFamiliar && target is not ArcaneFey &&
+                target is not Golem || bcTarg?.AlwaysMurderer == true || bcTarg?.IsAnimatedDead == true)
             {
                 return Notoriety.Murderer;
             }
@@ -561,7 +565,7 @@ namespace Server.Misc
                 return false;
             }
 
-            return !(m is BaseCreature c) || c.Deleted || !c.Controlled || c.ControlMaster == null ||
+            return m is not BaseCreature c || c.Deleted || !c.Controlled || c.ControlMaster == null ||
                    !house.IsFriend(c.ControlMaster);
         }
 

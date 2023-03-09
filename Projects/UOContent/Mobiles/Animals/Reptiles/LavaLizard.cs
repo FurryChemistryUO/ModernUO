@@ -1,12 +1,14 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
     [TypeAlias("Server.Mobiles.Lavalizard")]
-    public class LavaLizard : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class LavaLizard : BaseCreature
     {
         [Constructible]
-        public LavaLizard() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public LavaLizard() : base(AIType.AI_Melee)
         {
             Body = 0xCE;
             Hue = Utility.RandomList(0x647, 0x650, 0x659, 0x662, 0x66B, 0x674);
@@ -44,34 +46,17 @@ namespace Server.Mobiles
             PackItem(new SulfurousAsh(Utility.Random(4, 10)));
         }
 
-        public LavaLizard(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a lava lizard corpse";
         public override string DefaultName => "a lava lizard";
-
-        public override bool HasBreath => true; // fire breath enabled
         public override int Hides => 12;
         public override HideType HideType => HideType.Spined;
+
+        private static MonsterAbility[] _abilities = { MonsterAbilities.FireBreath };
+        public override MonsterAbility[] GetMonsterAbilities() => _abilities;
 
         public override void GenerateLoot()
         {
             AddLoot(LootPack.Meager);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

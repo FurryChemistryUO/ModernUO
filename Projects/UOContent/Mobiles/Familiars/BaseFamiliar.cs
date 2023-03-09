@@ -8,9 +8,9 @@ namespace Server.Mobiles
     {
         private bool m_LastHidden;
 
-        public BaseFamiliar()
-            : base(AIType.AI_Melee, FightMode.Closest, 10, 1, .1, .1)
+        public BaseFamiliar() : base(AIType.AI_Melee)
         {
+            SetSpeed(0.1, 0.11);
         }
 
         public BaseFamiliar(Serial serial) : base(serial)
@@ -20,6 +20,7 @@ namespace Server.Mobiles
         public override bool BardImmune => true;
         public override Poison PoisonImmune => Poison.Lethal;
         public override bool Commandable => false;
+        public override bool IgnoreMobiles => true;
 
         public override bool PlayerRangeSensitive => false;
 

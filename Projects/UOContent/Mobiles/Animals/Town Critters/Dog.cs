@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class Dog : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Dog : BaseCreature
     {
         [Constructible]
-        public Dog() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public Dog() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = 0xD9;
             Hue = Utility.RandomAnimalHue();
@@ -36,29 +39,11 @@ namespace Server.Mobiles
             MinTameSkill = -15.3;
         }
 
-        public Dog(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a dog corpse";
         public override string DefaultName => "a dog";
 
         public override int Meat => 1;
         public override FoodType FavoriteFood => FoodType.Meat;
         public override PackInstinct PackInstinct => PackInstinct.Canine;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

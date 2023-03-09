@@ -128,13 +128,13 @@ namespace Server.Factions
             InvalidateProperties();
         }
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
             if (IsCorrupted)
             {
-                TextDefinition.AddTo(list, m_Corrupted.Definition.SigilControl);
+                m_Corrupted.Definition.SigilControl.AddTo(list);
             }
             else
             {

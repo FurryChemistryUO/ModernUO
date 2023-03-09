@@ -1,6 +1,5 @@
 using Server.Items;
 using Server.Network;
-using Server.Targeting;
 
 namespace Server.Spells.Sixth
 {
@@ -36,8 +35,9 @@ namespace Server.Spells.Sixth
                     Caster.Name
                 );
             }
-            else if (!SpellHelper.CheckTravel(Caster, TravelCheckType.Mark))
+            else if (!SpellHelper.CheckTravel(Caster, TravelCheckType.Mark, out var failureMessage))
             {
+                failureMessage.SendMessageTo(Caster);
             }
             else if (SpellHelper.CheckMulti(Caster.Location, Caster.Map, !Core.AOS))
             {
@@ -64,6 +64,20 @@ namespace Server.Spells.Sixth
             Caster.Target = new SpellTargetItem(this, range: Core.ML ? 10 : 12);
         }
 
-        public override bool CheckCast() => base.CheckCast() && SpellHelper.CheckTravel(Caster, TravelCheckType.Mark);
+        public override bool CheckCast()
+        {
+            if (base.CheckCast())
+            {
+                return true;
+            }
+
+            if (!SpellHelper.CheckTravel(Caster, TravelCheckType.Mark, out var failureMessage))
+            {
+                failureMessage.SendMessageTo(Caster);
+                return false;
+            }
+
+            return true;
+        }
     }
 }

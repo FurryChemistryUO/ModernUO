@@ -1,6 +1,5 @@
 using Server.Items;
 using Server.Mobiles;
-using Server.Network;
 
 namespace Server.Engines.Quests.Ninja
 {
@@ -8,7 +7,7 @@ namespace Server.Engines.Quests.Ninja
     {
         public static int[] Messages =
         {
-            1063191, // They won�t find me here.
+            1063191, // They won't find me here.
             1063192  // Ah, a quiet hideout.
         };
 

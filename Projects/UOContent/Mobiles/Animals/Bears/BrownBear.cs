@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class BrownBear : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class BrownBear : BaseCreature
     {
         [Constructible]
-        public BrownBear() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public BrownBear() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = 167;
             BaseSoundID = 0xA3;
@@ -37,10 +40,6 @@ namespace Server.Mobiles
             MinTameSkill = 41.1;
         }
 
-        public BrownBear(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a bear corpse";
         public override string DefaultName => "a brown bear";
 
@@ -48,19 +47,5 @@ namespace Server.Mobiles
         public override int Hides => 12;
         public override FoodType FavoriteFood => FoodType.Fish | FoodType.FruitsAndVegies | FoodType.Meat;
         public override PackInstinct PackInstinct => PackInstinct.Bear;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

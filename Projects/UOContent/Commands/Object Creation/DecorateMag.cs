@@ -20,7 +20,8 @@ namespace Server.Commands
             CommandSystem.Register("DecorateMag", AccessLevel.Administrator, DecorateMag_OnCommand);
         }
 
-        [Usage("DecorateMag"), Description("Generates world decoration.")]
+        [Usage("DecorateMag")]
+        [Description("Generates world decoration.")]
         private static void DecorateMag_OnCommand(CommandEventArgs e)
         {
             m_Mobile = e.Mobile;
@@ -33,7 +34,7 @@ namespace Server.Commands
             Generate("Data/Decoration/RuinedMaginciaTram", Map.Trammel);
             Generate("Data/Decoration/RuinedMaginciaFel", Map.Felucca);
 
-            m_Mobile.SendMessage("World generating complete. {0} items were generated.", m_Count);
+            m_Mobile.SendMessage($"World generating complete. {m_Count} items were generated.");
         }
 
         public static void Generate(string folder, params Map[] maps)
@@ -256,8 +257,8 @@ namespace Server.Commands
 
                     var hi = new HintItem(m_ItemID, range, messageNumber, hintNumber);
 
-                    hi.WarningString = messageString;
-                    hi.HintString = hintString;
+                    hi.WarningMessage = messageString;
+                    hi.HintMessage = hintString;
                     hi.ResetDelay = resetDelay;
 
                     item = hi;
@@ -311,7 +312,7 @@ namespace Server.Commands
 
                     var wi = new WarningItem(m_ItemID, range, messageNumber);
 
-                    wi.WarningString = messageString;
+                    wi.WarningMessage = messageString;
                     wi.ResetDelay = resetDelay;
 
                     item = wi;
@@ -491,6 +492,9 @@ namespace Server.Commands
                         break;
                     }
                 }
+
+                // Make light never run out of fuel.
+                light.Duration = TimeSpan.Zero;
 
                 if (!unlit)
                 {
@@ -679,7 +683,7 @@ namespace Server.Commands
 
                         if (indexOf >= 0)
                         {
-                            st.MessageString = m_Params[i][++indexOf..];
+                            st.Message = m_Params[i][++indexOf..];
                         }
                     }
                     else if (m_Params[i].StartsWithOrdinal("MessageNumber"))
@@ -688,7 +692,7 @@ namespace Server.Commands
 
                         if (indexOf >= 0)
                         {
-                            st.MessageNumber = Utility.ToInt32(m_Params[i].AsSpan()[++indexOf..]);
+                            st.Message = Utility.ToInt32(m_Params[i].AsSpan()[++indexOf..]);
                         }
                     }
                     else if (m_Params[i].StartsWithOrdinal("PointDest"))
@@ -1103,7 +1107,7 @@ namespace Server.Commands
                     }
                 }
             }
-            else if (srcItem is Teleporter || srcItem is FillableContainer || srcItem is BaseBook)
+            else if (srcItem is Teleporter or FillableContainer or BaseBook)
             {
                 eable = map.GetItemsInRange(new Point3D(x, y, z), 0);
 

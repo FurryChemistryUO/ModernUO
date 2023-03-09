@@ -1,3 +1,4 @@
+using ModernUO.Serialization;
 using System;
 using System.Collections.Generic;
 using Server.Engines.BulkOrders;
@@ -5,7 +6,8 @@ using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class Blacksmith : BaseVendor
+    [SerializationGenerator(0, false)]
+    public partial class Blacksmith : BaseVendor
     {
         private readonly List<SBInfo> m_SBInfos = new();
 
@@ -19,10 +21,6 @@ namespace Server.Mobiles
             SetSkill(SkillName.Swords, 60.0, 83.0);
             SetSkill(SkillName.Tactics, 60.0, 83.0);
             SetSkill(SkillName.Parry, 61.0, 93.0);
-        }
-
-        public Blacksmith(Serial serial) : base(serial)
-        {
         }
 
         protected override List<SBInfo> SBInfos => m_SBInfos;
@@ -81,20 +79,6 @@ namespace Server.Mobiles
             AddItem(new SmithHammer());
         }
 
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
-
         public override Item CreateBulkOrder(Mobile from, bool fromContextMenu)
         {
             if (from is PlayerMobile pm && pm.NextSmithBulkOrder == TimeSpan.Zero &&
@@ -126,7 +110,7 @@ namespace Server.Mobiles
             return null;
         }
 
-        public override bool IsValidBulkOrder(Item item) => item is SmallSmithBOD || item is LargeSmithBOD;
+        public override bool IsValidBulkOrder(Item item) => item is SmallSmithBOD or LargeSmithBOD;
 
         public override bool SupportsBulkOrders(Mobile from) => from is PlayerMobile && from.Skills.Blacksmith.Base > 0;
 

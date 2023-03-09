@@ -1,8 +1,10 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class Miasma : Scorpion
+    [SerializationGenerator(0, false)]
+    public partial class Miasma : Scorpion
     {
         [Constructible]
         public Miasma()
@@ -44,7 +46,7 @@ namespace Server.Mobiles
         public override void OnDeath( Container c )
         {
           base.OnDeath( c );
-    
+
           if (Utility.RandomDouble() < 0.025)
           {
             switch ( Utility.Random( 16 ) )
@@ -70,11 +72,6 @@ namespace Server.Mobiles
         }
         */
 
-        public Miasma(Serial serial)
-            : base(serial)
-        {
-        }
-
         public override string CorpseName => "a Miasma corpse";
         public override string DefaultName => "Miasma";
 
@@ -92,19 +89,5 @@ namespace Server.Mobiles
         }
 
         public override WeaponAbility GetWeaponAbility() => WeaponAbility.MortalStrike;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

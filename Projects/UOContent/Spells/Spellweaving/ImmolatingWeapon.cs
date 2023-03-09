@@ -14,8 +14,7 @@ namespace Server.Spells.Spellweaving
 
         private static readonly Dictionary<BaseWeapon, ImmolatingWeaponTimer> _table = new();
 
-        public ImmolatingWeaponSpell(Mobile caster, Item scroll = null)
-            : base(caster, scroll, _info)
+        public ImmolatingWeaponSpell(Mobile caster, Item scroll = null) : base(caster, scroll, _info)
         {
         }
 
@@ -26,7 +25,7 @@ namespace Server.Spells.Spellweaving
 
         public override bool CheckCast()
         {
-            if (!(Caster.Weapon is BaseWeapon weapon) || weapon is Fists || weapon is BaseRanged)
+            if (Caster.Weapon is not BaseWeapon weapon || weapon is Fists or BaseRanged)
             {
                 Caster.SendLocalizedMessage(1060179); // You must be wielding a weapon to use this ability!
                 return false;
@@ -37,7 +36,7 @@ namespace Server.Spells.Spellweaving
 
         public override void OnCast()
         {
-            if (!(Caster.Weapon is BaseWeapon weapon) || weapon is Fists || weapon is BaseRanged)
+            if (Caster.Weapon is not BaseWeapon weapon || weapon is Fists or BaseRanged)
             {
                 Caster.SendLocalizedMessage(1060179); // You must be wielding a weapon to use this ability!
             }
@@ -97,9 +96,9 @@ namespace Server.Spells.Spellweaving
 
         private class ImmolatingWeaponTimer : Timer
         {
-            public readonly Mobile _caster;
-            public readonly int _damage;
-            public readonly BaseWeapon _weapon;
+            public Mobile _caster;
+            public int _damage;
+            public BaseWeapon _weapon;
 
             public ImmolatingWeaponTimer(TimeSpan duration, int damage, Mobile caster, BaseWeapon weapon) : base(duration)
             {

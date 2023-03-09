@@ -73,7 +73,8 @@ namespace Server.Commands
             CommandSystem.Register(command, access, handler);
         }
 
-        [Usage("SpeedBoost [true|false]"), Description("Enables a speed boost for the invoker.  Disable with parameters.")]
+        [Usage("SpeedBoost [true|false]")]
+        [Description("Enables a speed boost for the invoker.  Disable with parameters.")]
         private static void SpeedBoost_OnCommand(CommandEventArgs e)
         {
             var from = e.Mobile;
@@ -97,17 +98,18 @@ namespace Server.Commands
             }
         }
 
-        [Usage("Where"), Description("Tells the commanding player his coordinates, region, and facet.")]
+        [Usage("Where")]
+        [Description("Tells the commanding player his coordinates, region, and facet.")]
         public static void Where_OnCommand(CommandEventArgs e)
         {
             var from = e.Mobile;
             var map = from.Map;
 
-            from.SendMessage("You are at {0} {1} {2} in {3}.", from.X, from.Y, from.Z, map);
+            from.SendMessage($"You are at {from.X} {from.Y} {from.Z} in {map}.");
 
             if (map != null)
             {
-                var reg = from.Region;
+                var reg = Region.Find(from.Location, from.Map);
 
                 if (!reg.IsDefault)
                 {
@@ -122,14 +124,13 @@ namespace Server.Commands
                         reg = reg.Parent;
                     }
 
-                    from.SendMessage("Your region is {0}.", builder.ToString());
+                    from.SendMessage($"Your region is {builder}.");
                 }
             }
         }
 
-        [Usage("DropHolding"), Description(
-             "Drops the item, if any, that a targeted player is holding. The item is placed into their backpack, or if that's full, at their feet."
-         )]
+        [Usage("DropHolding")]
+        [Description("Drops the item, if any, that a targeted player is holding. The item is placed into their backpack, or if that's full, at their feet.")]
         public static void DropHolding_OnCommand(CommandEventArgs e)
         {
             e.Mobile.BeginTarget(-1, false, TargetFlags.None, DropHolding_OnTarget);
@@ -191,11 +192,7 @@ namespace Server.Commands
             {
                 CommandLogging.WriteLine(
                     from,
-                    "{0} {1} deleting {2} object{3}",
-                    from.AccessLevel,
-                    CommandLogging.Format(from),
-                    list.Count,
-                    list.Count == 1 ? "" : "s"
+                    $"{from.AccessLevel} {CommandLogging.Format(from)} deleting {list.Count} object{(list.Count == 1 ? "" : "s")}"
                 );
 
                 NetState.FlushAll();
@@ -205,7 +202,14 @@ namespace Server.Commands
                     list[i].Delete();
                 }
 
-                from.SendMessage("You have deleted {0} object{1}.", list.Count, list.Count == 1 ? "" : "s");
+                if (list.Count == 1)
+                {
+                    from.SendMessage($"You have deleted {list.Count} object.");
+                }
+                else
+                {
+                    from.SendMessage($"You have deleted {list.Count} objects.");
+                }
             }
             else
             {
@@ -248,12 +252,7 @@ namespace Server.Commands
             {
                 CommandLogging.WriteLine(
                     from,
-                    "{0} {1} starting facet clear of {2} ({3} object{4})",
-                    from.AccessLevel,
-                    CommandLogging.Format(from),
-                    map,
-                    list.Count,
-                    list.Count == 1 ? "" : "s"
+                    $"{from.AccessLevel} {CommandLogging.Format(from)} starting facet clear of {map} ({list.Count} object{(list.Count == 1 ? "" : "s")})"
                 );
 
                 from.SendGump(
@@ -274,7 +273,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("GetFollowers"), Description("Teleports all pets of a targeted player to your location.")]
+        [Usage("GetFollowers")]
+        [Description("Teleports all pets of a targeted player to your location.")]
         public static void GetFollowers_OnCommand(CommandEventArgs e)
         {
             e.Mobile.BeginTarget(-1, false, TargetFlags.None, GetFollowers_OnTarget);
@@ -291,13 +291,17 @@ namespace Server.Commands
                 {
                     CommandLogging.WriteLine(
                         from,
-                        "{0} {1} getting all followers of {2}",
-                        from.AccessLevel,
-                        CommandLogging.Format(from),
-                        CommandLogging.Format(pm)
+                        $"{from.AccessLevel} {CommandLogging.Format(from)} getting all followers of {CommandLogging.Format(pm)}"
                     );
 
-                    from.SendMessage("That player has {0} pet{1}.", pets.Count, pets.Count != 1 ? "s" : "");
+                    if (pets.Count == 1)
+                    {
+                        from.SendMessage($"That player has {pets.Count} pet.");
+                    }
+                    else
+                    {
+                        from.SendMessage($"That player has {pets.Count} pets.");
+                    }
 
                     for (var i = 0; i < pets.Count; ++i)
                     {
@@ -335,13 +339,17 @@ namespace Server.Commands
                 {
                     CommandLogging.WriteLine(
                         from,
-                        "{0} {1} getting all followers of {2}",
-                        from.AccessLevel,
-                        CommandLogging.Format(from),
-                        CommandLogging.Format(master)
+                        $"{from.AccessLevel} {CommandLogging.Format(from)} getting all followers of {CommandLogging.Format(master)}"
                     );
 
-                    from.SendMessage("That player has {0} pet{1}.", pets.Count, pets.Count != 1 ? "s" : "");
+                    if (pets.Count == 1)
+                    {
+                        from.SendMessage($"That player has {pets.Count} pet.");
+                    }
+                    else
+                    {
+                        from.SendMessage($"That player has {pets.Count} pets.");
+                    }
 
                     for (var i = 0; i < pets.Count; ++i)
                     {
@@ -374,9 +382,8 @@ namespace Server.Commands
             e.Mobile.Target = new ViewEqTarget();
         }
 
-        [Usage("Sound <index> [toAll=true]"), Description(
-             "Plays a sound to players within 12 tiles of you. The (toAll) argument specifies to everyone, or just those who can see you."
-         )]
+        [Usage("Sound <index> [toAll=true]")]
+        [Description("Plays a sound to players within 12 tiles of you. The (toAll) argument specifies to everyone, or just those who can see you.")]
         public static void Sound_OnCommand(CommandEventArgs e)
         {
             if (e.Length == 1)
@@ -404,11 +411,7 @@ namespace Server.Commands
 
             CommandLogging.WriteLine(
                 m,
-                "{0} {1} playing sound {2} (toAll={3})",
-                m.AccessLevel,
-                CommandLogging.Format(m),
-                index,
-                toAll
+                $"{m.AccessLevel} {CommandLogging.Format(m)} playing sound {index} (toAll={toAll})"
             );
 
             Span<byte> buffer = stackalloc byte[OutgoingEffectPackets.SoundPacketLength].InitializePacket();
@@ -423,7 +426,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("Echo <text>"), Description("Relays (text) as a system message.")]
+        [Usage("Echo <text>")]
+        [Description("Relays (text) as a system message.")]
         public static void Echo_OnCommand(CommandEventArgs e)
         {
             var toEcho = e.ArgString.Trim();
@@ -438,19 +442,22 @@ namespace Server.Commands
             }
         }
 
-        [Usage("Bank"), Description("Opens the bank box of a given target.")]
+        [Usage("Bank")]
+        [Description("Opens the bank box of a given target.")]
         public static void Bank_OnCommand(CommandEventArgs e)
         {
             e.Mobile.Target = new BankTarget();
         }
 
-        [Usage("Client"), Description("Opens the client gump menu for a given player.")]
+        [Usage("Client")]
+        [Description("Opens the client gump menu for a given player.")]
         private static void Client_OnCommand(CommandEventArgs e)
         {
             e.Mobile.Target = new ClientTarget();
         }
 
-        [Usage("Move"), Description("Repositions a targeted item or mobile.")]
+        [Usage("Move")]
+        [Description("Repositions a targeted item or mobile.")]
         private static void Move_OnCommand(CommandEventArgs e)
         {
             e.Mobile.Target = new PickMoveTarget();
@@ -473,9 +480,8 @@ namespace Server.Commands
             return validMap;
         }
 
-        [Usage("Go [name | serial | (x y [z]) | (deg min (N | S) deg min (E | W))]"), Description(
-             "With no arguments, this command brings up the go menu. With one argument, (name), you are moved to that regions \"go location.\" Or, if a numerical value is specified for one argument, (serial), you are moved to that object. Two or three arguments, (x y [z]), will move your character to that location. When six arguments are specified, (deg min (N | S) deg min (E | W)), your character will go to an approximate of those sextant coordinates."
-         )]
+        [Usage("Go [name | serial | (x y [z]) | (deg min (N | S) deg min (E | W))]")]
+        [Description("With no arguments, this command brings up the go menu. With one argument, (name), you are moved to that regions \"go location.\" Or, if a numerical value is specified for one argument, (serial), you are moved to that object. Two or three arguments, (x y [z]), will move your character to that location. When six arguments are specified, (deg min (N | S) deg min (E | W)), your character will go to an approximate of those sextant coordinates.")]
         private static void Go_OnCommand(CommandEventArgs e)
         {
             var from = e.Mobile;
@@ -566,7 +572,7 @@ namespace Server.Commands
                         {
                             map = Map.AllMaps[i];
 
-                            if (map.MapIndex == 0x7F || map.MapIndex == 0xFF)
+                            if (map.MapIndex is 0x7F or 0xFF)
                             {
                                 continue;
                             }
@@ -595,7 +601,7 @@ namespace Server.Commands
                         {
                             map = Map.AllMaps[i];
 
-                            if (map.MapIndex == 0x7F || map.MapIndex == 0xFF || from.Map == map)
+                            if (map.MapIndex is 0x7F or 0xFF || from.Map == map)
                             {
                                 continue;
                             }
@@ -629,7 +635,7 @@ namespace Server.Commands
 
                 from.SendMessage("Region name not found");
             }
-            else if (e.Length == 2 || e.Length == 3)
+            else if (e.Length is 2 or 3)
             {
                 var map = from.Map;
 
@@ -685,7 +691,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("Help"), Description("Lists all available commands.")]
+        [Usage("Help")]
+        [Description("Lists all available commands.")]
         public static void Help_OnCommand(CommandEventArgs e)
         {
             var m = e.Mobile;
@@ -732,13 +739,15 @@ namespace Server.Commands
             }
         }
 
-        [Usage("SMsg <text>"), Aliases("S", "SM"), Description("Broadcasts a message to all online staff.")]
+        [Usage("SMsg <text>"), Aliases("S", "SM")]
+        [Description("Broadcasts a message to all online staff.")]
         public static void StaffMessage_OnCommand(CommandEventArgs e)
         {
             BroadcastMessage(AccessLevel.Counselor, e.Mobile.SpeechHue, $"[{e.Mobile.Name}] {e.ArgString}");
         }
 
-        [Usage("BCast <text>"), Aliases("B", "BC"), Description("Broadcasts a message to everyone online.")]
+        [Usage("BCast <text>"), Aliases("B", "BC")]
+        [Description("Broadcasts a message to everyone online.")]
         public static void BroadcastMessage_OnCommand(CommandEventArgs e)
         {
             BroadcastMessage(AccessLevel.Player, 0x482, $"Staff message from {e.Mobile.Name}:");
@@ -758,14 +767,22 @@ namespace Server.Commands
             }
         }
 
-        [Usage("AutoPageNotify"), Aliases("APN"), Description("Toggles your auto-page-notify status.")]
+        [Usage("AutoPageNotify"), Aliases("APN")]
+        [Description("Toggles your auto-page-notify status.")]
         public static void APN_OnCommand(CommandEventArgs e)
         {
             var m = e.Mobile;
 
             m.AutoPageNotify = !m.AutoPageNotify;
 
-            m.SendMessage("Your auto-page-notify has been turned {0}.", m.AutoPageNotify ? "on" : "off");
+            if (m.AutoPageNotify)
+            {
+                m.SendMessage($"Your auto-page-notify has been turned on.");
+            }
+            else
+            {
+                m.SendMessage($"Your auto-page-notify has been turned off.");
+            }
         }
 
         [Usage("Animate <action> <frameCount> <repeatCount> <forward> <repeat> <delay>"),
@@ -789,7 +806,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("Cast <name>"), Description("Casts a spell by name.")]
+        [Usage("Cast <name>")]
+        [Description("Casts a spell by name.")]
         public static void Cast_OnCommand(CommandEventArgs e)
         {
             if (e.Length == 1)
@@ -816,24 +834,27 @@ namespace Server.Commands
             }
         }
 
-        [Usage("Stuck"), Description("Opens a menu of towns, used for teleporting stuck mobiles.")]
+        [Usage("Stuck")]
+        [Description("Opens a menu of towns, used for teleporting stuck mobiles.")]
         public static void Stuck_OnCommand(CommandEventArgs e)
         {
             e.Mobile.Target = new StuckMenuTarget();
         }
 
-        [Usage("Light <level>"), Description("Set your local lightlevel.")]
+        [Usage("Light <level>")]
+        [Description("Set your local lightlevel.")]
         public static void Light_OnCommand(CommandEventArgs e)
         {
             e.Mobile.LightLevel = e.GetInt32(0);
         }
 
-        [Usage("Stats"), Description("View some stats about the server.")]
+        [Usage("Stats")]
+        [Description("View some stats about the server.")]
         public static void Stats_OnCommand(CommandEventArgs e)
         {
-            e.Mobile.SendMessage("Open Connections: {0}", TcpServer.Instances.Count);
-            e.Mobile.SendMessage("Mobiles: {0}", World.Mobiles.Count);
-            e.Mobile.SendMessage("Items: {0}", World.Items.Count);
+            e.Mobile.SendMessage($"Open Connections: {TcpServer.Instances.Count}");
+            e.Mobile.SendMessage($"Mobiles: {World.Mobiles.Count}");
+            e.Mobile.SendMessage($"Items: {World.Items.Count}");
         }
 
         private class ViewEqTarget : Target
@@ -880,10 +901,7 @@ namespace Server.Commands
 
                     CommandLogging.WriteLine(
                         from,
-                        "{0} {1} viewing equipment of {2}",
-                        from.AccessLevel,
-                        CommandLogging.Format(from),
-                        CommandLogging.Format(m)
+                        $"{from.AccessLevel} {CommandLogging.Format(from)} viewing equipment of {CommandLogging.Format(m)}"
                     );
                 }
 
@@ -922,11 +940,7 @@ namespace Server.Commands
                         {
                             CommandLogging.WriteLine(
                                 state.Mobile,
-                                "{0} {1} moving equipment item {2} of {3}",
-                                state.Mobile.AccessLevel,
-                                CommandLogging.Format(state.Mobile),
-                                CommandLogging.Format(m_Item),
-                                CommandLogging.Format(m_Mobile)
+                                $"{state.Mobile.AccessLevel} {CommandLogging.Format(state.Mobile)} moving equipment item {CommandLogging.Format(m_Item)} of {CommandLogging.Format(m_Mobile)}"
                             );
                             state.Mobile.Target = new MoveTarget(m_Item);
                         }
@@ -934,11 +948,7 @@ namespace Server.Commands
                         {
                             CommandLogging.WriteLine(
                                 state.Mobile,
-                                "{0} {1} deleting equipment item {2} of {3}",
-                                state.Mobile.AccessLevel,
-                                CommandLogging.Format(state.Mobile),
-                                CommandLogging.Format(m_Item),
-                                CommandLogging.Format(m_Mobile)
+                                $"{state.Mobile.AccessLevel} {CommandLogging.Format(state.Mobile)} deleting equipment item {CommandLogging.Format(m_Item)} of {CommandLogging.Format(m_Mobile)}"
                             );
                             m_Item.Delete();
                         }
@@ -946,11 +956,7 @@ namespace Server.Commands
                         {
                             CommandLogging.WriteLine(
                                 state.Mobile,
-                                "{0} {1} opening properties for equipment item {2} of {3}",
-                                state.Mobile.AccessLevel,
-                                CommandLogging.Format(state.Mobile),
-                                CommandLogging.Format(m_Item),
-                                CommandLogging.Format(m_Mobile)
+                                $"{state.Mobile.AccessLevel} {CommandLogging.Format(state.Mobile)} opening properties for equipment item {CommandLogging.Format(m_Item)} of {CommandLogging.Format(m_Mobile)}"
                             );
                             state.Mobile.SendGump(new PropertiesGump(state.Mobile, m_Item));
                         }
@@ -975,10 +981,7 @@ namespace Server.Commands
                     {
                         CommandLogging.WriteLine(
                             from,
-                            "{0} {1} opening bank box of {2}",
-                            from.AccessLevel,
-                            CommandLogging.Format(from),
-                            CommandLogging.Format(m)
+                            $"{from.AccessLevel} {CommandLogging.Format(from)} opening bank box of {CommandLogging.Format(m)}"
                         );
 
                         if (from == m)
@@ -1010,10 +1013,7 @@ namespace Server.Commands
                 {
                     CommandLogging.WriteLine(
                         from,
-                        "{0} {1} opening client menu of {2}",
-                        from.AccessLevel,
-                        CommandLogging.Format(from),
-                        CommandLogging.Format(targ)
+                        $"{from.AccessLevel} {CommandLogging.Format(from)} opening client menu of {CommandLogging.Format(targ)}"
                     );
                     from.SendGump(new ClientGump(from, targ.NetState));
                 }

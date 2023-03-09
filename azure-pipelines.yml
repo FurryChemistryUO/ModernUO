@@ -9,72 +9,20 @@ variables:
 
 jobs:
 - job: BuildWindows
-  displayName: 'Windows Server 2019'
+  displayName: 'Windows Server 2022'
   pool:
     vmImage: 'windows-latest'
 
   steps:
   - task: UseDotNet@2
-    displayName: 'Install .NET 5'
+    displayName: 'Install .NET 7'
     inputs:
       packageType: sdk
-      version: 5.0.403
-  - task: UseDotNet@2
-    displayName: 'Install .NET 6'
-    inputs:
-      packageType: sdk
-      version: 6.0.100
-  - task: NuGetAuthenticate@0
-  - script: ./publish.cmd Release win
+      version: 7.0.201
+  - task: NuGetAuthenticate@1
+  - script: ./publish.cmd Release
     displayName: 'Build'
-  - script: dotnet test --no-restore --framework net6.0
-    displayName: 'Test'
-
-- job: BuildLinux
-  strategy:
-    matrix:
-      'CentOS 8':
-        containerImage: centos:8
-        os: centos.8
-      'CentOS 7':
-        containerImage: centos:7
-        os: centos.7
-      'Debian 10':
-        containerImage: mcr.microsoft.com/dotnet/sdk:5.0-buster-slim
-        os: debian.10
-      # 'Debian 11':
-      #   containerImage: amd64/buildpack-deps:bullseye
-      #   os: debian.11-x64
-      'Ubuntu 20':
-        containerImage: mcr.microsoft.com/dotnet/sdk:5.0-focal
-        os: ubuntu.20.04
-      'Fedora 32':
-        containerImage: fedora:32
-        os: fedora.32
-      'Fedora 33':
-        containerImage: fedora:33
-        os: fedora.33
-
-  displayName: Linux
-
-  pool:
-    vmImage: 'ubuntu-latest'
-
-  container: $[ variables['containerImage'] ]
-
-  steps:
-  - task: UseDotNet@2
-    displayName: 'Install .NET 5'
-    inputs:
-      packageType: sdk
-      version: 5.0.403
-  - task: UseDotNet@2
-    displayName: 'Install .NET 6'
-    inputs:
-      packageType: sdk
-      version: 6.0.100
-  - task: NuGetAuthenticate@0
-  - script: ./publish.cmd Release $(os)
-    displayName: 'Build'
-  - script: dotnet test --no-restore --framework net6.0
+  - script: git diff --exit-code ./**/Migrations/*.v*.json
+    displayName: Migration Changes
+  - script: dotnet test --no-restore
     displayName: 'Test'

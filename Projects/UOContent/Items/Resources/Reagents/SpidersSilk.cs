@@ -1,14 +1,15 @@
-namespace Server.Items
-{
-    [Serializable(0, false)]
-    public partial class SpidersSilk : BaseReagent, ICommodity
-    {
-        [Constructible]
-        public SpidersSilk(int amount = 1) : base(0xF8D, amount)
-        {
-        }
+using ModernUO.Serialization;
 
-        int ICommodity.DescriptionNumber => LabelNumber;
-        bool ICommodity.IsDeedable => true;
+namespace Server.Items;
+
+[SerializationGenerator(0, false)]
+public partial class SpidersSilk : BaseReagent, ICommodity
+{
+    [Constructible]
+    public SpidersSilk(int amount = 1) : base(0xF8D, amount)
+    {
     }
+
+    int ICommodity.DescriptionNumber => LabelNumber;
+    bool ICommodity.IsDeedable => true;
 }

@@ -22,9 +22,8 @@ namespace Server.Commands
             (m as PlayerMobile)?.VisibilityList.Clear();
         }
 
-        [Usage("Vis"), Description(
-             "Adds or removes a targeted player from your visibility list.  Anyone on your visibility list will be able to see you at all times, even when you're hidden."
-         )]
+        [Usage("Vis")]
+        [Description("Adds or removes a targeted player from your visibility list.  Anyone on your visibility list will be able to see you at all times, even when you're hidden.")]
         public static void Vis_OnCommand(CommandEventArgs e)
         {
             if (e.Mobile is PlayerMobile)
@@ -34,7 +33,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("VisList"), Description("Shows the names of everyone in your visibility list.")]
+        [Usage("VisList")]
+        [Description("Shows the names of everyone in your visibility list.")]
         public static void VisList_OnCommand(CommandEventArgs e)
         {
             if (e.Mobile is PlayerMobile pm)
@@ -43,11 +43,18 @@ namespace Server.Commands
 
                 if (list.Count > 0)
                 {
-                    pm.SendMessage("You are visible to {0} mobile{1}:", list.Count, list.Count == 1 ? "" : "s");
+                    if (list.Count == 1)
+                    {
+                        pm.SendMessage($"You are visible to {list.Count} mobile:");
+                    }
+                    else
+                    {
+                        pm.SendMessage($"You are visible to {list.Count} mobiles:");
+                    }
 
                     for (var i = 0; i < list.Count; ++i)
                     {
-                        pm.SendMessage("#{0}: {1}", i + 1, list[i].Name);
+                        pm.SendMessage($"#{i + 1}: {list[i].Name}");
                     }
                 }
                 else
@@ -57,7 +64,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("VisClear"), Description("Removes everyone from your visibility list.")]
+        [Usage("VisClear")]
+        [Description("Removes everyone from your visibility list.")]
         public static void VisClear_OnCommand(CommandEventArgs e)
         {
             if (e.Mobile is PlayerMobile pm)
@@ -102,12 +110,12 @@ namespace Server.Commands
                         if (list.Contains(targ))
                         {
                             list.Remove(targ);
-                            pm.SendMessage("{0} has been removed from your visibility list.", targ.Name);
+                            pm.SendMessage($"{targ.Name} has been removed from your visibility list.");
                         }
                         else
                         {
                             list.Add(targ);
-                            pm.SendMessage("{0} has been added to your visibility list.", targ.Name);
+                            pm.SendMessage($"{targ.Name} has been added to your visibility list.");
                         }
 
                         if (Utility.InUpdateRange(targ.Location, from.Location))

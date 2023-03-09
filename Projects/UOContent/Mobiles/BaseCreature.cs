@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
+using Server.Collections;
 using Server.ContextMenus;
 using Server.Engines.ConPVP;
 using Server.Engines.MLQuests;
@@ -21,7 +22,6 @@ using Server.Spells.Necromancy;
 using Server.Spells.Sixth;
 using Server.Spells.Spellweaving;
 using Server.Targeting;
-using Server.Utilities;
 
 namespace Server.Mobiles
 {
@@ -125,7 +125,7 @@ namespace Server.Mobiles
             m_Damage = damage;
         }
 
-        public int CompareTo(DamageStore ds) => ds?.m_Damage ?? 0 - m_Damage;
+        public int CompareTo(DamageStore ds) => (ds?.m_Damage ?? 0).CompareTo(m_Damage);
     }
 
     [AttributeUsage(AttributeTargets.Class)]
@@ -152,7 +152,7 @@ namespace Server.Mobiles
         }
     }
 
-    public class BaseCreature : Mobile, IHonorTarget, IQuestGiver
+    public abstract class BaseCreature : Mobile, IHonorTarget, IQuestGiver
     {
         public enum Allegiance
         {
@@ -195,16 +195,6 @@ namespace Server.Mobiles
             typeof(LichLord), typeof(FleshGolem), typeof(Lich),
             typeof(SkeletalKnight), typeof(BoneKnight), typeof(Mummy),
             typeof(SkeletalMage), typeof(BoneMagi), typeof(PatchworkSkeleton)
-        };
-
-        private static readonly double[] m_StandardActiveSpeeds =
-        {
-            0.175, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8
-        };
-
-        private static readonly double[] m_StandardPassiveSpeeds =
-        {
-            0.350, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.6, 2.0
         };
 
         private static Mobile m_NoDupeGuards;
@@ -259,9 +249,6 @@ namespace Server.Mobiles
             typeof(Gold)
         };
 
-        private readonly List<Type> m_SpellAttack;  // List of attack spell/power
-        private readonly List<Type> m_SpellDefense; // List of defensive spell/power
-
         private bool _summoned;
 
         private bool m_bTamable;
@@ -305,7 +292,6 @@ namespace Server.Mobiles
 
         private long m_NextAura;
 
-        private long m_NextBreathTime;
         private long m_NextHealOwnerTime = Core.TickCount;
 
         private long m_NextHealTime = Core.TickCount;
@@ -332,11 +318,9 @@ namespace Server.Mobiles
 
         public BaseCreature(
             AIType ai,
-            FightMode mode,
-            int iRangePerception,
-            int iRangeFight,
-            double dActiveSpeed,
-            double dPassiveSpeed
+            FightMode mode = FightMode.Closest,
+            int iRangePerception = 10,
+            int iRangeFight = 1
         )
         {
             if (iRangePerception == OldRangePerception)
@@ -354,18 +338,11 @@ namespace Server.Mobiles
 
             FightMode = mode;
 
+            ResetSpeeds();
+
             m_Team = 0;
 
-            SpeedInfo.GetSpeeds(this, ref dActiveSpeed, ref dPassiveSpeed);
-
-            ActiveSpeed = dActiveSpeed;
-            PassiveSpeed = dPassiveSpeed;
-            m_CurrentSpeed = dPassiveSpeed;
-
             Debug = false;
-
-            m_SpellAttack = new List<Type>();
-            m_SpellDefense = new List<Type>();
 
             m_Controlled = false;
             m_ControlMaster = null;
@@ -394,9 +371,6 @@ namespace Server.Mobiles
 
         public BaseCreature(Serial serial) : base(serial)
         {
-            m_SpellAttack = new List<Type>();
-            m_SpellDefense = new List<Type>();
-
             Debug = false;
         }
 
@@ -512,11 +486,11 @@ namespace Server.Mobiles
         public virtual bool DeathAdderCharmable => false;
 
         // TODO: Find the pub 31 tweaks to the DispelDifficulty and apply them of course.
-        public virtual double DispelDifficulty // at this skill level we dispel 50% chance
-            => 0.0;
+        // at this skill level we dispel 50% chance
+        public virtual double DispelDifficulty => 0.0;
 
-        public virtual double DispelFocus // at difficulty - focus we have 0%, at difficulty + focus we have 100%
-            => 20.0;
+        // at difficulty - focus we have 0%, at difficulty + focus we have 100%
+        public virtual double DispelFocus => 20.0;
 
         public virtual bool DisplayWeight => Backpack is StrongBackpack;
 
@@ -691,15 +665,22 @@ namespace Server.Mobiles
         public double PassiveSpeed { get; set; }
 
         [CommandProperty(AccessLevel.GameMaster)]
+        public double SpeedMod { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
         public double CurrentSpeed
         {
-            get => TargetLocation != null ? 0.3 : m_CurrentSpeed;
+            get => TargetLocation != null ? 0.3 : SpeedMod <= 0 ? m_CurrentSpeed : SpeedMod;
             set
             {
                 if (m_CurrentSpeed != value)
                 {
                     m_CurrentSpeed = value;
-                    AIObject?.OnCurrentSpeedChanged();
+
+                    if (SpeedMod <= 0)
+                    {
+                        AIObject?.OnCurrentSpeedChanged();
+                    }
                 }
             }
         }
@@ -884,7 +865,6 @@ namespace Server.Mobiles
 
         public static bool Summoning { get; set; }
 
-        public virtual bool CanBreath => HasBreath && !Summoned;
         public virtual bool IsDispellable => Summoned && !IsAnimatedDead;
 
         // If they are following a waypoint, they'll continue to follow it even if players aren't around
@@ -892,6 +872,8 @@ namespace Server.Mobiles
 
         public virtual bool ReturnsToHome =>
             SeeksHome && Home != Point3D.Zero && !m_ReturnQueued && !Controlled && !Summoned;
+
+        public virtual bool ScaleSpeedByDex => NPCSpeeds.ScaleSpeedByDex && !IsMonster;
 
         // used for deleting untamed creatures [in houses]
         [CommandProperty(AccessLevel.GameMaster)]
@@ -1049,52 +1031,8 @@ namespace Server.Mobiles
         [CommandProperty(AccessLevel.GameMaster)]
         public int DirectDamage { get; set; }
 
-        // Must be overridden in subclass to enable
-        public virtual bool HasBreath => false;
-
-        // Base damage given is: CurrentHitPoints * BreathDamageScalar
-        public virtual double BreathDamageScalar => Core.AOS ? 0.16 : 0.05;
-
-        // Min/max seconds until next breath
-        public virtual double BreathMinDelay => 30.0;
-        public virtual double BreathMaxDelay => 45.0;
-
-        // Creature stops moving for 1.0 seconds while breathing
-        public virtual double BreathStallTime => 1.0;
-
-        // Effect is sent 1.3 seconds after BreathAngerSound and BreathAngerAnimation is played
-        public virtual double BreathEffectDelay => 1.3;
-
-        // Damage is given 1.0 seconds after effect is sent
-        public virtual double BreathDamageDelay => 1.0;
-
-        public virtual int BreathRange => RangePerception;
-
-        // Damage types
-        public virtual int BreathChaosDamage => 0;
-        public virtual int BreathPhysicalDamage => 0;
-        public virtual int BreathFireDamage => 100;
-        public virtual int BreathColdDamage => 0;
-        public virtual int BreathPoisonDamage => 0;
-        public virtual int BreathEnergyDamage => 0;
-
         // Is immune to breath damages
         public virtual bool BreathImmune => false;
-
-        // Effect details and sound
-        public virtual int BreathEffectItemID => 0x36D4;
-        public virtual int BreathEffectSpeed => 5;
-        public virtual int BreathEffectDuration => 0;
-        public virtual bool BreathEffectExplodes => false;
-        public virtual bool BreathEffectFixedDir => false;
-        public virtual int BreathEffectHue => 0;
-        public virtual int BreathEffectRenderMode => 0;
-
-        public virtual int BreathEffectSound => 0x227;
-
-        // Anger sound/animations
-        public virtual int BreathAngerSound => GetAngerSound();
-        public virtual int BreathAngerAnimation => 12;
 
         public virtual bool CanFlee => !m_Paragon;
 
@@ -1169,13 +1107,178 @@ namespace Server.Mobiles
 
                     if (m_MLQuests == null)
                     {
-                        return
-                            MLQuestSystem
-                                .EmptyList; // return EmptyList, but don't cache it (run construction again next time)
+                        // return EmptyList, but don't cache it (run construction again next time)
+                        return MLQuestSystem.EmptyList;
                     }
                 }
 
                 return m_MLQuests;
+            }
+        }
+
+        public virtual MonsterAbility[] GetMonsterAbilities() => null;
+
+        public virtual MonsterAbility GetAbility(MonsterAbilityType type)
+        {
+            var abilities = GetMonsterAbilities();
+
+            if (abilities == null)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < abilities.Length; i++)
+            {
+                var ability = abilities[i];
+                if (ability is MonsterAbilityGroup group)
+                {
+                    ability = group.GetAbilityWithType(type);
+                    if (ability != null)
+                    {
+                        return ability;
+                    }
+                }
+                else if (ability.AbilityType == type)
+                {
+                    return ability;
+                }
+            }
+
+            return null;
+        }
+
+        public virtual bool HasAbility(MonsterAbility ability)
+        {
+            if (ability == null)
+            {
+                return false;
+            }
+
+            var abilities = GetMonsterAbilities();
+
+            if (abilities == null)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < abilities.Length; i++)
+            {
+                if (abilities[i] == ability || (ability as MonsterAbilityGroup)?.HasAbility(ability) == true)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public virtual bool TriggerAbility(MonsterAbilityTrigger trigger, Mobile defender)
+        {
+            var abilities = GetMonsterAbilities();
+
+            if (abilities == null)
+            {
+                return false;
+            }
+
+            var triggered = false;
+            for (var i = 0; i < abilities.Length; i++)
+            {
+                var ability = abilities[i];
+                if (ability.WillTrigger(trigger) && ability.CanTrigger(this, trigger))
+                {
+                    ability.Trigger(trigger, this, defender);
+                    triggered = true;
+                }
+            }
+
+            return triggered;
+        }
+
+        public virtual void TriggerAbilityMove(MonsterAbilityTrigger trigger, Mobile defender, Direction d)
+        {
+            var abilities = GetMonsterAbilities();
+
+            if (abilities == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < abilities.Length; i++)
+            {
+                var ability = abilities[i];
+                if (ability.WillTrigger(trigger) && ability.CanTrigger(this, trigger))
+                {
+                    ability.Move(this, d);
+                }
+            }
+        }
+
+        public virtual void TriggerAbilityAlterDamage(MonsterAbilityTrigger trigger, Mobile defender, ref int damage)
+        {
+            var abilities = GetMonsterAbilities();
+
+            if (abilities == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < abilities.Length; i++)
+            {
+                var ability = abilities[i];
+                if (ability.WillTrigger(trigger) && ability.CanTrigger(this, trigger))
+                {
+                    if ((trigger & MonsterAbilityTrigger.GiveMeleeDamage) != 0)
+                    {
+                        ability.AlterMeleeDamageTo(this, defender, ref damage);
+                    }
+
+                    if ((trigger & MonsterAbilityTrigger.TakeMeleeDamage) != 0)
+                    {
+                        ability.AlterMeleeDamageFrom(this, defender, ref damage);
+                    }
+
+                    if ((trigger & MonsterAbilityTrigger.GiveSpellDamage) != 0)
+                    {
+                        ability.AlterSpellDamageTo(this, defender, ref damage);
+                    }
+
+                    if ((trigger & MonsterAbilityTrigger.TakeSpellDamage) != 0)
+                    {
+                        ability.AlterSpellDamageFrom(this, defender, ref damage);
+                    }
+                }
+            }
+        }
+
+        public virtual void TriggerAbilityAlterDamageScalar(
+            MonsterAbilityTrigger trigger,
+            Mobile defender,
+            ref double scalar
+        )
+        {
+            var abilities = GetMonsterAbilities();
+
+            if (abilities == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < abilities.Length; i++)
+            {
+                var ability = abilities[i];
+                if (ability.WillTrigger(trigger) && ability.CanTrigger(this, trigger))
+                {
+                    if ((trigger & MonsterAbilityTrigger.GiveSpellDamage) != 0)
+                    {
+                        ability.AlterSpellDamageScalarTo(this, defender, ref scalar);
+                    }
+
+                    if ((trigger & MonsterAbilityTrigger.TakeSpellDamage) != 0)
+                    {
+                        ability.AlterSpellDamageScalarFrom(this, defender, ref scalar);
+                    }
+                }
             }
         }
 
@@ -1211,7 +1314,7 @@ namespace Server.Mobiles
                 return false;
             }
 
-            if (!(m is BaseCreature c) || m is MilitiaFighter)
+            if (m is not BaseCreature c || m is MilitiaFighter)
             {
                 return true;
             }
@@ -1342,7 +1445,7 @@ namespace Server.Mobiles
                 amount = (int)(amount * BonusPetDamageScalar);
             }
 
-            if (EvilOmenSpell.TryEndEffect(this))
+            if (EvilOmenSpell.EndEffect(this))
             {
                 amount = (int)(amount * 1.25);
             }
@@ -1376,6 +1479,15 @@ namespace Server.Mobiles
             }
         }
 
+        public override void OnRawDexChange(int oldValue)
+        {
+            // This only really happens for pets or when a GM modifies a mob.
+            if (oldValue != RawDex && ScaleSpeedByDex)
+            {
+                ResetSpeeds();
+            }
+        }
+
         public override void OnBeforeSpawn(Point3D location, Map m)
         {
             if (Paragon.CheckConvert(this, location, m))
@@ -1393,7 +1505,7 @@ namespace Server.Mobiles
                 return ApplyPoisonResult.Immune;
             }
 
-            if (EvilOmenSpell.TryEndEffect(this))
+            if (EvilOmenSpell.EndEffect(this))
             {
                 poison = PoisonImpl.IncreaseLevel(poison);
             }
@@ -1486,12 +1598,19 @@ namespace Server.Mobiles
             base.OnDamage(amount, from, willKill);
         }
 
-        public virtual void OnDamagedBySpell(Mobile from)
+        public virtual void OnDamagedBySpell(Mobile from, int damage)
         {
             if (CanBeDistracted && ControlOrder == OrderType.Follow)
             {
                 CheckDistracted(from);
             }
+
+            TriggerAbility(MonsterAbilityTrigger.TakeSpellDamage, from);
+        }
+
+        public virtual void OnDamageSpell(Mobile defender, int damage)
+        {
+            TriggerAbility(MonsterAbilityTrigger.GiveSpellDamage, defender);
         }
 
         public virtual void OnHarmfulSpell(Mobile from)
@@ -1634,23 +1753,35 @@ namespace Server.Mobiles
                     switch (sc)
                     {
                         case ScaleType.Red:
-                            corpse.AddCarvedItem(new RedScales(scales), from);
-                            break;
+                            {
+                                corpse.AddCarvedItem(new RedScales(scales), from);
+                                break;
+                            }
                         case ScaleType.Yellow:
-                            corpse.AddCarvedItem(new YellowScales(scales), from);
-                            break;
+                            {
+                                corpse.AddCarvedItem(new YellowScales(scales), from);
+                                break;
+                            }
                         case ScaleType.Black:
-                            corpse.AddCarvedItem(new BlackScales(scales), from);
-                            break;
+                            {
+                                corpse.AddCarvedItem(new BlackScales(scales), from);
+                                break;
+                            }
                         case ScaleType.Green:
-                            corpse.AddCarvedItem(new GreenScales(scales), from);
-                            break;
+                            {
+                                corpse.AddCarvedItem(new GreenScales(scales), from);
+                                break;
+                            }
                         case ScaleType.White:
-                            corpse.AddCarvedItem(new WhiteScales(scales), from);
-                            break;
+                            {
+                                corpse.AddCarvedItem(new WhiteScales(scales), from);
+                                break;
+                            }
                         case ScaleType.Blue:
-                            corpse.AddCarvedItem(new BlueScales(scales), from);
-                            break;
+                            {
+                                corpse.AddCarvedItem(new BlueScales(scales), from);
+                                break;
+                            }
                         case ScaleType.All:
                             {
                                 corpse.AddCarvedItem(new RedScales(scales), from);
@@ -1679,7 +1810,7 @@ namespace Server.Mobiles
         {
             base.Serialize(writer);
 
-            writer.Write(19); // version
+            writer.Write(20); // version
 
             writer.Write((int)m_CurrentAI);
             writer.Write((int)m_DefaultAI);
@@ -1699,18 +1830,6 @@ namespace Server.Mobiles
 
             // Version 1
             writer.Write(RangeHome);
-
-            writer.Write(m_SpellAttack.Count);
-            for (var i = 0; i < m_SpellAttack.Count; i++)
-            {
-                writer.Write(m_SpellAttack[i].ToString());
-            }
-
-            writer.Write(m_SpellDefense.Count);
-            for (var i = 0; i < m_SpellDefense.Count; i++)
-            {
-                writer.Write(m_SpellDefense[i].ToString());
-            }
 
             // Version 2
             writer.Write((int)FightMode);
@@ -1844,27 +1963,20 @@ namespace Server.Mobiles
             {
                 RangeHome = reader.ReadInt();
 
-                var iCount = reader.ReadInt();
-                for (var i = 0; i < iCount; i++)
+                if (version < 20)
                 {
-                    var str = reader.ReadString();
-                    var type = Type.GetType(str);
-
-                    if (type != null)
+                    // Spell Attacks
+                    var iCount = reader.ReadInt(); // Count
+                    for (var i = 0; i < iCount; i++)
                     {
-                        m_SpellAttack.Add(type);
+                        reader.ReadString(); // Spell Type
                     }
-                }
 
-                iCount = reader.ReadInt();
-                for (var i = 0; i < iCount; i++)
-                {
-                    var str = reader.ReadString();
-                    var type = Type.GetType(str);
-
-                    if (type != null)
+                    // Spell Defenses
+                    iCount = reader.ReadInt(); // Count
+                    for (var i = 0; i < iCount; i++)
                     {
-                        m_SpellDefense.Add(type);
+                        reader.ReadString(); // Spell Type
                     }
                 }
             }
@@ -1896,7 +2008,7 @@ namespace Server.Mobiles
                 if (_summoned)
                 {
                     SummonEnd = reader.ReadDeltaTime();
-                    new UnsummonTimer(m_ControlMaster, this, SummonEnd - Core.Now).Start();
+                    new UnsummonTimer(this, SummonEnd - Core.Now).Start();
                 }
 
                 ControlSlots = reader.ReadInt();
@@ -2004,42 +2116,6 @@ namespace Server.Mobiles
             if (version < 16 && Loyalty != MaxLoyalty)
             {
                 Loyalty *= 10;
-            }
-
-            var activeSpeed = ActiveSpeed;
-            var passiveSpeed = PassiveSpeed;
-
-            SpeedInfo.GetSpeeds(this, ref activeSpeed, ref passiveSpeed);
-
-            var isStandardActive = false;
-            for (var i = 0; !isStandardActive && i < m_StandardActiveSpeeds.Length; ++i)
-            {
-                isStandardActive = ActiveSpeed == m_StandardActiveSpeeds[i];
-            }
-
-            var isStandardPassive = false;
-            for (var i = 0; !isStandardPassive && i < m_StandardPassiveSpeeds.Length; ++i)
-            {
-                isStandardPassive = PassiveSpeed == m_StandardPassiveSpeeds[i];
-            }
-
-            if (isStandardActive && m_CurrentSpeed == ActiveSpeed)
-            {
-                m_CurrentSpeed = activeSpeed;
-            }
-            else if (isStandardPassive && m_CurrentSpeed == PassiveSpeed)
-            {
-                m_CurrentSpeed = passiveSpeed;
-            }
-
-            if (isStandardActive && !m_Paragon)
-            {
-                ActiveSpeed = activeSpeed;
-            }
-
-            if (isStandardPassive && !m_Paragon)
-            {
-                PassiveSpeed = passiveSpeed;
             }
 
             if (version >= 14)
@@ -2153,11 +2229,8 @@ namespace Server.Mobiles
             // even if they can't offer you anything at the moment
             if (MLQuestSystem.Enabled && CanGiveMLQuest && from is PlayerMobile mobile)
             {
-                MLQuestSystem.Tell(
-                    this,
-                    mobile,
-                    1074893
-                ); // You need to mark your quest items so I don't take the wrong object.  Then speak to me.
+                // You need to mark your quest items so I don't take the wrong object.  Then speak to me.
+                MLQuestSystem.Tell(this, mobile, 1074893);
                 return false;
             }
 
@@ -2253,13 +2326,26 @@ namespace Server.Mobiles
             }
         }
 
-        public virtual void OnGotMeleeAttack(Mobile attacker)
+        public virtual void OnGotMeleeAttack(Mobile attacker, int damage)
         {
             if (AutoDispel && attacker is BaseCreature creature && creature.IsDispellable &&
                 AutoDispelChance > Utility.RandomDouble())
             {
                 Dispel(creature);
             }
+
+            TriggerAbility(MonsterAbilityTrigger.TakeMeleeDamage, attacker);
+        }
+
+        public override bool Move(Direction d)
+        {
+            if (!base.Move(d))
+            {
+                return false;
+            }
+
+            TriggerAbilityMove(MonsterAbilityTrigger.Movement, this, d);
+            return true;
         }
 
         public virtual void Dispel(Mobile m)
@@ -2276,7 +2362,7 @@ namespace Server.Mobiles
             m.Delete();
         }
 
-        public virtual void OnGaveMeleeAttack(Mobile defender)
+        public virtual void OnGaveMeleeAttack(Mobile defender, int damage)
         {
             var p = m_Paragon ? PoisonImpl.IncreaseLevel(HitPoison) : HitPoison;
 
@@ -2295,6 +2381,8 @@ namespace Server.Mobiles
             {
                 Dispel(creature);
             }
+
+            TriggerAbility(MonsterAbilityTrigger.GiveMeleeDamage, defender);
         }
 
         public override void OnAfterDelete()
@@ -2326,20 +2414,11 @@ namespace Server.Mobiles
             base.OnAfterDelete();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void DebugSay(string text)
         {
-            if (Debug)
-            {
-                PublicOverheadMessage(MessageType.Regular, 41, false, text);
-            }
-        }
-
-        public void DebugSay(string format, params object[] args)
-        {
-            if (Debug)
-            {
-                PublicOverheadMessage(MessageType.Regular, 41, false, string.Format(format, args));
-            }
+            // Moved the debug check to implementation layer so we can avoid string formatting when we do not need it
+            PublicOverheadMessage(MessageType.Regular, 41, false, text);
         }
 
         /*
@@ -2440,8 +2519,7 @@ namespace Server.Mobiles
             }
 
             if (aggressor.ChangingCombatant && (m_Controlled || _summoned) &&
-                (ct == OrderType.Come || !Core.ML && ct == OrderType.Stay || ct == OrderType.Stop || ct == OrderType.None ||
-                 ct == OrderType.Follow))
+                (ct == OrderType.Come || !Core.ML && ct == OrderType.Stay || ct is OrderType.Stop or OrderType.None or OrderType.Follow))
             {
                 ControlTarget = aggressor;
                 ControlOrder = OrderType.Attack;
@@ -2536,8 +2614,8 @@ namespace Server.Mobiles
 
         public override bool IsHarmfulCriminal(Mobile target) =>
             (!Controlled || target != m_ControlMaster) && (!Summoned || target != m_SummonMaster) &&
-            (!(target is BaseCreature creature) || !creature.InitialInnocent || creature.Controlled) &&
-            (!(target is PlayerMobile mobile) || mobile.PermaFlags.Count <= 0) && base.IsHarmfulCriminal(target);
+            (target is not BaseCreature { InitialInnocent: true } creature || creature.Controlled) &&
+            (target is not PlayerMobile mobile || mobile.PermaFlags.Count <= 0) && base.IsHarmfulCriminal(target);
 
         public override void CriminalAction(bool message)
         {
@@ -2619,7 +2697,6 @@ namespace Server.Mobiles
             if (m_IdleReleaseTime > DateTime.MinValue)
             {
                 // idling...
-
                 if (Core.Now >= m_IdleReleaseTime)
                 {
                     m_IdleReleaseTime = DateTime.MinValue;
@@ -2634,18 +2711,23 @@ namespace Server.Mobiles
                 return false; // not idling, but don't want to enter idle state
             }
 
-            m_IdleReleaseTime = Core.Now + TimeSpan.FromSeconds(Utility.RandomMinMax(15, 25));
+            var idleSeconds = Utility.RandomMinMax(NPCSpeeds.MinIdleSeconds, NPCSpeeds.MaxIdleSeconds);
+            m_IdleReleaseTime = Core.Now + TimeSpan.FromSeconds(idleSeconds);
 
             if (Body.IsHuman)
             {
                 switch (Utility.Random(2))
                 {
                     case 0:
-                        CheckedAnimate(5, 5, 1, true, true, 1);
-                        break;
+                        {
+                            CheckedAnimate(5, 5, 1, true, true, 1);
+                            break;
+                        }
                     case 1:
-                        CheckedAnimate(6, 5, 1, true, false, 1);
-                        break;
+                        {
+                            CheckedAnimate(6, 5, 1, true, false, 1);
+                            break;
+                        }
                 }
             }
             else if (Body.IsAnimal)
@@ -2653,14 +2735,20 @@ namespace Server.Mobiles
                 switch (Utility.Random(3))
                 {
                     case 0:
-                        CheckedAnimate(3, 3, 1, true, false, 1);
-                        break;
+                        {
+                            CheckedAnimate(3, 3, 1, true, false, 1);
+                            break;
+                        }
                     case 1:
-                        CheckedAnimate(9, 5, 1, true, false, 1);
-                        break;
+                        {
+                            CheckedAnimate(9, 5, 1, true, false, 1);
+                            break;
+                        }
                     case 2:
-                        CheckedAnimate(10, 5, 1, true, false, 1);
-                        break;
+                        {
+                            CheckedAnimate(10, 5, 1, true, false, 1);
+                            break;
+                        }
                 }
             }
             else if (Body.IsMonster)
@@ -2668,11 +2756,15 @@ namespace Server.Mobiles
                 switch (Utility.Random(2))
                 {
                     case 0:
-                        CheckedAnimate(17, 5, 1, true, false, 1);
-                        break;
+                        {
+                            CheckedAnimate(17, 5, 1, true, false, 1);
+                            break;
+                        }
                     case 1:
-                        CheckedAnimate(18, 5, 1, true, false, 1);
-                        break;
+                        {
+                            CheckedAnimate(18, 5, 1, true, false, 1);
+                            break;
+                        }
                 }
             }
 
@@ -2800,55 +2892,6 @@ namespace Server.Mobiles
             }
         }
 
-        public void AddSpellAttack(Type type)
-        {
-            m_SpellAttack.Add(type);
-        }
-
-        public void AddSpellDefense(Type type)
-        {
-            m_SpellDefense.Add(type);
-        }
-
-        public Spell GetAttackSpellRandom() => m_SpellAttack.RandomElement()?.CreateInstance<Spell>(this, null);
-
-        public Spell GetDefenseSpellRandom() => m_SpellDefense.RandomElement()?.CreateInstance<Spell>(this, null);
-
-        public Spell GetSpellSpecific(Type type)
-        {
-            int i;
-
-            for (i = 0; i < m_SpellAttack.Count; i++)
-            {
-                if (m_SpellAttack[i] == type)
-                {
-                    return type.CreateInstance<Spell>(this, null);
-                }
-            }
-
-            for (i = 0; i < m_SpellDefense.Count; i++)
-            {
-                if (m_SpellDefense[i] == type)
-                {
-                    return type.CreateInstance<Spell>(this, null);
-                }
-            }
-
-            return null;
-        }
-
-        public static void Cap(ref int val, int min, int max)
-        {
-            if (val < min)
-            {
-                val = min;
-            }
-            else if (val > max)
-            {
-                val = max;
-            }
-        }
-
         public override void OnDoubleClick(Mobile from)
         {
             if (from.AccessLevel >= AccessLevel.GameMaster && !Body.IsHuman)
@@ -2875,7 +2918,7 @@ namespace Server.Mobiles
             base.OnDoubleClick(from);
         }
 
-        public override void AddNameProperties(ObjectPropertyList list)
+        public override void AddNameProperties(IPropertyList list)
         {
             base.AddNameProperties(list);
 
@@ -2888,7 +2931,7 @@ namespace Server.Mobiles
             {
                 if (DisplayWeight)
                 {
-                    list.Add(TotalWeight == 1 ? 1072788 : 1072789, TotalWeight.ToString()); // Weight: ~1_WEIGHT~ stones
+                    list.Add(TotalWeight == 1 ? 1072788 : 1072789, TotalWeight); // Weight: ~1_WEIGHT~ stones
                 }
 
                 if (m_ControlOrder == OrderType.Guard)
@@ -2903,7 +2946,8 @@ namespace Server.Mobiles
             }
             else if (Controlled && Commandable)
             {
-                if (IsBonded)          // Intentional difference (showing ONLY bonded when bonded instead of bonded & tame)
+                // Intentional difference (showing ONLY bonded when bonded instead of bonded & tame)
+                if (IsBonded)
                 {
                     list.Add(1049608); // (bonded)
                 }
@@ -2941,6 +2985,8 @@ namespace Server.Mobiles
 
         public override bool OnBeforeDeath()
         {
+            TriggerAbility(MonsterAbilityTrigger.Death, null);
+
             var treasureLevel = TreasureMapLevel;
 
             if (treasureLevel == 1 && Map == Map.Trammel && TreasureMap.IsInHavenIsland(this))
@@ -2966,7 +3012,7 @@ namespace Server.Mobiles
                     {
                         PackItem(new ParagonChest(Name, treasureLevel));
                     }
-                    else if ((Map == Map.Felucca || Map == Map.Trammel) && Utility.RandomDouble() <= TreasureMap.LootChance)
+                    else if ((Map == Map.Felucca || Map == Map.Trammel) && Utility.RandomDouble() < TreasureMap.LootChance)
                     {
                         PackItem(new TreasureMap(treasureLevel, Map));
                     }
@@ -2977,17 +3023,25 @@ namespace Server.Mobiles
                     switch (Utility.Random(4))
                     {
                         case 0:
-                            PackItem(new CocoaButter());
-                            break;
+                            {
+                                PackItem(new CocoaButter());
+                                break;
+                            }
                         case 1:
-                            PackItem(new CocoaLiquor());
-                            break;
+                            {
+                                PackItem(new CocoaLiquor());
+                                break;
+                            }
                         case 2:
-                            PackItem(new SackOfSugar());
-                            break;
+                            {
+                                PackItem(new SackOfSugar());
+                                break;
+                            }
                         case 3:
-                            PackItem(new Vanilla());
-                            break;
+                            {
+                                PackItem(new Vanilla());
+                                break;
+                            }
                     }
                 }
             }
@@ -3028,7 +3082,7 @@ namespace Server.Mobiles
             {
                 var de = list[i];
 
-                if (de.Damager == m || !(de.Damager is BaseCreature bc))
+                if (de.Damager == m || de.Damager is not BaseCreature bc)
                 {
                     continue;
                 }
@@ -3057,9 +3111,17 @@ namespace Server.Mobiles
             return null;
         }
 
+        public virtual bool IsMonster => !Controlled || (GetMaster() as BaseCreature)?.IsMonster == true;
+
+        public bool InActivePVPCombat() =>
+            ControlOrder != OrderType.Follow &&
+            Combatant is PlayerMobile ||
+            Combatant is BaseCreature { Controlled: true } bc && bc.GetMaster() is PlayerMobile;
+
         public static List<DamageStore> GetLootingRights(List<DamageEntry> damageEntries, int hitsMax)
         {
             var rights = new List<DamageStore>();
+            DamageStore firstDamager = null;
 
             for (var i = damageEntries.Count - 1; i >= 0; --i)
             {
@@ -3100,12 +3162,15 @@ namespace Server.Mobiles
                         {
                             ds.m_Damage += subEntry.DamageGiven;
                             needNewSubEntry = false;
+                            firstDamager = ds;
                         }
                     }
 
                     if (needNewSubEntry)
                     {
-                        rights.Add(new DamageStore(master, subEntry.DamageGiven));
+                        var ds = new DamageStore(master, subEntry.DamageGiven);
+                        rights.Add(ds);
+                        firstDamager = ds;
                     }
 
                     damage -= subEntry.DamageGiven;
@@ -3113,7 +3178,7 @@ namespace Server.Mobiles
 
                 var m = de.Damager;
 
-                if (m?.Deleted != false || !m.Player)
+                if (m is not { Deleted: false, Player: true })
                 {
                     continue;
                 }
@@ -3133,21 +3198,25 @@ namespace Server.Mobiles
                     {
                         ds.m_Damage += damage;
                         needNewEntry = false;
+                        firstDamager = ds;
                     }
                 }
 
                 if (needNewEntry)
                 {
-                    rights.Add(new DamageStore(m, damage));
+                    var ds = new DamageStore(m, damage);
+                    rights.Add(ds);
+                    firstDamager = ds;
                 }
             }
 
+            // Handle damage rights per Five on Friday: https://www.uoguide.com/Five_on_Friday_-_January_19,_2007
             if (rights.Count > 0)
             {
-                rights[0].m_Damage =
-                    (int)(rights[0].m_Damage *
-                          1.25
-                    ); // This would be the first valid person attacking it.  Gets a 25% bonus.  Per 1/19/07 Five on Friday
+                if (firstDamager != null)
+                {
+                    firstDamager.m_Damage = (int)(firstDamager.m_Damage * 1.25);
+                }
 
                 if (rights.Count > 1)
                 {
@@ -3155,24 +3224,14 @@ namespace Server.Mobiles
                 }
 
                 var topDamage = rights[0].m_Damage;
-                int minDamage;
 
-                if (hitsMax >= 3000)
+                int minDamage = hitsMax switch
                 {
-                    minDamage = topDamage / 16;
-                }
-                else if (hitsMax >= 1000)
-                {
-                    minDamage = topDamage / 8;
-                }
-                else if (hitsMax >= 200)
-                {
-                    minDamage = topDamage / 4;
-                }
-                else
-                {
-                    minDamage = topDamage / 2;
-                }
+                    >= 3000 => topDamage / 16,
+                    >= 1000 => topDamage / 8,
+                    >= 200  => topDamage / 4,
+                    _       => topDamage / 2
+                };
 
                 for (var i = 0; i < rights.Count; ++i)
                 {
@@ -3271,126 +3330,125 @@ namespace Server.Mobiles
                 GiftOfLifeSpell.HandleDeath(this);
 
                 CheckStatTimers();
+                return;
             }
-            else
-            {
-                if (!Summoned && !NoKillAwards)
-                {
-                    var totalFame = Fame / 100;
-                    var totalKarma = -Karma / 100;
 
-                    if (Map == Map.Felucca)
+            if (!Summoned && !NoKillAwards)
+            {
+                var totalFame = Fame / 100;
+                var totalKarma = -Karma / 100;
+
+                if (Map == Map.Felucca)
+                {
+                    totalFame += totalFame / 10 * 3;
+                    totalKarma += totalKarma / 10 * 3;
+                }
+
+                var list = GetLootingRights(DamageEntries, HitsMax);
+                var titles = new List<Mobile>();
+                var fame = new List<int>();
+                var karma = new List<int>();
+
+                var givenQuestKill = false;
+                var givenFactionKill = false;
+                var givenToTKill = false;
+
+                for (var i = 0; i < list.Count; ++i)
+                {
+                    var ds = list[i];
+
+                    if (!ds.m_HasRight)
                     {
-                        totalFame += totalFame / 10 * 3;
-                        totalKarma += totalKarma / 10 * 3;
+                        continue;
                     }
 
-                    var list = GetLootingRights(DamageEntries, HitsMax);
-                    var titles = new List<Mobile>();
-                    var fame = new List<int>();
-                    var karma = new List<int>();
+                    var party = Engines.PartySystem.Party.Get(ds.m_Mobile);
 
-                    var givenQuestKill = false;
-                    var givenFactionKill = false;
-                    var givenToTKill = false;
-
-                    for (var i = 0; i < list.Count; ++i)
+                    if (party != null)
                     {
-                        var ds = list[i];
+                        var divedFame = totalFame / party.Members.Count;
+                        var divedKarma = totalKarma / party.Members.Count;
 
-                        if (!ds.m_HasRight)
+                        for (var j = 0; j < party.Members.Count; ++j)
+                        {
+                            var info = party.Members[j];
+
+                            if (info?.Mobile != null)
+                            {
+                                var index = titles.IndexOf(info.Mobile);
+
+                                if (index == -1)
+                                {
+                                    titles.Add(info.Mobile);
+                                    fame.Add(divedFame);
+                                    karma.Add(divedKarma);
+                                }
+                                else
+                                {
+                                    fame[index] += divedFame;
+                                    karma[index] += divedKarma;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        titles.Add(ds.m_Mobile);
+                        fame.Add(totalFame);
+                        karma.Add(totalKarma);
+                    }
+
+                    OnKilledBy(ds.m_Mobile);
+
+                    if (!givenFactionKill)
+                    {
+                        givenFactionKill = true;
+                        Faction.HandleDeath(this, ds.m_Mobile);
+                    }
+
+                    var region = ds.m_Mobile.Region;
+
+                    if (!givenToTKill && (Map == Map.Tokuno || region.IsPartOf("Yomotsu Mines") ||
+                                          region.IsPartOf("Fan Dancer's Dojo")))
+                    {
+                        givenToTKill = true;
+                        TreasuresOfTokuno.HandleKill(this, ds.m_Mobile);
+                    }
+
+                    if (ds.m_Mobile is PlayerMobile pm)
+                    {
+                        if (MLQuestSystem.Enabled)
+                        {
+                            MLQuestSystem.HandleKill(pm, this);
+                        }
+
+                        if (givenQuestKill)
                         {
                             continue;
                         }
 
-                        var party = Engines.PartySystem.Party.Get(ds.m_Mobile);
+                        var qs = pm.Quest;
 
-                        if (party != null)
+                        if (qs != null)
                         {
-                            var divedFame = totalFame / party.Members.Count;
-                            var divedKarma = totalKarma / party.Members.Count;
-
-                            for (var j = 0; j < party.Members.Count; ++j)
-                            {
-                                var info = party.Members[j];
-
-                                if (info?.Mobile != null)
-                                {
-                                    var index = titles.IndexOf(info.Mobile);
-
-                                    if (index == -1)
-                                    {
-                                        titles.Add(info.Mobile);
-                                        fame.Add(divedFame);
-                                        karma.Add(divedKarma);
-                                    }
-                                    else
-                                    {
-                                        fame[index] += divedFame;
-                                        karma[index] += divedKarma;
-                                    }
-                                }
-                            }
+                            qs.OnKill(this, c);
+                            givenQuestKill = true;
                         }
-                        else
-                        {
-                            titles.Add(ds.m_Mobile);
-                            fame.Add(totalFame);
-                            karma.Add(totalKarma);
-                        }
-
-                        OnKilledBy(ds.m_Mobile);
-
-                        if (!givenFactionKill)
-                        {
-                            givenFactionKill = true;
-                            Faction.HandleDeath(this, ds.m_Mobile);
-                        }
-
-                        var region = ds.m_Mobile.Region;
-
-                        if (!givenToTKill && (Map == Map.Tokuno || region.IsPartOf("Yomotsu Mines") ||
-                                              region.IsPartOf("Fan Dancer's Dojo")))
-                        {
-                            givenToTKill = true;
-                            TreasuresOfTokuno.HandleKill(this, ds.m_Mobile);
-                        }
-
-                        if (ds.m_Mobile is PlayerMobile pm)
-                        {
-                            if (MLQuestSystem.Enabled)
-                            {
-                                MLQuestSystem.HandleKill(pm, this);
-                            }
-
-                            if (givenQuestKill)
-                            {
-                                continue;
-                            }
-
-                            var qs = pm.Quest;
-
-                            if (qs != null)
-                            {
-                                qs.OnKill(this, c);
-                                givenQuestKill = true;
-                            }
-                        }
-                    }
-
-                    for (var i = 0; i < titles.Count; ++i)
-                    {
-                        Titles.AwardFame(titles[i], fame[i], true);
-                        Titles.AwardKarma(titles[i], karma[i], true);
                     }
                 }
 
-                base.OnDeath(c);
-
-                if (DeleteCorpseOnDeath)
+                for (var i = 0; i < titles.Count; ++i)
                 {
-                    c.Delete();
+                    Titles.AwardFame(titles[i], fame[i], true);
+                    Titles.AwardKarma(titles[i], karma[i], true);
                 }
+            }
+
+            base.OnDeath(c);
+
+            if (DeleteCorpseOnDeath)
+            {
+                c.Delete();
             }
         }
 
@@ -3412,17 +3470,17 @@ namespace Server.Mobiles
                 return false;
             }
 
-            if (target is BaseCreature creature && creature.IsInvulnerable || target is PlayerVendor || target is TownCrier)
+            if (target is BaseCreature creature && creature.IsInvulnerable || target is PlayerVendor or TownCrier)
             {
                 if (message)
                 {
                     if (target.Title == null)
                     {
-                        SendMessage("{0} cannot be harmed.", target.Name);
+                        SendMessage($"{target.Name} cannot be harmed.");
                     }
                     else
                     {
-                        SendMessage("{0} {1} cannot be harmed.", target.Name, target.Title);
+                        SendMessage($"{target.Name} {target.Title} cannot be harmed.");
                     }
                 }
 
@@ -3444,9 +3502,6 @@ namespace Server.Mobiles
                 Controlled = false;
                 ControlTarget = null;
                 ControlOrder = OrderType.None;
-                Guild = null;
-
-                Delta(MobileDelta.Noto);
             }
             else
             {
@@ -3470,16 +3525,19 @@ namespace Server.Mobiles
                 Controlled = true;
                 ControlTarget = null;
                 ControlOrder = OrderType.Come;
-                Guild = null;
+
 
                 if (m_DeleteTimer != null)
                 {
                     m_DeleteTimer.Stop();
                     m_DeleteTimer = null;
                 }
-
-                Delta(MobileDelta.Noto);
             }
+
+            Guild = null;
+            ResetSpeeds();
+
+            Delta(MobileDelta.Noto);
 
             InvalidateProperties();
 
@@ -3539,7 +3597,7 @@ namespace Server.Mobiles
                 }
             }
 
-            new UnsummonTimer(caster, creature, duration).Start();
+            new UnsummonTimer(creature, duration).Start();
             creature.SummonEnd = Core.Now + duration;
 
             creature.MoveToWorld(p, caster.Map);
@@ -3574,24 +3632,8 @@ namespace Server.Mobiles
                 m_NextRummageTime = tc + (int)TimeSpan.FromMinutes(delay).TotalMilliseconds;
             }
 
-            // tested: controlled dragons do breath fire, what about summoned skeletal dragons?
-            if (CanBreath && tc - m_NextBreathTime >= 0)
-            {
-                var target = Combatant;
-
-                if (target?.Alive == true && !target.IsDeadBondedPet && CanBeHarmful(target) && target.Map == Map &&
-                    !IsDeadBondedPet && target.InRange(this, BreathRange) && InLOS(target) && !BardPacified)
-                {
-                    if (Core.TickCount - m_NextBreathTime < 30000 && Utility.RandomBool())
-                    {
-                        BreathStart(target);
-                    }
-
-                    m_NextBreathTime = tc + (int)TimeSpan
-                        .FromSeconds(BreathMinDelay + Utility.RandomDouble() * (BreathMaxDelay - BreathMinDelay))
-                        .TotalMilliseconds;
-                }
-            }
+            // Fire breath, etc.
+            TriggerAbility(MonsterAbilityTrigger.Think, Combatant);
 
             if ((CanHeal || CanHealOwner) && Alive && !IsHealing && !BardPacified)
             {
@@ -3642,17 +3684,25 @@ namespace Server.Mobiles
 
         public virtual bool Rummage()
         {
-            var eable = GetItemsInRange<Corpse>(2);
-            var toRummage = eable.FirstOrDefault(item => item.Items.Count > 0);
-
-            eable.Free();
-
-            if (toRummage == null)
+            if (Backpack == null)
             {
                 return false;
             }
 
-            if (Backpack == null)
+            var eable = GetItemsInRange<Corpse>(2);
+            Corpse toRummage = null;
+            foreach (var c in eable)
+            {
+                if (c.Items.Count > 0)
+                {
+                    toRummage = c;
+                    break;
+                }
+            }
+
+            eable.Free();
+
+            if (toRummage == null)
             {
                 return false;
             }
@@ -3788,27 +3838,38 @@ namespace Server.Mobiles
 
         public static void TeleportPets(Mobile master, Point3D loc, Map map, bool onlyBonded = false)
         {
-            var move = new List<Mobile>();
-
-            foreach (var m in master.GetMobilesInRange(3))
+            if (master is PlayerMobile pm)
             {
-                if (
-                    m is BaseCreature {
-                        Controlled: true,
-                        ControlOrder: OrderType.Guard or OrderType.Follow or OrderType.Come
-                    } pet
-                )
+                for (var i = 0; i < pm.AllFollowers.Count; i++)
                 {
-                    if (pet.ControlMaster == master && (!onlyBonded || pet.IsBonded))
+                    var m = pm.AllFollowers[i];
+                    if (m.Map == master.Map && master.InRange(m, 3) && m is BaseCreature
+                            { Controlled: true, ControlOrder: OrderType.Guard or OrderType.Follow or OrderType.Come } pet &&
+                        pet.ControlMaster == master && (!onlyBonded || pet.IsBonded))
                     {
-                        move.Add(pet);
+                        m.MoveToWorld(loc, map);
                     }
                 }
+
+                return;
             }
 
-            foreach (var m in move)
+            using var queue = PooledRefQueue<Mobile>.Create();
+            var eable = master.GetMobilesInRange(3);
+            foreach (var m in eable)
             {
-                m.MoveToWorld(loc, map);
+                if (m is BaseCreature
+                        { Controlled: true, ControlOrder: OrderType.Guard or OrderType.Follow or OrderType.Come } pet &&
+                    pet.ControlMaster == master && (!onlyBonded || pet.IsBonded))
+                {
+                    queue.Enqueue(pet);
+                }
+            }
+            eable.Free();
+
+            while (queue.Count > 0)
+            {
+                queue.Dequeue().MoveToWorld(loc, map);
             }
         }
 
@@ -3844,17 +3905,13 @@ namespace Server.Mobiles
 
             var owner = ControlMaster;
 
-            if (owner?.Deleted != false || owner.Map != Map || !owner.InRange(this, 12) || !CanSee(owner) ||
-                !InLOS(owner))
-            {
-                if (OwnerAbandonTime == DateTime.MinValue)
-                {
-                    OwnerAbandonTime = Core.Now;
-                }
-            }
-            else
+            if (owner?.Deleted == false && owner.Map == Map && owner.InRange(this, 12) && CanSee(owner) && InLOS(owner))
             {
                 OwnerAbandonTime = DateTime.MinValue;
+            }
+            else if (OwnerAbandonTime == DateTime.MinValue)
+            {
+                OwnerAbandonTime = Core.Now;
             }
 
             CheckStatTimers();
@@ -3956,12 +4013,12 @@ namespace Server.Mobiles
 
         public static void Configure()
         {
-            BondingEnabled = ServerConfiguration.GetOrUpdateSetting("taming.enableBonding", true);
+            BondingEnabled = ServerConfiguration.GetSetting("taming.enableBonding", Core.LBR);
         }
 
         public void BeginDeleteTimer()
         {
-            if (!(this is BaseEscortable) && !Summoned && !Deleted && !IsStabled)
+            if (this is not BaseEscortable && !Summoned && !Deleted && !IsStabled)
             {
                 StopDeleteTimer();
                 m_DeleteTimer = new DeleteTimer(this, TimeSpan.FromDays(3.0));
@@ -3976,151 +4033,6 @@ namespace Server.Mobiles
                 m_DeleteTimer.Stop();
                 m_DeleteTimer = null;
             }
-        }
-
-        public virtual void BreathStart(Mobile target)
-        {
-            BreathStallMovement();
-            BreathPlayAngerSound();
-            BreathPlayAngerAnimation();
-
-            Direction = GetDirectionTo(target);
-
-            Timer.StartTimer(TimeSpan.FromSeconds(BreathEffectDelay), () => BreathEffect_Callback(target));
-        }
-
-        public virtual void BreathStallMovement()
-        {
-            if (AIObject != null)
-            {
-                AIObject.NextMove = Core.TickCount + (int)(BreathStallTime * 1000);
-            }
-        }
-
-        public virtual void BreathPlayAngerSound()
-        {
-            PlaySound(BreathAngerSound);
-        }
-
-        public virtual void BreathPlayAngerAnimation()
-        {
-            Animate(BreathAngerAnimation, 5, 1, true, false, 0);
-        }
-
-        public virtual void BreathEffect_Callback(Mobile target)
-        {
-            if (!target.Alive || !CanBeHarmful(target))
-            {
-                return;
-            }
-
-            BreathPlayEffectSound();
-            BreathPlayEffect(target);
-
-            Timer.StartTimer(TimeSpan.FromSeconds(BreathDamageDelay), () => BreathDamage_Callback(target));
-        }
-
-        public virtual void BreathPlayEffectSound()
-        {
-            PlaySound(BreathEffectSound);
-        }
-
-        public virtual void BreathPlayEffect(Mobile target)
-        {
-            Effects.SendMovingEffect(
-                this,
-                target,
-                BreathEffectItemID,
-                BreathEffectSpeed,
-                BreathEffectDuration,
-                BreathEffectFixedDir,
-                BreathEffectExplodes,
-                BreathEffectHue,
-                BreathEffectRenderMode
-            );
-        }
-
-        public virtual void BreathDamage_Callback(Mobile target)
-        {
-            if (target is BaseCreature creature && creature.BreathImmune)
-            {
-                return;
-            }
-
-            if (CanBeHarmful(target))
-            {
-                DoHarmful(target);
-                BreathDealDamage(target);
-            }
-        }
-
-        public virtual void BreathDealDamage(Mobile target)
-        {
-            if (!Evasion.CheckSpellEvasion(target))
-            {
-                var physDamage = BreathPhysicalDamage;
-                var fireDamage = BreathFireDamage;
-                var coldDamage = BreathColdDamage;
-                var poisDamage = BreathPoisonDamage;
-                var nrgyDamage = BreathEnergyDamage;
-
-                if (BreathChaosDamage > 0)
-                {
-                    switch (Utility.Random(5))
-                    {
-                        case 0:
-                            physDamage += BreathChaosDamage;
-                            break;
-                        case 1:
-                            fireDamage += BreathChaosDamage;
-                            break;
-                        case 2:
-                            coldDamage += BreathChaosDamage;
-                            break;
-                        case 3:
-                            poisDamage += BreathChaosDamage;
-                            break;
-                        case 4:
-                            nrgyDamage += BreathChaosDamage;
-                            break;
-                    }
-                }
-
-                if (physDamage == 0 && fireDamage == 0 && coldDamage == 0 && poisDamage == 0 && nrgyDamage == 0)
-                {
-                    target.Damage(BreathComputeDamage(), this); // Unresistable damage even in AOS
-                }
-                else
-                {
-                    AOS.Damage(
-                        target,
-                        this,
-                        BreathComputeDamage(),
-                        physDamage,
-                        fireDamage,
-                        coldDamage,
-                        poisDamage,
-                        nrgyDamage
-                    );
-                }
-            }
-        }
-
-        public virtual int BreathComputeDamage()
-        {
-            var damage = (int)(Hits * BreathDamageScalar);
-
-            if (IsParagon)
-            {
-                damage = (int)(damage / Paragon.HitsBuff);
-            }
-
-            if (damage > 200)
-            {
-                damage = 200;
-            }
-
-            return damage;
         }
 
         public void SpillAcid(int amount)
@@ -4160,7 +4072,7 @@ namespace Server.Mobiles
           kappa+acidslime, grizzles+whatever, etc.
         */
 
-        public virtual Item NewHarmfulItem() => new PoolOfAcid(TimeSpan.FromSeconds(10), 30, 30);
+        public virtual Item NewHarmfulItem() => new Acid(TimeSpan.FromSeconds(10), 30, 30);
 
         public virtual void StopFlee()
         {
@@ -4239,62 +4151,41 @@ namespace Server.Mobiles
 
         public virtual void AlterDamageScalarFrom(Mobile caster, ref double scalar)
         {
+            TriggerAbilityAlterDamageScalar(MonsterAbilityTrigger.TakeSpellDamage, caster, ref scalar);
         }
 
         public virtual void AlterDamageScalarTo(Mobile target, ref double scalar)
         {
+            TriggerAbilityAlterDamageScalar(MonsterAbilityTrigger.GiveSpellDamage, target, ref scalar);
         }
 
         public virtual void AlterSpellDamageFrom(Mobile from, ref int damage)
         {
+            TriggerAbilityAlterDamage(MonsterAbilityTrigger.TakeSpellDamage, from, ref damage);
         }
 
         public virtual void AlterSpellDamageTo(Mobile to, ref int damage)
         {
+            TriggerAbilityAlterDamage(MonsterAbilityTrigger.GiveSpellDamage, to, ref damage);
         }
 
         public virtual void AlterMeleeDamageFrom(Mobile from, ref int damage)
         {
+            TriggerAbilityAlterDamage(MonsterAbilityTrigger.TakeMeleeDamage, from, ref damage);
         }
 
         public virtual void AlterMeleeDamageTo(Mobile to, ref int damage)
         {
+            TriggerAbilityAlterDamage(MonsterAbilityTrigger.GiveMeleeDamage, to, ref damage);
         }
 
-        public virtual bool CheckFoodPreference(Item f)
-        {
-            if (CheckFoodPreference(f, FoodType.Eggs, m_Eggs))
-            {
-                return true;
-            }
-
-            if (CheckFoodPreference(f, FoodType.Fish, m_Fish))
-            {
-                return true;
-            }
-
-            if (CheckFoodPreference(f, FoodType.GrainsAndHay, m_GrainsAndHay))
-            {
-                return true;
-            }
-
-            if (CheckFoodPreference(f, FoodType.Meat, m_Meat))
-            {
-                return true;
-            }
-
-            if (CheckFoodPreference(f, FoodType.FruitsAndVegies, m_FruitsAndVegies))
-            {
-                return true;
-            }
-
-            if (CheckFoodPreference(f, FoodType.Gold, m_Gold))
-            {
-                return true;
-            }
-
-            return false;
-        }
+        public virtual bool CheckFoodPreference(Item f) =>
+            CheckFoodPreference(f, FoodType.Eggs, m_Eggs) ||
+            CheckFoodPreference(f, FoodType.Fish, m_Fish) ||
+            CheckFoodPreference(f, FoodType.GrainsAndHay, m_GrainsAndHay) ||
+            CheckFoodPreference(f, FoodType.Meat, m_Meat) ||
+            CheckFoodPreference(f, FoodType.FruitsAndVegies, m_FruitsAndVegies) ||
+            CheckFoodPreference(f, FoodType.Gold, m_Gold);
 
         public virtual bool CheckFoodPreference(Item fed, FoodType type, Type[] types)
         {
@@ -4326,16 +4217,11 @@ namespace Server.Mobiles
 
                     if (amount > 0)
                     {
-                        int stamGain;
-
-                        if (f is Gold)
+                        int stamGain = f switch
                         {
-                            stamGain = amount - 50;
-                        }
-                        else
-                        {
-                            stamGain = amount * 15 - 50;
-                        }
+                            Gold => amount - 50,
+                            _    => amount * 15 - 50
+                        };
 
                         if (stamGain > 0)
                         {
@@ -4353,7 +4239,7 @@ namespace Server.Mobiles
                         {
                             for (var i = 0; i < amount; ++i)
                             {
-                                if (m_Loyalty < MaxLoyalty && Utility.RandomDouble() <= 0.5)
+                                if (m_Loyalty < MaxLoyalty && Utility.RandomBool())
                                 {
                                     m_Loyalty += 10;
                                 }
@@ -4396,9 +4282,8 @@ namespace Server.Mobiles
                                 }
                                 else if (Core.ML)
                                 {
-                                    from.SendLocalizedMessage(
-                                        1075268
-                                    ); // Your pet cannot form a bond with you until your animal taming ability has risen.
+                                    // Your pet cannot form a bond with you until your animal taming ability has risen.
+                                    from.SendLocalizedMessage(1075268);
                                 }
                             }
                         }
@@ -4454,12 +4339,7 @@ namespace Server.Mobiles
                 return false;
             }
 
-            if (!Core.AOS && (skill == SkillName.Focus || skill == SkillName.Chivalry || skill == SkillName.Necromancy))
-            {
-                return false;
-            }
-
-            return true;
+            return Core.AOS || skill != SkillName.Focus && skill != SkillName.Chivalry && skill != SkillName.Necromancy;
         }
 
         public virtual TeachResult CheckTeachSkills(
@@ -4657,6 +4537,13 @@ namespace Server.Mobiles
             return false;
         }
 
+        public void SetSpeed(double active, double passive)
+        {
+            ActiveSpeed = active;
+            PassiveSpeed = passive;
+            CurrentSpeed = PassiveSpeed;
+        }
+
         public void SetDamage(int val)
         {
             m_DamageMin = val;
@@ -4762,20 +4649,30 @@ namespace Server.Mobiles
             switch (type)
             {
                 case ResistanceType.Physical:
-                    PhysicalDamage = val;
-                    break;
+                    {
+                        PhysicalDamage = val;
+                        break;
+                    }
                 case ResistanceType.Fire:
-                    FireDamage = val;
-                    break;
+                    {
+                        FireDamage = val;
+                        break;
+                    }
                 case ResistanceType.Cold:
-                    ColdDamage = val;
-                    break;
+                    {
+                        ColdDamage = val;
+                        break;
+                    }
                 case ResistanceType.Poison:
-                    PoisonDamage = val;
-                    break;
+                    {
+                        PoisonDamage = val;
+                        break;
+                    }
                 case ResistanceType.Energy:
-                    EnergyDamage = val;
-                    break;
+                    {
+                        EnergyDamage = val;
+                        break;
+                    }
             }
         }
 
@@ -4789,20 +4686,30 @@ namespace Server.Mobiles
             switch (type)
             {
                 case ResistanceType.Physical:
-                    m_PhysicalResistance = val;
-                    break;
+                    {
+                        m_PhysicalResistance = val;
+                        break;
+                    }
                 case ResistanceType.Fire:
-                    m_FireResistance = val;
-                    break;
+                    {
+                        m_FireResistance = val;
+                        break;
+                    }
                 case ResistanceType.Cold:
-                    m_ColdResistance = val;
-                    break;
+                    {
+                        m_ColdResistance = val;
+                        break;
+                    }
                 case ResistanceType.Poison:
-                    m_PoisonResistance = val;
-                    break;
+                    {
+                        m_PoisonResistance = val;
+                        break;
+                    }
                 case ResistanceType.Energy:
-                    m_EnergyResistance = val;
-                    break;
+                    {
+                        m_EnergyResistance = val;
+                        break;
+                    }
             }
 
             UpdateResistances();
@@ -4908,7 +4815,7 @@ namespace Server.Mobiles
 
         public void PackNecroScroll(int index)
         {
-            if (!Core.AOS || Utility.RandomDouble() >= 0.05)
+            if (!Core.AOS || Utility.RandomDouble() < 0.95)
             {
                 return;
             }
@@ -4934,6 +4841,23 @@ namespace Server.Mobiles
             {
                 PackWeapon(minLevel, maxLevel, weaponChance);
             }
+        }
+
+        // If this needs to be serialized, recommend creating a hash or registry id. Don't serialize strings.
+        public virtual SpeedLevel SpeedClass => SpeedLevel.None;
+
+        public virtual void GetSpeeds(out double activeSpeed, out double passiveSpeed)
+        {
+            NPCSpeeds.GetSpeeds(this, out activeSpeed, out passiveSpeed);
+        }
+
+        public void ResetSpeeds(bool currentUseActive = false)
+        {
+            GetSpeeds(out var activeSpeed, out var passiveSpeed);
+
+            ActiveSpeed = activeSpeed;
+            PassiveSpeed = passiveSpeed;
+            CurrentSpeed = currentUseActive ? activeSpeed : passiveSpeed;
         }
 
         public virtual void DropBackpack()
@@ -5033,8 +4957,8 @@ namespace Server.Mobiles
                 return false;
             }
 
-            Cap(ref minLevel, 0, 5);
-            Cap(ref maxLevel, 0, 5);
+            minLevel = Math.Clamp(minLevel, 0, 5);
+            maxLevel = Math.Clamp(maxLevel, 0, 5);
 
             if (Core.AOS)
             {
@@ -5121,9 +5045,7 @@ namespace Server.Mobiles
 
             if (min > max)
             {
-                var hold = min;
-                min = max;
-                max = hold;
+                (min, max) = (max, min);
             }
 
             /* Example:
@@ -5204,8 +5126,8 @@ namespace Server.Mobiles
                 return false;
             }
 
-            Cap(ref minLevel, 0, 5);
-            Cap(ref maxLevel, 0, 5);
+            minLevel = Math.Clamp(minLevel, 0, 5);
+            maxLevel = Math.Clamp(maxLevel, 0, 5);
 
             if (Core.AOS)
             {
@@ -5481,15 +5403,21 @@ namespace Server.Mobiles
             }
 
             var eable = GetMobilesInRange(AuraRange);
-
-            var list = eable.Where(
-                m =>
-                    m != this && CanBeHarmful(m, false) && (Core.AOS || InLOS(m)) &&
-                    (m is BaseCreature bc && (bc.Controlled || bc.Summoned || bc.Team != Team) || m.Player)
-            );
-
-            foreach (var m in list)
+            using var queue = PooledRefQueue<Mobile>.Create();
+            foreach (var m in eable)
             {
+                if (m != this && CanBeHarmful(m, false) && (Core.AOS || InLOS(m)) &&
+                    (m is BaseCreature bc && (bc.Controlled || bc.Summoned || bc.Team != Team) || m.Player))
+                {
+                    queue.Enqueue(m);
+                }
+            }
+            eable.Free();
+
+            while (queue.Count > 0)
+            {
+                var m = queue.Dequeue();
+
                 AOS.Damage(
                     m,
                     this,
@@ -5503,8 +5431,6 @@ namespace Server.Mobiles
                 );
                 AuraEffect(m);
             }
-
-            eable.Free();
         }
 
         public virtual void AuraEffect(Mobile m)
@@ -5599,10 +5525,8 @@ namespace Server.Mobiles
 
         private DateTime m_NextHourlyCheck;
 
-        public LoyaltyTimer() : base(InternalDelay, InternalDelay)
-        {
+        public LoyaltyTimer() : base(InternalDelay, InternalDelay) =>
             m_NextHourlyCheck = Core.Now + TimeSpan.FromHours(1.0);
-        }
 
         public static void Initialize()
         {
@@ -5618,14 +5542,14 @@ namespace Server.Mobiles
 
             m_NextHourlyCheck = Core.Now + TimeSpan.FromHours(1.0);
 
-            var toRelease = new List<BaseCreature>();
+            using var toRelease = PooledRefQueue<BaseCreature>.Create();
 
             // added array for wild creatures in house regions to be removed
-            var toRemove = new List<BaseCreature>();
+            using var toRemove = PooledRefQueue<Mobile>.Create();
 
             foreach (var m in World.Mobiles.Values)
             {
-                if (!(m is BaseCreature c))
+                if (m is not BaseCreature c)
                 {
                     continue;
                 }
@@ -5649,7 +5573,7 @@ namespace Server.Mobiles
                         }
                         else if (c.OwnerAbandonTime + c.BondingAbandonDelay <= Core.Now)
                         {
-                            toRemove.Add(c);
+                            toRemove.Enqueue(c);
                         }
                     }
                     else
@@ -5673,7 +5597,7 @@ namespace Server.Mobiles
 
                         if (c.Loyalty <= 0)
                         {
-                            toRelease.Add(c);
+                            toRelease.Enqueue(c);
                         }
                     }
                 }
@@ -5686,7 +5610,7 @@ namespace Server.Mobiles
 
                     if (c.RemoveStep >= 20)
                     {
-                        toRemove.Add(c);
+                        toRemove.Enqueue(c);
                     }
                 }
                 else
@@ -5695,22 +5619,24 @@ namespace Server.Mobiles
                 }
             }
 
-            foreach (var c in toRelease)
+            while (toRelease.Count > 0)
             {
-                c.Say(1043255, c.Name);              // ~1_NAME~ appears to have decided that is better off without a master!
+                var c = toRelease.Dequeue();
+
+                c.Say(1043255, c.Name); // ~1_NAME~ appears to have decided that is better off without a master!
                 c.Loyalty = BaseCreature.MaxLoyalty; // Wonderfully Happy
                 c.IsBonded = false;
                 c.BondingBegin = DateTime.MinValue;
                 c.OwnerAbandonTime = DateTime.MinValue;
                 c.ControlTarget = null;
-                c.AIObject
-                    .DoOrderRelease(); // this will prevent no release of creatures left alone with AI disabled (and consequent bug of Followers)
+                // This will prevent no release of creatures left alone with AI disabled (and consequent bug of Followers)
+                c.AIObject.DoOrderRelease();
                 c.DropBackpack();
             }
 
-            foreach (var c in toRemove)
+            while (toRemove.Count > 0)
             {
-                c.Delete();
+                toRemove.Dequeue().Delete();
             }
         }
     }

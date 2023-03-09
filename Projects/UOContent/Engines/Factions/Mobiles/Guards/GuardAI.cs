@@ -106,7 +106,7 @@ namespace Server.Factions
         private const int ManaReserve = 30;
         private readonly BaseFactionGuard m_Guard;
 
-        private BandageContext m_Bandage;
+        private BandageContext _bandage;
         private DateTime m_BandageStart;
 
         private SpellCombo m_Combo;
@@ -123,21 +123,21 @@ namespace Server.Factions
         {
             get
             {
-                if (m_Bandage != null && m_Bandage.Timer == null)
+                if (_bandage != null && !_bandage.Running)
                 {
-                    m_Bandage = null;
+                    _bandage = null;
                 }
 
-                if (m_Bandage == null)
+                if (_bandage == null)
                 {
                     return TimeSpan.MaxValue;
                 }
 
-                var ts = m_BandageStart + m_Bandage.Timer.Delay - Core.Now;
+                var ts = m_BandageStart + _bandage.Delay - Core.Now;
 
                 if (ts < TimeSpan.FromSeconds(-1.0))
                 {
-                    m_Bandage = null;
+                    _bandage = null;
                     return TimeSpan.MaxValue;
                 }
 
@@ -156,7 +156,7 @@ namespace Server.Factions
                 return false;
             }
 
-            if (m_Guard.Weapon is Item weapon && weapon.Parent == m_Guard && !(weapon is Fists))
+            if (m_Guard.Weapon is Item weapon && weapon.Parent == m_Guard && weapon is not Fists)
             {
                 pack.DropItem(weapon);
                 return true;
@@ -174,16 +174,15 @@ namespace Server.Factions
 
         public bool StartBandage()
         {
-            m_Bandage = null;
+            _bandage = null;
 
-            if (m_Guard.Backpack?.FindItemByType<Bandage>() == null)
+            if (m_Guard.Backpack?.FindItemByType<Bandage>() != null)
             {
-                return false;
+                _bandage = BandageContext.BeginHeal(m_Guard, m_Guard);
+                m_BandageStart = Core.Now;
             }
 
-            m_Bandage = BandageContext.BeginHeal(m_Guard, m_Guard);
-            m_BandageStart = Core.Now;
-            return m_Bandage != null;
+            return _bandage != null;
         }
 
         public bool UseItemByType(Type type)
@@ -209,17 +208,8 @@ namespace Server.Factions
             return true;
         }
 
-        public int GetStatMod(Mobile mob, StatType type)
-        {
-            var mod = mob.GetStatMod($"[Magic] {type} Offset");
-
-            if (mod == null)
-            {
-                return 0;
-            }
-
-            return mod.Offset;
-        }
+        public static int GetStatMod(Mobile mob, StatType type) =>
+            mob.GetStatMod($"[Magic] {type} Curse")?.Offset ?? 0;
 
         public Spell RandomOffenseSpell()
         {
@@ -411,13 +401,13 @@ namespace Server.Factions
             {
                 if (m_Mobile.Debug)
                 {
-                    m_Mobile.DebugSay("My move is blocked, so I am going to attack {0}", m_Mobile.FocusMob.Name);
+                    m_Mobile.DebugSay($"My move is blocked, so I am going to attack {m_Mobile.FocusMob.Name}");
                 }
 
                 m_Mobile.Combatant = m_Mobile.FocusMob;
                 Action = ActionType.Combat;
             }
-            else
+            else if (m_Mobile.Debug)
             {
                 m_Mobile.DebugSay("I am stuck");
             }
@@ -815,16 +805,13 @@ namespace Server.Factions
 
                     if (type != null && m_Guard.Target == null && UseItemByType(type))
                     {
-                        if (spell is GreaterHealSpell)
-                        {
-                            if (m_Guard.Hits + 30 > m_Guard.HitsMax && m_Guard.Hits + 10 < m_Guard.HitsMax)
-                            {
-                                spell = new HealSpell(m_Guard);
-                            }
-                        }
-                        else
+                        if (spell is not GreaterHealSpell)
                         {
                             spell = null;
+                        }
+                        else if (m_Guard.Hits + 30 > m_Guard.HitsMax && m_Guard.Hits + 10 < m_Guard.HitsMax)
+                        {
+                            spell = new HealSpell(m_Guard);
                         }
                     }
                 }

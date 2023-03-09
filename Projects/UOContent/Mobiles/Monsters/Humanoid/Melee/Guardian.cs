@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class Guardian : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Guardian : BaseCreature
     {
         [Constructible]
-        public Guardian() : base(AIType.AI_Archer, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public Guardian() : base(AIType.AI_Archer, FightMode.Aggressor)
         {
             InitStats(100, 125, 25);
             Title = "the guardian";
@@ -62,24 +64,6 @@ namespace Server.Mobiles
             Skills.Archery.Base = 120.0;
             Skills.MagicResist.Base = 120.0;
             Skills.DetectHidden.Base = 100.0;
-        }
-
-        public Guardian(Serial serial) : base(serial)
-        {
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

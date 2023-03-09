@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Server.Items;
 using Server.Mobiles;
-using Server.Network;
 
 namespace Server.Engines.MLQuests.Items
 {
@@ -27,7 +26,7 @@ namespace Server.Engines.MLQuests.Items
         public List<MLQuest> MLQuests => m_MLQuests ??
                                          (m_MLQuests = MLQuestSystem.FindQuestList(GetType()) ?? MLQuestSystem.EmptyList);
 
-        public override void AddNameProperties(ObjectPropertyList list)
+        public override void AddNameProperties(IPropertyList list)
         {
             base.AddNameProperties(list);
 
@@ -105,7 +104,7 @@ namespace Server.Engines.MLQuests.Items
         {
         }
 
-        public override void AddNameProperties(ObjectPropertyList list)
+        public override void AddNameProperties(IPropertyList list)
         {
             base.AddNameProperties(list);
 

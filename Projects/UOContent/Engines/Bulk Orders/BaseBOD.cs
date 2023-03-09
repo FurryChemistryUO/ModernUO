@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using ModernUO.Serialization;
 
 namespace Server.Engines.BulkOrders
 {
-    [Serializable(1)]
+    [SerializationGenerator(1)]
     public abstract partial class BaseBOD : Item
     {
         public BaseBOD(int hue, int amountMax, bool requireExeptional, BulkMaterialType material) : this()
@@ -23,17 +24,17 @@ namespace Server.Engines.BulkOrders
 
         [SerializableField(0)]
         [InvalidateProperties]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _amountMax;
 
         [SerializableField(1)]
         [InvalidateProperties]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private bool _requireExceptional;
 
         [SerializableField(2)]
         [InvalidateProperties]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private BulkMaterialType _material;
 
         public static BulkMaterialType GetRandomMaterial(BulkMaterialType start, double[] chances)

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using ModernUO.Serialization;
 using Server.Collections;
 using Server.Network;
 
@@ -33,7 +34,7 @@ namespace Server.Items
         public static bool CheckReplyTime(DateTime time) => time + ThreadReplyTime < Core.Now;
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [Flippable(0x1E5E, 0x1E5F)]
     public partial class BulletinBoard : BaseBulletinBoard
     {
@@ -43,11 +44,11 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public abstract partial class BaseBulletinBoard : Item
     {
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private string _boardName;
 
         public BaseBulletinBoard(int itemID) : base(itemID)

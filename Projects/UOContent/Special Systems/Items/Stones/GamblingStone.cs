@@ -30,17 +30,17 @@ namespace Server.Items
 
         public override string DefaultName => "a gambling stone";
 
-        public override void GetProperties(ObjectPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
             base.GetProperties(list);
 
-            list.Add("Jackpot: {0}gp", m_GamblePot);
+            list.Add($"Jackpot: {m_GamblePot}gp");
         }
 
         public override void OnSingleClick(Mobile from)
         {
             base.OnSingleClick(from);
-            LabelTo(from, "Jackpot: {0}gp", m_GamblePot);
+            LabelTo(from, $"Jackpot: {m_GamblePot}gp");
         }
 
         public override void OnDoubleClick(Mobile from)
@@ -58,7 +58,7 @@ namespace Server.Items
                 {
                     var maxCheck = 1000000;
 
-                    from.SendMessage(0x35, "You win the {0}gp jackpot!", m_GamblePot);
+                    from.SendMessage(0x35, $"You win the {m_GamblePot}gp jackpot!");
 
                     while (m_GamblePot > maxCheck)
                     {

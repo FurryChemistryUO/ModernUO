@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class MountainGoat : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class MountainGoat : BaseCreature
     {
         [Constructible]
-        public MountainGoat() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public MountainGoat() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = 88;
             BaseSoundID = 0x99;
@@ -39,29 +42,11 @@ namespace Server.Mobiles
             MinTameSkill = -0.9;
         }
 
-        public MountainGoat(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a mountain goat corpse";
         public override string DefaultName => "a mountain goat";
 
         public override int Meat => 2;
         public override int Hides => 12;
         public override FoodType FavoriteFood => FoodType.GrainsAndHay | FoodType.FruitsAndVegies;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

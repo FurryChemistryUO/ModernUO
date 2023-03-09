@@ -1,14 +1,16 @@
+using ModernUO.Serialization;
 using System;
-using System.Linq;
+using Server.Collections;
 
 namespace Server.Mobiles
 {
-    public class MeerEternal : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class MeerEternal : BaseCreature
     {
         private DateTime m_NextAbilityTime;
 
         [Constructible]
-        public MeerEternal() : base(AIType.AI_Mage, FightMode.Evil, 10, 1, 0.2, 0.4)
+        public MeerEternal() : base(AIType.AI_Mage, FightMode.Evil)
         {
             Body = 772;
 
@@ -41,10 +43,6 @@ namespace Server.Mobiles
             VirtualArmor = 34;
 
             m_NextAbilityTime = Core.Now + TimeSpan.FromSeconds(Utility.RandomMinMax(2, 5));
-        }
-
-        public MeerEternal(Serial serial) : base(serial)
-        {
         }
 
         public override string CorpseName => "a meer's corpse";
@@ -84,45 +82,43 @@ namespace Server.Mobiles
         private void DoAreaLeech_Finish()
         {
             var eable = GetMobilesInRange(6);
-            var list = eable.Where(m => CanBeHarmful(m) && IsEnemy(m)).ToList();
+            using var queue = PooledRefQueue<Mobile>.Create();
+            foreach (var m in eable)
+            {
+                if (CanBeHarmful(m) && IsEnemy(m))
+                {
+                    queue.Enqueue(m);
+                }
+            }
             eable.Free();
 
-            if (list.Count == 0)
+            if (queue.Count == 0)
             {
                 Say(true, "Bah! You have escaped my grasp this time, mortal!");
+                return;
             }
-            else
+
+            double scalar = queue.Count switch
             {
-                double scalar;
+                1 => 0.75,
+                2 => 0.50,
+                _ => 0.25
+            };
 
-                if (list.Count == 1)
-                {
-                    scalar = 0.75;
-                }
-                else if (list.Count == 2)
-                {
-                    scalar = 0.50;
-                }
-                else
-                {
-                    scalar = 0.25;
-                }
+            while (queue.Count > 0)
+            {
+                var m = queue.Dequeue();
 
-                for (var i = 0; i < list.Count; ++i)
-                {
-                    var m = list[i];
+                var damage = (int)(m.Hits * scalar) + Utility.RandomMinMax(-5, 5);
 
-                    var damage = (int)(m.Hits * scalar) + Utility.RandomMinMax(-5, 5);
+                m.MovingParticles(this, 0x36F4, 1, 0, false, false, 32, 0, 9535, 1, 0, (EffectLayer)255, 0x100);
+                m.MovingParticles(this, 0x0001, 1, 0, false, true, 32, 0, 9535, 9536, 0, (EffectLayer)255, 0);
 
-                    m.MovingParticles(this, 0x36F4, 1, 0, false, false, 32, 0, 9535, 1, 0, (EffectLayer)255, 0x100);
-                    m.MovingParticles(this, 0x0001, 1, 0, false, true, 32, 0, 9535, 9536, 0, (EffectLayer)255, 0);
-
-                    DoHarmful(m);
-                    Hits += AOS.Damage(m, this, Math.Max(damage, 1), 100, 0, 0, 0, 0);
-                }
-
-                Say(true, "If I cannot cleanse thy soul, I will destroy it!");
+                DoHarmful(m);
+                Hits += AOS.Damage(m, this, Math.Max(damage, 1), 100, 0, 0, 0, 0);
             }
+
+            Say(true, "If I cannot cleanse thy soul, I will destroy it!");
         }
 
         private void DoFocusedLeech(Mobile combatant, string message)
@@ -172,38 +168,34 @@ namespace Server.Mobiles
                     switch (ability)
                     {
                         case 0:
-                            DoFocusedLeech(combatant, "Thine essence will fill my withering body with strength!");
-                            break;
+                            {
+                                DoFocusedLeech(combatant, "Thine essence will fill my withering body with strength!");
+                                break;
+                            }
                         case 1:
-                            DoFocusedLeech(
-                                combatant,
-                                "I rebuke thee, worm, and cleanse thy vile spirit of its tainted blood!"
-                            );
-                            break;
+                            {
+                                DoFocusedLeech(
+                                    combatant,
+                                    "I rebuke thee, worm, and cleanse thy vile spirit of its tainted blood!"
+                                );
+                                break;
+                            }
                         case 2:
-                            DoFocusedLeech(combatant, "I devour your life's essence to strengthen my resolve!");
-                            break;
+                            {
+                                DoFocusedLeech(combatant, "I devour your life's essence to strengthen my resolve!");
+                                break;
+                            }
                         case 3:
-                            DoAreaLeech();
-                            break;
+                            {
+                                DoAreaLeech();
+                                break;
+                            }
                         // TODO: Resurrect ability
                     }
                 }
             }
 
             base.OnThink();
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

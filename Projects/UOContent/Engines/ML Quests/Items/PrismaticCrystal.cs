@@ -1,7 +1,6 @@
 using Server.Engines.MLQuests;
 using Server.Engines.MLQuests.Definitions;
 using Server.Mobiles;
-using Server.Network;
 
 namespace Server.Items
 {
@@ -22,7 +21,7 @@ namespace Server.Items
 
         public override void OnDoubleClick(Mobile from)
         {
-            if (!(from is PlayerMobile pm) || pm.Backpack == null)
+            if (from is not PlayerMobile pm || pm.Backpack == null)
             {
                 return;
             }

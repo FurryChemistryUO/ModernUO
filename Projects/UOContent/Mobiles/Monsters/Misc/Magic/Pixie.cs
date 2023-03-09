@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class Pixie : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Pixie : BaseCreature
     {
         [Constructible]
-        public Pixie() : base(AIType.AI_Mage, FightMode.Evil, 10, 1, 0.2, 0.4)
+        public Pixie() : base(AIType.AI_Mage, FightMode.Evil)
         {
             Name = NameList.RandomName("pixie");
             Body = 128;
@@ -44,10 +46,6 @@ namespace Server.Mobiles
             }
         }
 
-        public Pixie(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a pixie corpse";
         public override bool InitialInnocent => true;
 
@@ -71,19 +69,6 @@ namespace Server.Mobiles
             {
                 c.DropItem(new PixieLeg());
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

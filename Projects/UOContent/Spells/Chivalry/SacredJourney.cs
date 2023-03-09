@@ -16,8 +16,11 @@ namespace Server.Spells.Chivalry
         );
 
         private readonly Runebook m_Book;
-
         private readonly RunebookEntry m_Entry;
+
+        public SacredJourneySpell(Mobile caster, Item scroll) : base(caster, scroll, _info)
+        {
+        }
 
         public SacredJourneySpell(
             Mobile caster, RunebookEntry entry = null, Runebook book = null, Item scroll = null
@@ -45,13 +48,15 @@ namespace Server.Spells.Chivalry
             {
                 Caster.SendLocalizedMessage(1005569); // You can not recall to another facet.
             }
-            else if (!SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom))
+            else if (!SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom, out var failureMessage))
             {
+                failureMessage.SendMessageTo(Caster);
             }
-            else if (!SpellHelper.CheckTravel(Caster, map, loc, TravelCheckType.RecallTo))
+            else if (!SpellHelper.CheckTravel(Caster, map, loc, TravelCheckType.RecallTo, out failureMessage))
             {
+                failureMessage.SendMessageTo(Caster);
             }
-            else if (map == Map.Felucca && Caster is PlayerMobile mobile && mobile.Young)
+            else if (map == Map.Felucca && Caster is PlayerMobile { Young: true } mobile)
             {
                 mobile.SendLocalizedMessage(1049543); // You decide against traveling to Felucca while you are still young.
             }
@@ -151,7 +156,13 @@ namespace Server.Spells.Chivalry
                 return false;
             }
 
-            return SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom);
+            if (!SpellHelper.CheckTravel(Caster, TravelCheckType.RecallFrom, out var failureMessage))
+            {
+                failureMessage.SendMessageTo(Caster);
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -1,15 +1,18 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class ChaosDragoonElite : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class ChaosDragoonElite : BaseCreature
     {
         [Constructible]
-        public ChaosDragoonElite()
-            : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.15, 0.4)
+        public ChaosDragoonElite() : base(AIType.AI_Mage)
         {
             Body = 0x190;
             Hue = Race.Human.RandomSkinHue();
+
+            SetSpeed(0.15, 0.4);
 
             SetStr(276, 350);
             SetDex(66, 90);
@@ -39,9 +42,7 @@ namespace Server.Mobiles
             Fame = 8000;
             Karma = -8000;
 
-            CraftResource res;
-
-            res = Utility.Random(6) switch
+            var res = Utility.Random(6) switch
             {
                 0 => CraftResource.BlackScales,
                 1 => CraftResource.RedScales,
@@ -110,13 +111,14 @@ namespace Server.Mobiles
 
         public override string CorpseName => "a chaos dragoon elite corpse";
         public override string DefaultName => "a chaos dragoon elite";
-
-        public override bool HasBreath => true;
         public override bool AutoDispel => true;
         public override bool BardImmune => !Core.AOS;
         public override bool CanRummageCorpses => true;
         public override bool AlwaysMurderer => true;
         public override bool ShowFameTitle => false;
+
+        private static MonsterAbility[] _abilities = { MonsterAbilities.FireBreath };
+        public override MonsterAbility[] GetMonsterAbilities() => _abilities;
 
         public override int GetIdleSound() => 0x2CE;
 
@@ -151,23 +153,10 @@ namespace Server.Mobiles
 
         public override void AlterMeleeDamageTo(Mobile to, ref int damage)
         {
-            if (to is Dragon || to is WhiteWyrm || to is SwampDragon || to is Drake || to is Nightmare || to is Hiryu ||
-                to is LesserHiryu || to is Daemon)
+            if (to is Dragon or WhiteWyrm or SwampDragon or Drake or Nightmare or Hiryu or LesserHiryu or Daemon)
             {
                 damage *= 3;
             }
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

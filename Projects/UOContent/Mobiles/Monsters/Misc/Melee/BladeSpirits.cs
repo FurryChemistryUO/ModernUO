@@ -1,13 +1,15 @@
+using ModernUO.Serialization;
 using System;
-using System.Linq;
+using Server.Buffers;
+using Server.Collections;
 
 namespace Server.Mobiles
 {
-    public class BladeSpirits : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class BladeSpirits : BaseCreature
     {
         [Constructible]
-        public BladeSpirits()
-            : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.3, 0.6)
+        public BladeSpirits() : base(AIType.AI_Melee)
         {
             Body = 574;
 
@@ -42,10 +44,6 @@ namespace Server.Mobiles
             ControlSlots = Core.SE ? 2 : 1;
         }
 
-        public BladeSpirits(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a blade spirit corpse";
         public override bool DeleteCorpseOnDeath => Core.AOS;
         public override bool IsHouseSummonable => true;
@@ -72,35 +70,32 @@ namespace Server.Mobiles
             if (Core.SE && Summoned)
             {
                 var eable = GetMobilesInRange(5);
-                var spiritsOrVortexes = eable
-                    .Where(m => (m is EnergyVortex || m is BladeSpirits) && ((BaseCreature)m).Summoned)
-                    .ToList();
-
+                using var queue = PooledRefQueue<Mobile>.Create();
+                foreach (var m in eable)
+                {
+                    if (m is EnergyVortex or BladeSpirits && ((BaseCreature)m).Summoned)
+                    {
+                        queue.Enqueue(m);
+                    }
+                }
                 eable.Free();
 
-                while (spiritsOrVortexes.Count > 6)
+                var amount = queue.Count - 6;
+                if (amount > 0)
                 {
-                    var random = spiritsOrVortexes.RandomElement();
-                    Dispel(random);
-                    spiritsOrVortexes.Remove(random);
+                    var mobs = queue.ToPooledArray();
+                    mobs.Shuffle();
+
+                    while (amount > 0)
+                    {
+                        Dispel(mobs[amount--]);
+                    }
+
+                    STArrayPool<Mobile>.Shared.Return(mobs, true);
                 }
             }
 
             base.OnThink();
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0); // version
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
         }
     }
 }

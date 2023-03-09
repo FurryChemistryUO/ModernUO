@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class Bird : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Bird : BaseCreature
     {
         [Constructible]
-        public Bird() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public Bird() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             if (Utility.RandomBool())
             {
@@ -48,41 +51,19 @@ namespace Server.Mobiles
             MinTameSkill = -6.9;
         }
 
-        public Bird(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a bird corpse";
 
         public override MeatType MeatType => MeatType.Bird;
         public override int Meat => 1;
         public override int Feathers => 25;
         public override FoodType FavoriteFood => FoodType.FruitsAndVegies | FoodType.GrainsAndHay;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-
-            if (Hue == 0)
-            {
-                Hue = Utility.RandomBirdHue();
-            }
-        }
     }
 
-    public class TropicalBird : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class TropicalBird : BaseCreature
     {
         [Constructible]
-        public TropicalBird() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public TropicalBird() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Hue = Utility.RandomBirdHue();
 
@@ -111,10 +92,6 @@ namespace Server.Mobiles
             MinTameSkill = -6.9;
         }
 
-        public TropicalBird(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a bird corpse";
         public override string DefaultName => "a tropical bird";
 
@@ -122,19 +99,5 @@ namespace Server.Mobiles
         public override int Meat => 1;
         public override int Feathers => 25;
         public override FoodType FavoriteFood => FoodType.FruitsAndVegies | FoodType.GrainsAndHay;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ModernUO.Serialization;
 using Server.Multis;
 
 namespace Server.Items
@@ -20,12 +21,9 @@ namespace Server.Items
         bool CouldFit(IPoint3D p, Map map);
     }
 
-    [Serializable(3, false)]
+    [SerializationGenerator(3, false)]
     public abstract partial class BaseAddon : Item, IChoppable, IAddon
     {
-        [SerializableField(1, "private", "private")]
-        private CraftResource _rawResource;
-
         public BaseAddon() : base(1)
         {
             Movable = false;
@@ -65,16 +63,17 @@ namespace Server.Items
             }
         }
 
+        [SerializableProperty(1)]
         [CommandProperty(AccessLevel.GameMaster)]
         public CraftResource Resource
         {
-            get => _rawResource;
+            get => _resource;
             set
             {
-                if (_rawResource != value)
+                if (_resource != value)
                 {
-                    RawResource = value;
-                    Hue = CraftResources.GetHue(_rawResource);
+                    _resource = value;
+                    Hue = CraftResources.GetHue(_resource);
 
                     InvalidateProperties();
                     this.MarkDirty();
@@ -284,7 +283,7 @@ namespace Server.Items
 
             if (version == 2)
             {
-                _rawResource = (CraftResource)reader.ReadEncodedInt();
+                _resource = (CraftResource)reader.ReadEncodedInt();
             }
         }
     }

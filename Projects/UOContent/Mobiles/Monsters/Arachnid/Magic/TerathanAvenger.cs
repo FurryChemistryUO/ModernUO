@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class TerathanAvenger : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class TerathanAvenger : BaseCreature
     {
         [Constructible]
-        public TerathanAvenger() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public TerathanAvenger() : base(AIType.AI_Mage)
         {
             Body = 152;
             BaseSoundID = 0x24D;
@@ -39,10 +42,6 @@ namespace Server.Mobiles
             VirtualArmor = 50;
         }
 
-        public TerathanAvenger(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a terathan avenger corpse";
         public override string DefaultName => "a terathan avenger";
 
@@ -56,23 +55,6 @@ namespace Server.Mobiles
         public override void GenerateLoot()
         {
             AddLoot(LootPack.Rich, 2);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
-
-            if (BaseSoundID == 263)
-            {
-                BaseSoundID = 0x24D;
-            }
         }
     }
 }

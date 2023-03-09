@@ -1,14 +1,15 @@
-namespace Server.Items
-{
-    [Serializable(0, false)]
-    public partial class DeadWood : BaseReagent, ICommodity
-    {
-        [Constructible]
-        public DeadWood(int amount = 1) : base(0xF90, amount)
-        {
-        }
+using ModernUO.Serialization;
 
-        int ICommodity.DescriptionNumber => LabelNumber;
-        bool ICommodity.IsDeedable => true;
+namespace Server.Items;
+
+[SerializationGenerator(0, false)]
+public partial class DeadWood : BaseReagent, ICommodity
+{
+    [Constructible]
+    public DeadWood(int amount = 1) : base(0xF90, amount)
+    {
     }
+
+    int ICommodity.DescriptionNumber => LabelNumber;
+    bool ICommodity.IsDeedable => true;
 }

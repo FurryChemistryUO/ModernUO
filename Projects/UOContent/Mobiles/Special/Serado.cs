@@ -89,17 +89,17 @@ namespace Server.Mobiles
 
         // TODO: Hit Lightning Area
 
-        public override void OnDamagedBySpell(Mobile attacker)
+        public override void OnDamagedBySpell(Mobile attacker, int damage)
         {
-            base.OnDamagedBySpell(attacker);
+            base.OnDamagedBySpell(attacker, damage);
 
             ScaleResistances();
             DoCounter(attacker);
         }
 
-        public override void OnGotMeleeAttack(Mobile attacker)
+        public override void OnGotMeleeAttack(Mobile attacker, int damage)
         {
-            base.OnGotMeleeAttack(attacker);
+            base.OnGotMeleeAttack(attacker, damage);
 
             ScaleResistances();
             DoCounter(attacker);
@@ -163,7 +163,7 @@ namespace Server.Mobiles
                     continue;
                 }
 
-                if (!(m is BaseCreature bc) || !(bc.Controlled || bc.Summoned || bc.Team != Team))
+                if (m is not BaseCreature bc || !(bc.Controlled || bc.Summoned || bc.Team != Team))
                 {
                     continue;
                 }

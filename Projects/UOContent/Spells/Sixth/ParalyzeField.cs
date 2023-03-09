@@ -2,7 +2,6 @@ using System;
 using Server.Items;
 using Server.Misc;
 using Server.Mobiles;
-using Server.Targeting;
 
 namespace Server.Spells.Sixth
 {
@@ -30,31 +29,36 @@ namespace Server.Spells.Sixth
             if (SpellHelper.CheckTown(p, Caster) && CheckSequence())
             {
                 SpellHelper.Turn(Caster, p);
-
                 SpellHelper.GetSurfaceTop(ref p);
 
-                var eastToWest = SpellHelper.GetEastToWest(Caster.Location, p);
+                var loc = new Point3D(p);
+                var eastToWest = SpellHelper.GetEastToWest(Caster.Location, loc);
 
-                Effects.PlaySound(new Point3D(p), Caster.Map, 0x20B);
+                Effects.PlaySound(loc, Caster.Map, 0x20B);
 
                 var itemID = eastToWest ? 0x3967 : 0x3979;
 
-                var duration = TimeSpan.FromSeconds(3.0 + Caster.Skills.Magery.Value / 3.0);
+                var duration = Core.Expansion switch
+                {
+                    Expansion.None  => TimeSpan.FromSeconds(20),
+                    < Expansion.LBR => TimeSpan.FromSeconds(15.0 + Caster.Skills.Magery.Value / 3.0),
+                    _               => TimeSpan.FromSeconds(3.0 + Caster.Skills.Magery.Value / 3.0)
+                };
 
                 for (var i = -2; i <= 2; ++i)
                 {
-                    var loc = new Point3D(eastToWest ? p.X + i : p.X, eastToWest ? p.Y : p.Y + i, p.Z);
+                    var targetLoc = new Point3D(eastToWest ? loc.X + i : loc.X, eastToWest ? loc.Y : loc.Y + i, loc.Z);
 
-                    if (!SpellHelper.AdjustField(ref loc, Caster.Map, 12, false))
+                    if (!SpellHelper.AdjustField(ref targetLoc, Caster.Map, 12, false))
                     {
                         continue;
                     }
 
-                    Item item = new InternalItem(Caster, itemID, loc, Caster.Map, duration);
+                    Item item = new InternalItem(Caster, itemID, targetLoc, Caster.Map, duration);
                     item.ProcessDelta();
 
                     Effects.SendLocationParticles(
-                        EffectItem.Create(loc, Caster.Map, EffectItem.DefaultDuration),
+                        EffectItem.Create(targetLoc, Caster.Map, EffectItem.DefaultDuration),
                         0x376A,
                         9,
                         10,
@@ -180,7 +184,7 @@ namespace Server.Spells.Sixth
                     }
                     else
                     {
-                        duration = 7.0 + m_Caster.Skills.Magery.Value * 0.2;
+                        duration = 7.0 + m_Caster.Skills.Magery.Value / 5;
                     }
 
                     m.Paralyze(TimeSpan.FromSeconds(duration));

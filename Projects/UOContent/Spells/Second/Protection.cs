@@ -56,8 +56,8 @@ namespace Server.Spells.Second
              * a decreased "resisting spells" skill value by -35 + (Inscription/20),
              * and a slower casting speed modifier (technically, a negative "faster cast speed") of 2 points.
              * The protection spell has an indefinite duration, becoming active when cast, and deactivated when re-cast.
-             * Reactive Armor, Protection, and Magic Reflection will stay on�even after logging out,
-             * even after dying�until you �turn them off� by casting them again.
+             * Reactive Armor, Protection, and Magic Reflection will stay on even after logging out,
+             * even after dying, until you turn them off by casting them again.
              */
 
             if (_table.Remove(target, out var mods))
@@ -77,27 +77,18 @@ namespace Server.Spells.Second
                 target.PlaySound(0x1E9);
                 target.FixedParticles(0x375A, 9, 20, 5016, EffectLayer.Waist);
 
-                mods = new Tuple<ResistanceMod, DefaultSkillMod>(
-                    new ResistanceMod(
-                        ResistanceType.Physical,
-                        -15 + Math.Min((int)(caster.Skills.Inscribe.Value / 20), 15)
-                    ),
-                    new DefaultSkillMod(
-                        SkillName.MagicResist,
-                        true,
-                        -35 + Math.Min((int)(caster.Skills.Inscribe.Value / 20), 35)
-                    )
-                );
+                var physLoss = -15 + (int)(caster.Skills.Inscribe.Value / 20);
+                var resistLoss = -35 + (int)(caster.Skills.Inscribe.Value / 20);
+                var physMod = new ResistanceMod(ResistanceType.Physical, "PhysicalResistProtectionSpell", physLoss);
+                var resistMod = new DefaultSkillMod(SkillName.MagicResist, "MagicResistProtectionSpell", true, resistLoss);
 
-                _table[target] = mods;
+                _table[target] = Tuple.Create(physMod, resistMod);
                 Registry[target] = 1000; // 100.0% protection from disruption
 
-                target.AddResistanceMod(mods.Item1);
-                target.AddSkillMod(mods.Item2);
+                target.AddResistanceMod(physMod);
+                target.AddSkillMod(resistMod);
 
-                var physloss = -15 + (int)(caster.Skills.Inscribe.Value / 20);
-                var resistloss = -35 + (int)(caster.Skills.Inscribe.Value / 20);
-                var args = $"{physloss}\t{resistloss}";
+                var args = $"{physLoss}\t{resistLoss}";
                 BuffInfo.AddBuff(target, new BuffInfo(BuffIcon.Protection, 1075814, 1075815, args));
             }
         }

@@ -230,7 +230,7 @@ namespace Server.Engines.MLQuests.Definitions
                     "rats",
                     new QuestArea(1074807, "Sanctuary")
                 )
-            ); // Sanctuary
+            );
 
             Rewards.Add(new DummyReward(1074872)); // The opportunity to learn the ways of the Arcanist.
         }
@@ -347,11 +347,8 @@ namespace Server.Engines.MLQuests.Definitions
             Objectives.Add(new CollectObjective(1, typeof(Beads), 1024235));    // beads
             Objectives.Add(new CollectObjective(1, typeof(JarHoney), 1022540)); // jar of honey
 
-            Rewards.Add(
-                new DummyReward(
-                    1074874
-                )
-            ); // The opportunity to prove yourself worthy of learning to Summon Fey. (Sufficient spellweaving skill is required to cast the spell)
+            // The opportunity to prove yourself worthy of learning to Summon Fey. (Sufficient spellweaving skill is required to cast the spell)
+            Rewards.Add(new DummyReward(1074874));
         }
 
         public override Type NextQuest => typeof(TokenOfFriendship);
@@ -372,11 +369,8 @@ namespace Server.Engines.MLQuests.Definitions
 
             Objectives.Add(new DeliverObjective(typeof(GiftForArielle), 1, "gift for Arielle", typeof(Arielle)));
 
-            Rewards.Add(
-                new DummyReward(
-                    1074874
-                )
-            ); // The opportunity to prove yourself worthy of learning to Summon Fey. (Sufficient spellweaving skill is required to cast the spell)
+            // The opportunity to prove yourself worthy of learning to Summon Fey. (Sufficient spellweaving skill is required to cast the spell)
+            Rewards.Add(new DummyReward(1074874));
         }
 
         public override Type NextQuest => typeof(Alliance);
@@ -404,11 +398,8 @@ namespace Server.Engines.MLQuests.Definitions
         public override void GetRewards(MLQuestInstance instance)
         {
             instance.PlayerContext.SummonFey = true;
-            instance.Player.SendLocalizedMessage(
-                1074320,
-                "",
-                0x2A
-            ); // *giggle* Mean reapers got fixed!  Pixie friend now! *giggle* When mean thingies bother you, a brave pixie will help.
+            // *giggle* Mean reapers got fixed!  Pixie friend now! *giggle* When mean thingies bother you, a brave pixie will help.
+            instance.Player.SendLocalizedMessage(1074320, "", 0x2A);
 
             base.GetRewards(instance);
         }
@@ -429,11 +420,9 @@ namespace Server.Engines.MLQuests.Definitions
 
             Objectives.Add(new KillObjective(50, new[] { typeof(Imp) }, "imps"));
 
-            Rewards.Add(
-                new DummyReward(
-                    1074873
-                )
-            ); // The opportunity to prove yourself worthy of learning to Summon Fiends. (Sufficient spellweaving skill is required to cast the spell)
+            // The opportunity to prove yourself worthy of learning to Summon Fiends.
+            // (Sufficient spellweaving skill is required to cast the spell)
+            Rewards.Add(new DummyReward(107487));
         }
 
         public override Type NextQuest => typeof(CrackingTheWhipI);
@@ -455,11 +444,8 @@ namespace Server.Engines.MLQuests.Definitions
 
             Objectives.Add(new CollectObjective(1, typeof(StoutWhip), "Stout Whip"));
 
-            Rewards.Add(
-                new DummyReward(
-                    1074873
-                )
-            ); // The opportunity to prove yourself worthy of learning to Summon Fiends. (Sufficient spellweaving skill is required to cast the spell)
+            // The opportunity to prove yourself worthy of learning to Summon Fiends. (Sufficient spellweaving skill is required to cast the spell)
+            Rewards.Add(new DummyReward(1074873));
         }
 
         public override Type NextQuest => typeof(CrackingTheWhipII);
@@ -488,11 +474,9 @@ namespace Server.Engines.MLQuests.Definitions
         public override void GetRewards(MLQuestInstance instance)
         {
             instance.PlayerContext.SummonFiend = true;
-            instance.Player.SendLocalizedMessage(
-                1074322,
-                "",
-                0x2A
-            ); // You've demonstrated your strength, got a means of control, and taught the imps to fear you.  You're ready now to summon them.
+            // You've demonstrated your strength, got a means of control, and taught the imps to fear you.
+            // You're ready now to summon them.
+            instance.Player.SendLocalizedMessage(1074322, "", 0x2A);
 
             base.GetRewards(instance);
         }
@@ -502,14 +486,15 @@ namespace Server.Engines.MLQuests.Definitions
     public class Aeluva : BaseCreature
     {
         [Constructible]
-        public Aeluva()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2.0)
+        public Aeluva() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Title = "the arcanist";
             Race = Race.Elf;
             Female = true;
             Body = 606;
             Hue = Race.RandomSkinHue();
+
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
 
             Utility.AssignRandomHair(this);
@@ -561,13 +546,14 @@ namespace Server.Engines.MLQuests.Definitions
     public class Koole : BaseCreature
     {
         [Constructible]
-        public Koole()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2.0)
+        public Koole() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Title = "the arcanist";
             Race = Race.Elf;
             Body = 605;
             Hue = Race.RandomSkinHue();
+
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
 
             Utility.AssignRandomHair(this);
@@ -607,9 +593,9 @@ namespace Server.Engines.MLQuests.Definitions
                 pm,
                 Utility.RandomList(
                     1074186, // Come here, I have a task.
-                    1074218
+                    1074218  // Hey!  I want to talk to you, now.
                 )
-            ); // Hey!  I want to talk to you, now.
+            );
         }
 
         public override void Serialize(IGenericWriter writer)
@@ -631,14 +617,15 @@ namespace Server.Engines.MLQuests.Definitions
     public class Synaeva : BaseCreature
     {
         [Constructible]
-        public Synaeva()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2.0)
+        public Synaeva() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Title = "the arcanist";
             Race = Race.Elf;
             Female = true;
             Body = 606;
             Hue = Race.RandomSkinHue();
+
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
 
             Utility.AssignRandomHair(this);
@@ -691,14 +678,15 @@ namespace Server.Engines.MLQuests.Definitions
     public class ElderBrae : BaseCreature
     {
         [Constructible]
-        public ElderBrae()
-            : base(AIType.AI_Vendor, FightMode.None, 2, 1, 0.5, 2.0)
+        public ElderBrae() : base(AIType.AI_Vendor, FightMode.None, 2)
         {
             Title = "the wise";
             Race = Race.Elf;
             Female = true;
             Body = 606;
             Hue = Race.RandomSkinHue();
+
+            SetSpeed(0.5, 2.0);
             InitStats(100, 100, 25);
 
             Utility.AssignRandomHair(this);
@@ -728,9 +716,9 @@ namespace Server.Engines.MLQuests.Definitions
                 pm,
                 Utility.RandomList(
                     1074215, // Don’t test my patience you sniveling worm!
-                    1074218
+                    1074218  // Hey!  I want to talk to you, now.
                 )
-            ); // Hey!  I want to talk to you, now.
+            );
         }
 
         public override void Serialize(IGenericWriter writer)

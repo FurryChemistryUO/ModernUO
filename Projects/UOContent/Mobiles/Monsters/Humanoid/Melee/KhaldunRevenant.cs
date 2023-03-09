@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
+using ModernUO.Serialization;
 using Server.Items;
+
 
 namespace Server.Mobiles
 {
-    public class KhaldunRevenant : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class KhaldunRevenant : BaseCreature
     {
         private static readonly HashSet<Mobile> m_Set = new();
         private readonly DateTime m_ExpireTime;
 
         private readonly Mobile m_Target;
 
-        public KhaldunRevenant(Mobile target) : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.18, 0.36)
+        public KhaldunRevenant(Mobile target) : base(AIType.AI_Melee)
         {
             Body = 0x3CA;
             Hue = 0x41CE;
@@ -50,10 +53,6 @@ namespace Server.Mobiles
             var weapon = new Halberd { Hue = 0x41CE, Movable = false };
 
             AddItem(weapon);
-        }
-
-        public KhaldunRevenant(Serial serial) : base(serial)
-        {
         }
 
         public override bool DeleteCorpseOnDeath => true;
@@ -154,19 +153,9 @@ namespace Server.Mobiles
             base.OnDelete();
         }
 
-        public override void Serialize(IGenericWriter writer)
+        [AfterDeserialization(false)]
+        private void AfterDeserialization()
         {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-
             Delete();
         }
     }

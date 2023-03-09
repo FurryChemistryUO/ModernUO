@@ -1,9 +1,12 @@
+using ModernUO.Serialization;
+
 namespace Server.Mobiles
 {
-    public class Pig : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class Pig : BaseCreature
     {
         [Constructible]
-        public Pig() : base(AIType.AI_Animal, FightMode.Aggressor, 10, 1, 0.2, 0.4)
+        public Pig() : base(AIType.AI_Animal, FightMode.Aggressor)
         {
             Body = 0xCB;
             BaseSoundID = 0xC4;
@@ -35,28 +38,10 @@ namespace Server.Mobiles
             MinTameSkill = 11.1;
         }
 
-        public Pig(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a pig corpse";
         public override string DefaultName => "a pig";
 
         public override int Meat => 1;
         public override FoodType FavoriteFood => FoodType.FruitsAndVegies | FoodType.GrainsAndHay;
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            var version = reader.ReadInt();
-        }
     }
 }

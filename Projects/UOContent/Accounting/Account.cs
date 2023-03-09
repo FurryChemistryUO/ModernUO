@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Xml;
+using ModernUO.Serialization;
 using Server.Accounting.Security;
 using Server.Misc;
 using Server.Mobiles;
@@ -10,7 +12,7 @@ using Server.Network;
 
 namespace Server.Accounting
 {
-    [Serializable(4)]
+    [SerializationGenerator(4)]
     public partial class Account : IAccount, IComparable<Account>, ISerializable
     {
         public static readonly TimeSpan YoungDuration = TimeSpan.FromHours(40.0);
@@ -41,7 +43,7 @@ namespace Server.Accounting
         ///     0 to 999,999,999 by default.
         /// </summary>
         [SerializableField(6, setter: "private")]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.Administrator)]")]
+        [SerializedCommandProperty(AccessLevel.Administrator)]
         public int _totalGold;
 
         /// <summary>
@@ -51,15 +53,12 @@ namespace Server.Accounting
         ///     One Platinum represents the value of CurrencyThreshold in Gold.
         /// </summary>
         [SerializableField(7, setter: "private")]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.Administrator)]")]
+        [SerializedCommandProperty(AccessLevel.Administrator)]
         public int _totalPlat;
 
-        [SerializableField(8, "private", "private")]
         private Mobile[] _mobiles;
 
-        private List<AccountComment> _comments;
-
-        [SerializableField(9)]
+        [SerializableProperty(9)]
         public List<AccountComment> Comments
         {
             get => _comments ??= new List<AccountComment>();
@@ -70,9 +69,7 @@ namespace Server.Accounting
             }
         }
 
-        private List<AccountTag> _tags;
-
-        [SerializableField(10)]
+        [SerializableProperty(10)]
         public List<AccountTag> Tags
         {
             get => _tags ??= new List<AccountTag>();
@@ -93,13 +90,11 @@ namespace Server.Accounting
         [SerializableField(12)]
         private string[] _ipRestrictions;
 
-        private TimeSpan _totalGameTime;
-
         /// <summary>
         ///     Gets the total game time of this account, also considering the game time of characters
         ///     that have been deleted.
         /// </summary>
-        [SerializableField(13)]
+        [SerializableProperty(13)]
         public TimeSpan TotalGameTime
         {
             get
@@ -122,7 +117,7 @@ namespace Server.Accounting
         }
 
         [SerializableField(14)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.Administrator)]")]
+        [SerializedCommandProperty(AccessLevel.Administrator)]
         private string _email;
 
         private Timer m_YoungTimer;
@@ -150,7 +145,6 @@ namespace Server.Accounting
         public Account(XmlElement node)
         {
             Serial = Accounts.NewAccount;
-            SetTypeRef(GetType());
 
             _username = Utility.GetText(node["username"], "empty");
 
@@ -221,17 +215,6 @@ namespace Server.Accounting
 
             Accounts.Add(this);
             this.MarkDirty();
-        }
-
-        public void SetTypeRef(Type type)
-        {
-            TypeRef = Accounts.Types.IndexOf(type);
-
-            if (TypeRef == -1)
-            {
-                Accounts.Types.Add(type);
-                TypeRef = Accounts.Types.Count - 1;
-            }
         }
 
         /// <summary>
@@ -310,13 +293,7 @@ namespace Server.Accounting
         [CommandProperty(AccessLevel.GameMaster)]
         DateTime ISerializable.LastSerialized { get; set; } = Core.Now;
 
-        public int TypeRef { get; private set; }
-
         public Serial Serial { get; set; }
-
-        public void BeforeSerialize()
-        {
-        }
 
         [AfterDeserialization]
         private void AfterDeserialization()
@@ -354,6 +331,12 @@ namespace Server.Accounting
             {
                 CheckYoung();
             }
+        }
+
+        public bool ShouldExecuteAfterSerialize => false;
+
+        public void AfterSerialize()
+        {
         }
 
         /// <summary>
@@ -446,8 +429,7 @@ namespace Server.Accounting
         ///     Gets the maximum amount of characters allowed to be created on this account. Values other than 1, 5, 6, or 7 are not
         ///     supported by the client.
         /// </summary>
-        public int Limit => Core.SA ? 7 :
-            Core.AOS ? 6 : 5;
+        public int Limit => Core.SA ? 7 : Core.AOS ? 6 : 5;
 
         /// <summary>
         ///     Gets the maximum amount of characters that this account can hold.
@@ -634,6 +616,11 @@ namespace Server.Accounting
         /// <param name="name">Tag name to remove.</param>
         public void RemoveTag(string name)
         {
+            if (_tags == null)
+            {
+                return;
+            }
+
             for (var i = _tags.Count - 1; i >= 0; --i)
             {
                 if (i >= _tags.Count)
@@ -645,7 +632,7 @@ namespace Server.Accounting
 
                 if (tag.Name == name)
                 {
-                    _tags?.RemoveAt(i);
+                    _tags.RemoveAt(i);
                     this.MarkDirty();
                 }
             }
@@ -758,7 +745,7 @@ namespace Server.Accounting
 
         private static void EventSink_Connected(Mobile m)
         {
-            if (!(m.Account is Account acc))
+            if (m.Account is not Account acc)
             {
                 return;
             }
@@ -808,11 +795,14 @@ namespace Server.Accounting
                 var ts = YoungDuration - acc.TotalGameTime;
                 var hours = Math.Max((int)ts.TotalHours, 0);
 
-                m.SendAsciiMessage(
-                    "You will enjoy the benefits and relatively safe status of a young player for {0} more hour{1}.",
-                    hours,
-                    hours != 1 ? "s" : ""
-                );
+                if (hours == 1)
+                {
+                    m.SendAsciiMessage($"You will enjoy the benefits and relatively safe status of a young player for {hours} more hour.");
+                }
+                else
+                {
+                    m.SendAsciiMessage($"You will enjoy the benefits and relatively safe status of a young player for {hours} more hours.");
+                }
             }
         }
 
@@ -1075,8 +1065,6 @@ namespace Server.Accounting
                     }
                 }
 
-                Console.WriteLine("{0} {1}", hasAccess ? "yes" : "no", _accessLevel);
-
                 if (!hasAccess)
                 {
                     return false;
@@ -1176,6 +1164,54 @@ namespace Server.Accounting
             protected override void OnTick()
             {
                 m_Account.CheckYoung();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Enumerator GetEnumerator() => new(_mobiles);
+
+        [SerializableProperty(8, useField: nameof(_mobiles))]
+        public Enumerator Mobiles
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => GetEnumerator();
+        }
+
+        public ref struct Enumerator
+        {
+            private readonly Mobile[] _mobiles;
+            private int _index;
+            private Mobile _current;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal Enumerator(Mobile[] mobs)
+            {
+                _mobiles = mobs;
+                _index = 0;
+                _current = default;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                Mobile[] localList = _mobiles;
+
+                while ((uint)_index < (uint)localList.Length)
+                {
+                    _current = _mobiles[_index++];
+                    if (_current?.Deleted == false)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public Mobile Current
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _current;
             }
         }
     }

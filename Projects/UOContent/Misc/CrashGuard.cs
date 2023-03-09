@@ -112,11 +112,11 @@ namespace Server.Misc
                     DirectoryCopy(savePath, backupPath);
                 }
 
-                logger.Information("Backup done");
+                logger.Information("Backup {Status}", "done");
             }
             catch
             {
-                logger.Error("Backup failed");
+                logger.Error("Backup {Status}", "failed");
             }
         }
 
@@ -195,7 +195,7 @@ namespace Server.Misc
 
                             if (m != null)
                             {
-                                op.Write($" (mobile = 0x{m.Serial.Value:X} '{m.Name}')");
+                                op.Write($" (mobile = {m.Serial} '{m.Name}')");
                             }
 
                             op.WriteLine();

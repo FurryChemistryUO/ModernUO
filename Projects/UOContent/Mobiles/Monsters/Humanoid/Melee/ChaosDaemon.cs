@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class ChaosDaemon : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class ChaosDaemon : BaseCreature
     {
         [Constructible]
-        public ChaosDaemon() : base(AIType.AI_Melee, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public ChaosDaemon() : base(AIType.AI_Melee)
         {
             Body = 792;
             BaseSoundID = 0x3E9;
@@ -37,10 +39,6 @@ namespace Server.Mobiles
             VirtualArmor = 15;
         }
 
-        public ChaosDaemon(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a chaos daemon corpse";
 
         public override string DefaultName => "a chaos daemon";
@@ -51,18 +49,6 @@ namespace Server.Mobiles
         {
             AddLoot(LootPack.Average);
             AddLoot(LootPack.Meager);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

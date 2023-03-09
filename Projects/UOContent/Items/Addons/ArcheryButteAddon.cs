@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Server.Network;
+using ModernUO.Serialization;
 
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     [FlippableAttribute(0x100A /*East*/, 0x100B /*South*/)]
     public partial class ArcheryButte : AddonComponent
     {
@@ -20,11 +20,11 @@ namespace Server.Items
         }
 
         [SerializableField(0)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private double _minSkill;
 
         [SerializableField(1)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private double _maxSkill;
 
         [CommandProperty(AccessLevel.GameMaster)]
@@ -38,20 +38,21 @@ namespace Server.Items
         }
 
         [SerializableField(2)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _arrows;
 
         [SerializableField(3)]
-        [SerializableFieldAttr("[CommandProperty(AccessLevel.GameMaster)]")]
+        [SerializedCommandProperty(AccessLevel.GameMaster)]
         private int _bolts;
 
         public override void OnDoubleClick(Mobile from)
         {
-            if ((_arrows > 0 || _bolts > 0) && from.InRange(GetWorldLocation(), 1))
+            var inRange = from.InRange(GetWorldLocation(), 1);
+            if ((_arrows > 0 || _bolts > 0) && inRange)
             {
                 Gather(from);
             }
-            else
+            else if (from.Weapon is not BaseThrown || inRange)
             {
                 Fire(from);
             }
@@ -293,7 +294,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class ArcheryButteAddon : BaseAddon
     {
         [Constructible]
@@ -305,7 +306,7 @@ namespace Server.Items
         public override BaseAddonDeed Deed => new ArcheryButteDeed();
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class ArcheryButteDeed : BaseAddonDeed
     {
         [Constructible]

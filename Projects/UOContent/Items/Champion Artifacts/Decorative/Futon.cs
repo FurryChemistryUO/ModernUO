@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
+
 namespace Server.Items
 {
     [Flippable]
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class Futon : Item
     {
         [Constructible]
-        public Futon() : base(Utility.RandomDouble() > 0.5 ? 0x295C : 0x295E)
+        public Futon() : base(Utility.RandomBool() ? 0x295C : 0x295E)
         {
         }
 

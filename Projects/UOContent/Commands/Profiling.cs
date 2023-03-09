@@ -19,7 +19,8 @@ namespace Server.Commands
             CommandSystem.Register("SetProfiles", AccessLevel.Administrator, SetProfiles_OnCommand);
         }
 
-        [Usage("WriteProfiles"), Description("Generates a log files containing performance diagnostic information.")]
+        [Usage("WriteProfiles")]
+        [Description("Generates a log files containing performance diagnostic information.")]
         public static void WriteProfiles_OnCommand(CommandEventArgs e)
         {
             try
@@ -67,7 +68,14 @@ namespace Server.Commands
                 Core.Profiling = !Core.Profiling;
             }
 
-            e.Mobile.SendMessage("Profiling has been {0}.", Core.Profiling ? "enabled" : "disabled");
+            if (Core.Profiling)
+            {
+                e.Mobile.SendMessage($"Profiling has been enabled.");
+            }
+            else
+            {
+                e.Mobile.SendMessage($"Profiling has been disabled.");
+            }
         }
 
         [Usage("DumpTimers"),
@@ -86,7 +94,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("CountObjects"), Description("Generates a log file detailing all item and mobile types in the world.")]
+        [Usage("CountObjects")]
+        [Description("Generates a log file detailing all item and mobile types in the world.")]
         public static void CountObjects_OnCommand(CommandEventArgs e)
         {
             using (var op = new StreamWriter("objects.log"))
@@ -140,7 +149,8 @@ namespace Server.Commands
             e.Mobile.SendMessage("Object table has been generated. See the file : objects.log");
         }
 
-        [Usage("TraceExpanded"), Description("Generates a log file describing all items using expanded memory.")]
+        [Usage("TraceExpanded")]
+        [Description("Generates a log file describing all items using expanded memory.")]
         public static void TraceExpanded_OnCommand(CommandEventArgs e)
         {
             var typeTable = new Dictionary<Type, int[]>();
@@ -251,7 +261,8 @@ namespace Server.Commands
             }
         }
 
-        [Usage("TraceInternal"), Description("Generates a log file describing all items in the 'internal' map.")]
+        [Usage("TraceInternal")]
+        [Description("Generates a log file describing all items in the 'internal' map.")]
         public static void TraceInternal_OnCommand(CommandEventArgs e)
         {
             var totalCount = 0;

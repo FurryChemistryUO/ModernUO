@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
@@ -105,7 +104,7 @@ namespace Server.Misc
 
                 if (_publicAddress != null)
                 {
-                    logger.Information("Auto-detected public IP address ({0})", _publicAddress);
+                    logger.Information("Auto-detected public IP address ({IPAddress})", _publicAddress);
                 }
                 else
                 {

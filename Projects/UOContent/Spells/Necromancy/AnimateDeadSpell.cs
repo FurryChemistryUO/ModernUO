@@ -4,7 +4,6 @@ using Server.Engines.Quests;
 using Server.Engines.Quests.Necro;
 using Server.Items;
 using Server.Mobiles;
-using Server.Targeting;
 using Server.Utilities;
 
 namespace Server.Spells.Necromancy
@@ -143,7 +142,7 @@ namespace Server.Spells.Necromancy
                 return;
             }
 
-            if (!(item is Corpse c))
+            if (item is not Corpse c)
             {
                 Caster.SendLocalizedMessage(1061084); // You cannot animate that.
             }

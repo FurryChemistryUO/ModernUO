@@ -1,11 +1,13 @@
+using ModernUO.Serialization;
 using Server.Items;
 
 namespace Server.Mobiles
 {
-    public class GolemController : BaseCreature
+    [SerializationGenerator(0, false)]
+    public partial class GolemController : BaseCreature
     {
         [Constructible]
-        public GolemController() : base(AIType.AI_Mage, FightMode.Closest, 10, 1, 0.2, 0.4)
+        public GolemController() : base(AIType.AI_Mage)
         {
             Name = NameList.RandomName("golem controller");
             Title = "the controller";
@@ -52,10 +54,6 @@ namespace Server.Mobiles
             }
         }
 
-        public GolemController(Serial serial) : base(serial)
-        {
-        }
-
         public override string CorpseName => "a golem controller corpse";
 
         public override bool ClickTitle => false;
@@ -78,18 +76,6 @@ namespace Server.Mobiles
             item.LootType = LootType.Newbied;
 
             AddItem(item);
-        }
-
-        public override void Serialize(IGenericWriter writer)
-        {
-            base.Serialize(writer);
-            writer.Write(0);
-        }
-
-        public override void Deserialize(IGenericReader reader)
-        {
-            base.Deserialize(reader);
-            var version = reader.ReadInt();
         }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using Server.Network;
 using Server.Spells;
 using Server.Targeting;
 
@@ -23,7 +22,7 @@ namespace Server.Ethics.Evil
 
         private void Power_OnTarget(Mobile fromMobile, object obj, Player from)
         {
-            if (!(obj is IPoint3D p))
+            if (obj is not IPoint3D p)
             {
                 return;
             }

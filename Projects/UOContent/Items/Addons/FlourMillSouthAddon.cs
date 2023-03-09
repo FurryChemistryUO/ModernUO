@@ -1,9 +1,9 @@
 using System;
-using Server.Network;
+using ModernUO.Serialization;
 
 namespace Server.Items
 {
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class FlourMillSouthAddon : BaseAddon, IFlourMill
     {
         private static readonly int[][] m_StageTable =
@@ -12,8 +12,6 @@ namespace Server.Items
             new[] { 0x192E, 0x192F, 0x1932 },
             new[] { 0x1930, 0x1930, 0x1934 }
         };
-
-        private int _flour;
 
         [Constructible]
         public FlourMillSouthAddon()
@@ -26,10 +24,10 @@ namespace Server.Items
         public override BaseAddonDeed Deed => new FlourMillSouthDeed();
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public bool HasFlour => _flour > 0;
+        public bool HasFlour => _curFlour > 0;
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public bool IsFull => _flour >= MaxFlour;
+        public bool IsFull => _curFlour >= MaxFlour;
 
         [CommandProperty(AccessLevel.GameMaster)]
         public bool IsWorking { get; private set; }
@@ -37,14 +35,14 @@ namespace Server.Items
         [CommandProperty(AccessLevel.GameMaster)]
         public int MaxFlour => 2;
 
-        [SerializableField(0)]
+        [SerializableProperty(0)]
         [CommandProperty(AccessLevel.GameMaster)]
         public int CurFlour
         {
-            get => _flour;
+            get => _curFlour;
             set
             {
-                _flour = Math.Max(0, Math.Min(value, MaxFlour));
+                _curFlour = Math.Max(0, Math.Min(value, MaxFlour));
                 UpdateStage();
             }
         }
@@ -73,7 +71,7 @@ namespace Server.Items
 
                 if (from.PlaceInBackpack(flour))
                 {
-                    _flour = 0;
+                    _curFlour = 0;
                 }
                 else
                 {
@@ -159,7 +157,7 @@ namespace Server.Items
         }
     }
 
-    [Serializable(0, false)]
+    [SerializationGenerator(0, false)]
     public partial class FlourMillSouthDeed : BaseAddonDeed
     {
         [Constructible]
